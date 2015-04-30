@@ -14,4 +14,4 @@ the electron can scatter the ionic core and then can ionize a second electron, r
 #Objective
  Compute classical trajectories of an electron in a Coulomb potential and in an intense electric field and study the influence of a weak ellipticity compared to an linear one. I already dispose of a code which computes the trajectories of the electron and determines which are the conditions on the inital phase of the field for having a closest approach to the nucleus. The orbit starts just after the ionization process. The initial position is the position of the electron just after he finishes tunneling. The initial parallel (to the field) velocity is taken null. The initial perpendicular velocity follows a velocity distribution (ADK distribution ?) centered on zero. 
 I will try to replace the linear field by a weakly elliptic one. 
-Then, we could try to replace the Coulomb hydrogenoid potential by the potential of a chiral molecules. 
+Then, we could try to replace the Coulomb hydrogenoid potential by the potential of a chiral molecules.
