@@ -53,7 +53,7 @@ void Solve::rk4(double dt)
 
   for(i=0; i<6; i++)
     {
-      q[i]= q[i] + (k[0][i]+2*k[1][i]+2*k[2][i]+k[3][i])/6;
+      q[i]= q[i] + (k[0][i]+2.*k[1][i]+2.*k[2][i]+k[3][i])/6.;
     }
  
 }
