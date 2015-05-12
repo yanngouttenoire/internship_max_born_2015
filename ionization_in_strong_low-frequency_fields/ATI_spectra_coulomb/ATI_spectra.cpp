@@ -13,10 +13,10 @@ double uaIntensity=3.5094451E16;
 double uaTime=24.1888421562712E-18;
 double uaEnergy=27.211608;
 double lightSpeed=2.99792458E8;
-double waveLenght=2E-6;
-double fieldAmpl=sqrt(300*(1E13)/uaIntensity);
+double waveLenght=1064E-9;
+double fieldAmpl=sqrt(13*(1E13)/uaIntensity);
 double pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
-double IP=24.587/uaEnergy;
+double IP=13.605804/uaEnergy;
 double opticalCycle=2.*M_PI/pulsation;
 double pulseDuration=3.*opticalCycle;
 double phase=0;
@@ -29,10 +29,13 @@ double tBirth;
 //We declare a variable for the initial field value
 double fieldBirth;
 
+//We declare a variable for the electron position after tunneling
+double rhoBirth;
+
 //We consider the rotating frame of reference (xPrime, yPrime, zPrime) where the electric field holds the xPrime direction
 double vPerpYPrime, vPerpZPrime, weightYPrime, weightZPrime;
 int iField, iVyPrime=0, iVzPrime=0;
-int nField=100, nVyPrime=100, nVzPrime=100;
+int nField=100, nVyPrime=10, nVzPrime=10;
 
 //We create the time variable
 double t;
@@ -42,6 +45,10 @@ double* q=new double[6];
 
 //We fix the step
 double dt=1.; 
+
+//We declare the number of points for trajectories
+int nBirth;
+int nEnd;
 
 //We declare containers which will contains electron spectra
 map<int,double> asymptVelZUp;
@@ -165,72 +172,108 @@ void setInitialVPerp(double &vPerp, double &weight, int iVPerp, int nVPerp)
 
   //Perpendicular velocity after tunneling
   vPerp=-2.*sigma_V+4.*double(iVPerp)/double(nVPerp)*sigma_V;
-  vPerp=3.*vPerp/4.;
+  vPerp=2.*vPerp/4.;
 
   //Ionization rate with a given field and a given transverse velocity according ADK distribution
   //REF: J. Liu, Classical Trajectory Perspective of Atomic Ionization in Strong Laser Fields
-  weight=4./fieldBirth*exp(-2.*pow(2.*IP,3./2.)/3./fieldBirth)*exp(-pow(2.*IP,1./2.)*vPerp*vPerp/fieldBirth);
-
-
+  weight=4./fieldBirth*exp(-2.*pow(2.*IP,3./2.)/3./fieldBirth)*fabs(vPerp)/fieldBirth*exp(-pow(2.*IP,1./2.)*vPerp*vPerp/fieldBirth);
 }
 
 //We set the initial ionization time
 void setTBirth(int iField, int nField)
 {
+ 
   //We set the initial time tBirth
   tBirth=double(iField)/double(nField)*2.*pulseDuration; 
+
 }
 
 //We set the initial field value
 void setFieldBirth()
 {
+ 
   //We set the initial field value
   fieldBirth=fieldAmpl*pow(sin(M_PI*tBirth/2./pulseDuration),2)*sqrt(pow(cos(ellipticity)*sin(pulsation*tBirth+phase),2)+pow(sin(ellipticity)*cos(pulsation*tBirth+phase),2));
   fieldBirth=fabs(fieldBirth);
+
+  if(fieldBirth==0)
+    fieldBirth=1E-6;
 }
 
+//We set the electron position after tunneling
+void setRhoBirth()
+{
+ 
+  double rhoBirthSq=IP*IP-4*Z*fabs(fieldBirth);
+  rhoBirth=sqrt(IP*IP-4*Z*fabs(fieldBirth));
+  rhoBirth=(rhoBirth+IP)/(fieldBirth)/2.; 
+
+}
 
 //We build the function which sets the initial conditions
 void IC(double* q) 
 {
-//We set the initial time tBirth
-setTBirth(iField, nField);
-t=tBirth; 
+  //We set the initial time tBirth
+  setTBirth(iField, nField);
+  t=tBirth; 
 
-//We set the initial field value
-setFieldBirth();
+  //We set the initial field value
+  setFieldBirth();
 
-//Position of the electron after tunneling
-double rhoBirth=sqrt(IP*IP-4*Z*fabs(fieldBirth));
-rhoBirth=(rhoBirth+IP)/(fieldBirth)/2.; 
+  //We set the electron position after tunneling
+  setRhoBirth();
 
-//We set vPerp and the weight associated for the two directions perpendicular to the field       
-setInitialVPerp(vPerpYPrime, weightYPrime, iVyPrime, nVyPrime);
-setInitialVPerp(vPerpZPrime, weightZPrime, iVzPrime, nVzPrime);
+  //We set vPerp and the weight associated for the two directions perpendicular to the field       
+  setInitialVPerp(vPerpYPrime, weightYPrime, iVyPrime, nVyPrime);
+  setInitialVPerp(vPerpZPrime, weightZPrime, iVzPrime, nVzPrime);
 
-//We set the IC
-q[0]=rhoBirth*cos(ellipticity)*sin(pulsation*tBirth+phase);
-q[1]=-rhoBirth*sin(ellipticity)*cos(pulsation*tBirth+phase);
-q[2]=0.;
-q[3]=vPerpYPrime*sin(ellipticity)*cos(pulsation*tBirth+phase);
-q[4]=vPerpYPrime*cos(ellipticity)*sin(pulsation*tBirth+phase);
-q[5]=vPerpZPrime;
+  //We set the IC
+  q[0]=rhoBirth*cos(ellipticity)*sin(pulsation*tBirth+phase);
+  q[1]=-rhoBirth*sin(ellipticity)*cos(pulsation*tBirth+phase);
+  q[2]=0.;
+  q[3]=vPerpYPrime*sin(ellipticity)*cos(pulsation*tBirth+phase);
+  q[4]=vPerpYPrime*cos(ellipticity)*sin(pulsation*tBirth+phase);
+  q[5]=vPerpZPrime;
+
+}
+
+//We set the number of point for the trajectory
+void setTrajParameters()
+{
+
+  //The trajectory will stop at the end of the impulsion
+  nEnd=int(2.*pulseDuration/dt); 
+
+  //We compute the correponding step dt
+  dt=2.*pulseDuration/double(nEnd);
+
+  //We make the initial loop control variable nBirth to correspond with the ionization time tBirth
+  nBirth=int(tBirth/dt); 
 
 }
 
 //We compute the asymptoticVelocity
 double asymptoticVelocity(double* q)
 {
+
   double Vsq=q[3]*q[3]+q[4]*q[4]+q[5]*q[5];
   double dist=sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]);
-  return sqrt(Vsq-2.*Z/dist);
+  double asymptVsq=Vsq-2.*Z/dist;
+
+  if(asymptVsq<0)
+    return 0.;
+else
+  return sqrt(asymptVsq);
+
 }
 
 //We set the histogram intervals width
-void setBinsWidth(int binsNumber=1000)
+void setBinsWidth(int binsNumber=10000)
 {
+
   double ponderomotiveEnergy=fieldAmpl*fieldAmpl/4./pulsation/pulsation;
-  binsWidth=100./double(binsNumber);
+  binsWidth=20./double(binsNumber);
+
 }
 
 //We store asymptotic velocities in containers of map type
@@ -310,7 +353,7 @@ void writeDataBinning()
 //First top
 time_t start = time (NULL);  
 
-static inline void loadbar(int i,double np)
+static inline void loadbar(int i, int np)
 {
 
   //If it the first time, we execute it we leave three line break
@@ -358,10 +401,14 @@ static inline void loadbar(int i,double np)
     }
 
   cout<<"\r"<<"estimated remaining time= "<<Z1<<" h "<<Z2<<" min "<<Z3<<" s "<<"    "<<endl;
-      
-  //We ask the cursor to go three lines up
-  cout<<"\033[F"<<"\033[F"<<"\033[F";
 
+  cout<<"ponderomotriveMin= "<<fieldBirth*fieldBirth/4./pulsation/pulsation<<"      "<<endl;
+  cout<<"ponderomotriveMax= "<<fieldAmpl*fieldAmpl/4./pulsation/pulsation<<"       "<<endl;      cout<<"i= "<<i<<" np= "<<np<<endl;
+  cout<<"asymptoticVelocity= "<<asymptoticVelocity(q)<<"           "<<endl;
+
+  //We ask the cursor to go three lines up
+  if(int(i)!=int(np))
+    cout<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F";
 }
 
 
@@ -375,23 +422,21 @@ int main()
   //second, for each perpendicular velocity along yPrime
   //third, for each perpendicular velocity along zPrime
 
-  for(iField=0; iField<=nField; iField++)
+  for(iField=1; iField<=nField; iField++)
     {
-      for(iVyPrime=0; iVyPrime<=nVyPrime; iVyPrime++)
+      for(iVyPrime=1; iVyPrime<=nVyPrime; iVyPrime++)
 	{
-	  for(iVzPrime=0; iVzPrime<=nVzPrime; iVzPrime++)
+	  for(iVzPrime=1; iVzPrime<=nVzPrime; iVzPrime++)
 	    {
 	  
 	      //We call the function which will fix the initial condition
 	      IC(q);
 
-	      //We set the number of points
-	      int N=int(2.*pulseDuration/dt); 
-	      dt=2.*pulseDuration/double(N);
-	      int nBirth=int(tBirth/dt); 
-
+	      //We set the number of points for the trajectory
+	      setTrajParameters();
+	   
 	      //We compute the trajectory
-	      for(int n=nBirth; n<=N; n++)
+	      for(int n=nBirth; n<=nEnd; n++)
 		{ 
 		  
 		  //We call the function which solve eq of the motion
@@ -403,7 +448,7 @@ int main()
 	      storeDataBinning();
 	      
 	      //We update the load bar
-	      loadbar(iVyPrime+iField*nVyPrime, nField*nVyPrime);
+	      loadbar(iVzPrime+nVzPrime*((iVyPrime-1)+(iField-1)*nVyPrime), nField*nVyPrime*nVzPrime);
 
 	    }
 	}
