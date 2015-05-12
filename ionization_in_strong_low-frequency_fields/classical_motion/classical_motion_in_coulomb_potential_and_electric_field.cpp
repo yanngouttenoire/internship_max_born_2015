@@ -26,6 +26,19 @@ void coulomb(double* q, double t, double* qp)
 {
   double K=Z;
 
+ //We introduce a spatial threshold below which we switch off the coulomb potential
+  double thresholdLenght=1.;
+  if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])<thresholdLenght)
+    {
+      qp[0]=q[3];
+      qp[1]=q[4];
+      qp[2]=q[5];
+      qp[3]=0.;
+      qp[4]=0.;
+      qp[5]=0.;  
+      return;
+    }
+
   double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2],3./2.);  //Do not forget the dots in 3./2. !
   qp[0]=q[3];
   qp[1]=q[4];
@@ -40,7 +53,20 @@ void coulomb(double* q, double t, double* qp)
 void coulomb_field(double* q, double t, double* qp)
 {
   double K=Z;
-  fieldAmpl=0.;
+
+    //We introduce a spatial threshold below which we switch off the coulomb potential
+  double thresholdLenght=1.;
+  if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])<thresholdLenght)
+    {
+      qp[0]=q[3];
+      qp[1]=q[4];
+      qp[2]=q[5];
+      qp[3]=fieldAmpl*pow(sin(M_PI*t/2./pulseDuration),2)*cos(ellipticity)*sin(pulsation*t+phase);
+      qp[4]=-fieldAmpl*pow(sin(M_PI*t/2./pulseDuration),2)*sin(ellipticity)*cos(pulsation*t+phase);
+      qp[5]=0.;  
+      return;
+    }
+
   double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2],3./2.);
   qp[0]=q[3];
   qp[1]=q[4];
@@ -119,7 +145,7 @@ void IC(double* q)
   q[1]=0.;
   q[2]=0.;
   q[3]=0.;
-  q[4]=vPerp;
+  q[4]=0.;
   q[5]=0.;
 
 }
@@ -175,14 +201,6 @@ int main()
 	}
       dat<<" "<<endl;
 
-      //We prevent from divergence due to Coulomb singularity
-      if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])<0.001)
-	{
-	  n=N;
-	  dat<<"COULOMB DIVERGENCE"<<endl;
-	  cout<<"Coulomb divergence"<<endl;
-	}
-
       //We display some informations
       if(n%int(N/3)==0)
 	{
@@ -195,13 +213,13 @@ int main()
 
   //We plot a circle which somehow corresponds to the ionic core
 
-  int u;
+ double u;
  
   dat<<" "<<endl;
 
   for(i=0; i<=100; i++)
     {
-      u=i*2*M_PI/100;
+      u=double(i)*2.*M_PI/100.;
       dat<<cos(u)<<" "<<sin(u)<<" "<<0<<endl;
     }
 
