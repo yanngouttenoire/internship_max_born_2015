@@ -2,6 +2,7 @@
 #include<fstream>
 #include<math.h>
 #include<stdlib.h>
+#include<iomanip>
 
 
 using namespace std;
@@ -13,7 +14,7 @@ double lightSpeed=2.99792458E8;
 double waveLenght=2E-6;
 double fieldAmpl=sqrt(30*(1E13)/uaIntensity);
 double pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
-double IP=24.587/uaEnergy;
+double IP=0.5;
 double opticalCycle=2.*M_PI/pulsation;
 double pulseDuration=3.*opticalCycle;
 double phase=0.;
@@ -25,19 +26,6 @@ double Z=1.; //Positive charge of the nucleus
 void coulomb(double* q, double t, double* qp)
 {
   double K=Z;
-
- //We introduce a spatial threshold below which we switch off the coulomb potential
-  double thresholdLenght=1.;
-  if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])<thresholdLenght)
-    {
-      qp[0]=q[3];
-      qp[1]=q[4];
-      qp[2]=q[5];
-      qp[3]=0.;
-      qp[4]=0.;
-      qp[5]=0.;  
-      return;
-    }
 
   double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2],3./2.);  //Do not forget the dots in 3./2. !
   qp[0]=q[3];
@@ -54,19 +42,6 @@ void coulomb_field(double* q, double t, double* qp)
 {
   double K=Z;
 
-    //We introduce a spatial threshold below which we switch off the coulomb potential
-  double thresholdLenght=1.;
-  if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])<thresholdLenght)
-    {
-      qp[0]=q[3];
-      qp[1]=q[4];
-      qp[2]=q[5];
-      qp[3]=fieldAmpl*pow(sin(M_PI*t/2./pulseDuration),2)*cos(ellipticity)*sin(pulsation*t+phase);
-      qp[4]=-fieldAmpl*pow(sin(M_PI*t/2./pulseDuration),2)*sin(ellipticity)*cos(pulsation*t+phase);
-      qp[5]=0.;  
-      return;
-    }
-
   double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2],3./2.);
   qp[0]=q[3];
   qp[1]=q[4];
@@ -80,44 +55,69 @@ void coulomb_field(double* q, double t, double* qp)
 //We implement the rk4 iteration for the integration of ode
 void rk4(void (&diff)(double*,double,double*), double* q, double &t, double dt)
 {
-  int i;
-  double qp[6];
-  double qm[6];
-  double k[4][6];
 
-  diff(q,t,qp);
-  for(i=0; i<6; i++)
-    {
-      k[0][i] = dt*qp[i];
-      qm[i]=q[i]+k[0][i]/2.;
-      t=t+dt/2.;
-    }
+  //yn+1=yn+c0*k0+c1*k1+c2*k2+c3*k3
+  //k0=dt*f(xn,yn)
+  //k1=dt*f(xn+a1*dt,yn+b10*k0)
+  //k2=dt*f(xn+a2*dt,yn+b20*k0+b21*k1)
+  //k3=dt*f(xn+a3*dt,yn+b30*k0+b31*k1+b32*k2)
 
-  diff(qm,t,qp);
-  for(i=0; i<6; i++)
-    {
-      k[1][i] = dt*qp[i];
-      qm[i]=q[i]+k[1][i]/2.;
-    }
+  int i,j,p;
+  int order=4;
+  double qp[order][6];
+  double qm[order][6];
+  double k[order][6];
 
-  diff(qm,t,qp);
-  for(i=0; i<6; i++)
-    {
-      k[2][i] = dt*qp[i];
-      qm[i]=q[i]+k[2][i];
-      t=t+dt/2.;
-    }
+  double a[4]={0.,1/2.,1/2.,1.};
+  double b[4][4]={{0.,0.,0.,0.},{1/2.,0,0,0},{0.,1/2.,0.,0.},{0.,0.,1.,0}};
+  double c[4]={1/6.,1/3.,1/3.,1/6.};
 
-  diff(qm,t,qp);	
-  for(i=0; i<6; i++)
-    {
-      k[3][i] = dt*qp[i];
-    }
 
   for(i=0; i<6; i++)
     {
-      q[i]= q[i] + (k[0][i]+2.*k[1][i]+2.*k[2][i]+k[3][i])/6.;
+    qm[0][i]=q[i];
     }
+
+  for(j=1 ; j<=order; j++)
+    {
+cout<<"qm= "<<qm[j][i]<<" ";
+      diff(qm[j-1],t+dt*a[j-1],qp[j-1]);
+      
+      if(j!=order)
+	{
+
+	  for(i=0; i<6; i++)
+	    {
+	      cout<<"qp= "<<qp[j][i]<<" ";
+	      qm[j][i]=q[i];
+	      k[j][i]=dt*qp[j][i];
+
+	      for(p=0; p<j; p++)
+		{
+		  qm[j][i]=qm[j][i]+b[j][p]*k[p][i];
+		}
+	    }
+	  cout<<" "<<endl;
+ 
+	}
+
+    }
+cout<<" "<<endl;
+
+  for(i=0; i<6; i++)
+    {
+
+      for(j=0; j<order; j++)
+	{
+	  cout<<k[j][i]<<" ";
+	  q[i]= q[i] + c[j]*k[j][i];;
+
+	}
+      cout<<" "<<endl;
+    }
+ cout<<" "<<endl;
+
+  t=t+dt;
 }
 
 //We build the function which sets the initial conditions
@@ -139,13 +139,14 @@ void IC(double* q)
   cout<<"xbirth= "<<x_birth<<endl;
   cout<<"vPerp= "<<vPerp<<endl;
   cout<<" "<<endl;
+  cout<<" "<<endl;
 
   //We set the IC
-  q[0]=x_birth;
+  q[0]=2.;
   q[1]=0.;
   q[2]=0.;
   q[3]=0.;
-  q[4]=0.;
+  q[4]=0.1;
   q[5]=0.;
 
 }
@@ -160,6 +161,7 @@ int main()
 {
 
   //We display some informations
+
   cout<<" "<<endl;
   cout<<"fieldIntensity= "<<fieldAmpl<<endl;
   cout<<"opticalCycle= "<<2*M_PI/pulsation<<endl;
@@ -167,13 +169,14 @@ int main()
   cout<<"ellipticity= "<<ellipticity<<endl;
   cout<<" "<<endl;
 
+
   //We open a file with a view to writing in it
   fstream dat("data.dat",ios::out);
 
   int n, i,j;
 
   //We fix the step
-  double dt=0.001;
+  double dt=0.0001;
 
   //We fix the number of points
   int N=100000;
@@ -188,11 +191,13 @@ int main()
   IC(q);
   t=0.;
   
+  time_t start=time(NULL);
+
   for(n=1; n<=N; n++)
     { 
 
       //We call the rk4 function which solve eq of the motion
-      rk4(coulomb_field,q,t,dt);
+      rk4(coulomb,q,t,dt);
     
       //We write the position of the electron in the phase space
       for (i=0; i<6; i++)
@@ -202,14 +207,17 @@ int main()
       dat<<" "<<endl;
 
       //We display some informations
-      if(n%int(N/3)==0)
+      if(n%100==0)
 	{
+	  cout<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F";
 	  cout<<"Energy= "<<energy(q)<<endl;
 	  cout<<"Distance= "<<pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2],1./2.)<<endl;
-	  cout<<" "<<endl;
+	  time_t end=time(NULL);
+	  //We display the elapsed time and the load bar
+	  cout<<"Elapsed time= "<<difftime(end,start)<<endl;
+	  cout<<"\r"<<"progression= "<<setprecision(3)<<(double)(n)/(double)(N)*100.<<"%"<<setprecision(cout.precision())<<"                "<<endl;
 	}
     }
-
 
   //We plot a circle which somehow corresponds to the ionic core
 
@@ -220,7 +228,7 @@ int main()
   for(i=0; i<=100; i++)
     {
       u=double(i)*2.*M_PI/100.;
-      dat<<cos(u)<<" "<<sin(u)<<" "<<0<<endl;
+      dat<<0.01*cos(u)<<" "<<0.01*sin(u)<<" "<<0<<endl;
     }
 
   //We display the duration of the simulation in ua
