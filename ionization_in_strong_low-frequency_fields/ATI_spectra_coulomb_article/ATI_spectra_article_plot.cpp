@@ -5,7 +5,11 @@
 #include<map>
 #include<iomanip>
 
+#include <boost/numeric/odeint.hpp>
+using namespace boost::numeric::odeint;
+
 using namespace std;
+
 
 //Plateau in above-threashold-ionization spectra and chaotic behavior in rescattering processes
 //Bambi Hu, Jie Liu, Shi-gang Chen

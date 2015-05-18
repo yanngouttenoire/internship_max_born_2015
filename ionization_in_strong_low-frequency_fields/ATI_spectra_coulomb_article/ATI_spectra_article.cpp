@@ -35,7 +35,7 @@ int iField, iVPerp=0;
 int nField=100, nVPerp=100;
 
 //We fix the step
-double dt=0.00001; 
+double dt=0.001; 
 
 //We declare runge kutta error, its max, its min and the desired error (desired accuracy) 
 double error;
@@ -309,7 +309,7 @@ void setRhoBirthArt()
 
 
   // we find the root of the function which gives us the position of the electron after tunneling
- double x=0.5;
+ double x=100.;
  for(int k=0; k<=50; k++)                              
 	{
 	  x=x-(-1./4./x-1./8./x/x-1./8.*fabs(fieldBirth)*x+1./8.)/(+1./4./x/x+1./4./x/x/x-fabs(fieldBirth)/8.);
@@ -360,7 +360,7 @@ void setTrajParameters()
 }
 
 //We set the histogram intervals width
-void setBinsWidth(int binsNumber=1000)
+void setBinsWidth(int binsNumber=10000)
 {
 
   double ponderomotiveEnergy=fieldAmpl*fieldAmpl/4./pulsation/pulsation;
@@ -374,13 +374,14 @@ void storeDataBinning()
 
   setBinsWidth();
 
+  double asymptoticEnergy=asymptoticVelocity(q)*asymptoticVelocity(q)/2.;
   int range;
   
       //We compute the x value of the new point in the histogram
-      range=int(asymptoticVelocity(q)/binsWidth);
+  range=int(asymptoticEnergy/binsWidth);
       
-      if(range==0) return;
-      if(asymptoticVelocity(q)>10.) return;
+     if(range==0) return;
+      //  if(asymptoticVelocity(q)>10.) return;
 
       //We declare a container of map type
       //It can contains pairs with are couple of objects
@@ -470,13 +471,14 @@ static inline void loadbar(int i, int np)
   cout<<"ponderomotriveMin= "<<fieldBirth*fieldBirth/4./pulsation/pulsation<<"      "<<endl;
   cout<<"ponderomotriveMax= "<<fieldAmpl*fieldAmpl/4./pulsation/pulsation<<"       "<<endl;      
   cout<<"asymptoticVelocityArt= "<<asymptoticVelocity(q)<<" asymptoticVelocityOld= "<<asymptoticVelocityOld(q)<<" diff= "<<asymptoticVelocity(q)-asymptoticVelocityOld(q)<<"          "<<endl;
+  cout<<"asymptoticEnergy= "<<asymptoticVelocity(q)*asymptoticVelocity(q)/2.<<endl;
   cout<<"weight= "<<weight<<"        "<<endl;
   cout<<"phaseBirth= "<<pulsation*tBirth*180./M_PI<<"    "<<endl;
   cout<<"vPerp= "<<vPerp<<endl;
 
   //We ask the cursor to go three lines up
   if(int(i)!=int(np))
-    cout<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F";
+    cout<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F";
 
 }
 
@@ -512,13 +514,12 @@ int main()
 	      //We call the function which solve eq of the motion
 	      rk5(coulomb_field,q,t,dt,error,desiredErrorMin,desiredErrorMax);
 
-	      //if(nBirth%100==0) {cout<<"+1";}
+	      // if(nBirth%100==0) {cout<<"\033[F"<<"+1";}
 
 	      //We stop when the electron is fully ionized
-	      if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])>40.)
-		stop=false;
+	      if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])>250.) stop=false;
 
-	      if(n==nBirth+50000000) stop=false;
+	      //  if(t>100.*opticalCycle || n>1E6) stop=false;
 	    }
 
 	  //We store the asymptotic velocity in a container of map type with a view to make a data binning
@@ -539,7 +540,7 @@ int main()
   fstream gnu("data.gnu", ios::out);
 
   gnu<<"set xtics rotate out"<<endl;
-  gnu<<"set multiplot  layout 2, 1"<<endl;
+  gnu<<"set multiplot  layout 1, 1"<<endl;
   gnu<<"set key on outside left bmargin box title 'nField="<<nField<<", nVPerp="<<nVPerp<<", dt="<<dt<<"'"<<endl;
   gnu<<"plot 'data.dat' using 1:2 w l title 'Spectra'"<<endl;
   gnu<<"unset multiplot"<<endl;
