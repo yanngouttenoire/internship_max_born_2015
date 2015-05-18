@@ -27,15 +27,21 @@ double ellipticity=0.1;
 double Z=1.; //Positive charge of the nucleus
 
 //We declare a softening parameter for the soft coulomb potential
-double softeningParameter=0.1;
+double softParameter=0.1;
 
 //We consider the rotating frame of reference (xPrime, yPrime, zPrime) where the electric field holds the xPrime direction
 double vPerp, weight;
 int iField, iVPerp=0;
-int nField=1000, nVPerp=500;
+int nField=100, nVPerp=100;
 
 //We fix the step
-double dt=0.1; 
+double dt=0.00001; 
+
+//We declare runge kutta error, its max, its min and the desired error (desired accuracy) 
+double error;
+double errorMax=1E-25;
+double desiredErrorMax=1E-10;
+double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare the number of points for trajectories
 int nBirth;
@@ -76,7 +82,7 @@ void coulomb(double* q, double t, double* qp)
 {
   double K=Z;
 
-  double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softeningParameter,3./2.); 
+  double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter,3./2.); 
   qp[0]=q[3];
   qp[1]=q[4];
   qp[2]=q[5];
@@ -91,7 +97,7 @@ void coulomb_field(double* q, double t, double* qp)
 {
   double K=Z;
  
-  double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softeningParameter,3./2.);
+  double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter,3./2.);
   qp[0]=q[3];
   qp[1]=q[4];
   qp[2]=q[5];
@@ -101,47 +107,105 @@ void coulomb_field(double* q, double t, double* qp)
 
 }
 
-//We implement the rk4 iteration for the integration of ode
-void rk4(void (&diff)(double*,double,double*), double* q, double &t, double dt)
+
+//We implement the rk5 iteration for the integration of ode
+//We also imprement a embedded rk4 with a view to computing the error and then to adapting the step size
+//http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c16-2.pdf
+void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax)
 {
-  int i;
-  double qp[6];
-  double qm[6];
-  double k[4][6];
 
-  diff(q,t,qp);
+  //yn+1=yn+c0*k0+c1*k1+c2*k2+c3*k3+c4*k4+c5*k5
+  //k0=dt*f(xn,yn)
+  //k1=dt*f(xn+a1*dt,yn+b10*k0)
+  //k2=dt*f(xn+a2*dt,yn+b20*k0+b21*k1)
+  //k3=dt*f(xn+a3*dt,yn+b30*k0+b31*k1+b32*k2)
+  //k4=dt*f(xn+a4*dt,yn+b40*k0+b41*k1+b42*k2+b43*k3)
+  //k5=dt*f(xn+a5*dt,yn+b50*k0+b51*k1+b52*k2+b53*k3+b54*k4)
+
+  int i,j,p;
+  double qp[6][6];
+  double qm[7][6];
+  double k[6][6];
+
+  double a[6]={0.,1/5.,3/10.,3/5.,1.,7/8.};
+  double b[6][5]={{0.,0.,0.,0.,0.},{1/5.,0.,0.,0.,0.},{3/40.,9/40.,0.,0.,0.},{3/10.,-9/10.,6/5.,0.,0.},{-11/54.,5/2.,-70/27.,35/27.,0.},{1631/55296.,175/512.,575/13824.,44275/110592.,253/4096.}};
+  
+  //Fifth-order Runge-Kuta method
+  double c5[6]={37/378.,0.,250/621.,125/594.,0.,512/1771.};
+  //Embedded four-order Runge kutta method  
+  double c4[6]={2825/27648.,0.,18575/48384.,13525/55296.,277/14336.,1/4.};
+
+
+  double q4[6];
+  double q5[6];
+
+ do
+    {
+     
   for(i=0; i<6; i++)
     {
-      k[0][i] = dt*qp[i];
-      qm[i]=q[i]+k[0][i]/2.;
-    }
-  t=t+dt/2.; //Out of the loop !
-
-  diff(qm,t,qp);
-  for(i=0; i<6; i++)
-    {
-      k[1][i] = dt*qp[i];
-      qm[i]=q[i]+k[1][i]/2.;
+      q4[i]=q[i];
+      q5[i]=q[i];
     }
 
-  diff(qm,t,qp);
-  for(i=0; i<6; i++)
-    {
-      k[2][i] = dt*qp[i];
-      qm[i]=q[i]+k[2][i];
-    }
-  t=t+dt/2.;
+       for(i=0; i<6; i++)
+	{
+	  qm[0][i]=q[i];
+	}
+   
+      for(j=1 ; j<=6; j++)
+	{
+	  diff(qm[j-1],t+dt*a[j-1],qp[j-1]);
+      
+	  for(i=0; i<6; i++)
+	    {
+	      qm[j][i]=q[i];
+	      k[j-1][i]=dt*qp[j-1][i];
 
-  diff(qm,t,qp);	
-  for(i=0; i<6; i++)
-    {
-      k[3][i] = dt*qp[i];
-    }
+	      for(p=0; p<j && j<6 ; p++)
+		{
+		  qm[j][i]=qm[j][i]+b[j][p]*k[p][i];
+		}
+	    }
+	}
+
+      for(i=0; i<6; i++)
+	{
+	  for(j=0; j<6; j++)
+	    {
+	      q4[i]=q4[i]+c4[j]*k[j][i];
+	    }
+	}
+
+      for(i=0; i<6; i++)
+	{
+	  for(j=0; j<6; j++)
+	    {
+	      q5[i]=q5[i]+c5[j]*k[j][i];
+	    }
+	}
+   
+      error=fabs(pow(q5[0]*q5[0]+q5[1]*q5[1]+q5[2]*q5[2],1./2.)-pow(q4[0]*q4[0]+q4[1]*q4[1]+q4[2]*q4[2],1./2.))/pow(q5[0]*q5[0]+q5[1]*q5[1]+q5[2]*q5[2],1./2.);
+   
+    
+  if(error>desiredErrorMax)
+	dt=dt*pow(desiredErrorMax/error,0.2);
+    
+  if(error<desiredErrorMin && error!=0.)
+	dt=dt*pow(desiredErrorMin/error,0.2);
+
+     }
+
+  while(error>desiredErrorMax || error<desiredErrorMin && error!=0.);
+     
 
   for(i=0; i<6; i++)
     {
-      q[i]= q[i] + (k[0][i]+2.*k[1][i]+2.*k[2][i]+k[3][i])/6.;
+      q[i]=q5[i];
     }
+
+  t=t+dt;
+
 }
 
 
@@ -150,7 +214,7 @@ double asymptoticVelocityOld(double* q)
 {
 
   double Vsq=q[3]*q[3]+q[4]*q[4]+q[5]*q[5];
-  double dist=sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]);
+  double dist=sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter);
   double asymptVsq=Vsq-2.*Z/dist;
 
   if(asymptVsq<0)
@@ -166,7 +230,7 @@ double asymptoticVelocity(double* q)
 {
   double vectPot=fieldAmpl/pulsation*sin(pulsation*t+phase);
   double Vsq=(q[3]+vectPot)*(q[3]+vectPot)+q[4]*q[4]+q[5]*q[5];
-  double dist=sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]);
+  double dist=sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter);
   double asymptVsq=Vsq-2.*Z/dist;
 
   if(asymptVsq<0)
@@ -226,31 +290,6 @@ void setRhoBirth()
 
 }
 
-//We implement the function and its derivative whose root is the position of the electron after tunneling
-double functionToRoot(double x)
-{
-    return -1./4./x-1./8./x/x-1./8.*fieldBirth*x+1./8.;
-}
-
-double derivativeFonctionToRoot(double x)
-{
- return +1./4./x/x+1./4./x/x/x-fieldBirth/8.;
-}
-
-//We implement a method for computing the root of a function
-double NewtonRaphson(double (*function)(double), double (*derivative)(double))
-{
-
-  double x;
-
-       for(int k=0; k<=500; k++)                              
-	{
-	  x=x-(*function)(x)/(*derivative)(x);
-	}
-    
-       cout<<"test"<<endl;
-}     
-
 //We set the electron position after tunneling according the article
 void setRhoBirthArt()
 {
@@ -268,16 +307,18 @@ void setRhoBirthArt()
  cout<<" e= "<<e<<" p= "<<p<<" q= "<<q<<" s= "<<s<<" theta= "<<theta<<" eta= "<<eta<<" rhoBirth= "<<rhoBirth<<endl;
   */
 
-  // rhoBirth=NewtonRaphson(&functionToRoot,&derivativeFonctionToRoot);
-  double x=100.;
- for(int k=0; k<=500; k++)                              
+
+  // we find the root of the function which gives us the position of the electron after tunneling
+ double x=0.5;
+ for(int k=0; k<=50; k++)                              
 	{
-	  x=x-(-1./4./x-1./8./x/x-1./8.*fieldBirth*x+1./8.)/(+1./4./x/x+1./4./x/x/x-fieldBirth/8.);
+	  x=x-(-1./4./x-1./8./x/x-1./8.*fabs(fieldBirth)*x+1./8.)/(+1./4./x/x+1./4./x/x/x-fabs(fieldBirth)/8.);
 	}
- rhoBirth=x;
+
+ rhoBirth=-x/2.*fabs(fieldBirth)/fieldBirth;
+
+
 }
-
-
 
 //We build the function which sets the initial conditions
 void IC(double* q) 
@@ -301,7 +342,7 @@ void IC(double* q)
   setInitialVPerp();
  
   //We set the IC
-  q[0]=-rhoBirth;
+  q[0]=rhoBirth;
   q[1]=0.;
   q[2]=0.;
   q[3]=0.;
@@ -339,6 +380,7 @@ void storeDataBinning()
       range=int(asymptoticVelocity(q)/binsWidth);
       
       if(range==0) return;
+      if(asymptoticVelocity(q)>10.) return;
 
       //We declare a container of map type
       //It can contains pairs with are couple of objects
@@ -468,7 +510,7 @@ int main()
 	    { 
 		  
 	      //We call the function which solve eq of the motion
-	      rk4(coulomb_field,q,t,dt);
+	      rk5(coulomb_field,q,t,dt,error,desiredErrorMin,desiredErrorMax);
 
 	      //if(nBirth%100==0) {cout<<"+1";}
 
@@ -476,6 +518,7 @@ int main()
 	      if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])>40.)
 		stop=false;
 
+	      if(n==nBirth+50000000) stop=false;
 	    }
 
 	  //We store the asymptotic velocity in a container of map type with a view to make a data binning
