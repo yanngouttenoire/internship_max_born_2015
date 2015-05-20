@@ -146,6 +146,8 @@ void IC(state_type& x)
   cout<<" "<<endl;
   cout<<" "<<endl;
 
+  rhoBirth=0.01;
+
   //We set the IC
   x[0]=0.;
   x[1]=0.;
@@ -187,12 +189,14 @@ int main()
   
   time_t start=time(NULL);
 
-   // define_adapt_stepper
-    typedef runge_kutta_cash_karp54< state_type > error_stepper_type;
-  
-    // integrate_adapt
-    typedef controlled_runge_kutta< error_stepper_type > controlled_stepper_type;
-    controlled_stepper_type controlled_stepper;
+  // define_adapt_stepper
+  typedef runge_kutta_cash_karp54< state_type > error_stepper_type;
+  // integrate_adapt
+  typedef controlled_runge_kutta< error_stepper_type > controlled_stepper_type;   // controlled_stepper_type controlled_stepper;
+
+  double abs_err = 1.0e-10 , rel_err = 1.0e-30 , a_x = 1.0 , a_dxdt = 1.0;
+  controlled_stepper_type controlled_stepper(default_error_checker< double , range_algebra , default_operations >( abs_err , rel_err , a_x , a_dxdt ) );
+
 
     coulomb m_coulomb("withoutField");
    
@@ -203,7 +207,8 @@ int main()
     dt=0.01;
 
 	//We call the rk4 function which solve eq of the motion
-  steps=integrate_adaptive( controlled_stepper , m_coulomb , x , 0.0 , 500.0 , dt,  push_back_state_and_time( x_vec , times ) );
+
+  steps=integrate_adaptive( controlled_stepper , m_coulomb , x , 0.0 , 100.0 , dt,  push_back_state_and_time( x_vec , times ) );
 
     // steps = integrate(m_coulomb ,  x , 0.0 , 600.0 , 0.0001, push_back_state_and_time( x_vec , times )  );
 
@@ -240,10 +245,6 @@ int main()
 	}
       */
 
-
-  //We display the duration of the simulation in ua
-  cout<<"t= "<<t<<endl;
- 
     
   //We plot the orbit (and the "ionic circle") with gnuplot
 
