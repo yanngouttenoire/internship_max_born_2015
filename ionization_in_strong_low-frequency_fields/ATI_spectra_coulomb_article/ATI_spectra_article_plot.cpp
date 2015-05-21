@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<map>
 #include<iomanip>
+#include<vector>
 
 using namespace std;
 
@@ -20,7 +21,6 @@ double uaEnergy=27.211608;
 double lightSpeed=2.99792458E8;
 double waveLenght=1064E-9;
 double fieldAmpl=sqrt(12*(1E13)/uaIntensity);
-
 double pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
 double IP=13.605804/uaEnergy;
 double opticalCycle=2.*M_PI/pulsation;
@@ -35,7 +35,8 @@ double softParameter=0.;
 //We consider the rotating frame of reference (xPrime, yPrime, zPrime) where the electric field holds the xPrime direction
 double vPerp, weight;
 int iField, iVPerp=0;
-int nField=0, nVPerp=0;
+int nField=1, nVPerp=1;
+
 double tBirth0=0.871;
 double vPerp0=6E-5;
 double rhoBirth0=0.;
@@ -64,7 +65,8 @@ int nEnd;
 double t;
 
 //We create the array in which we will store the orbit
-double* q=new double[6];
+typedef vector<double> state_type;
+state_type x(6);
 
 //We declare a variable for the initial time
 double tBirth;
@@ -74,7 +76,6 @@ double fieldBirth;
 
 //We declare a variable for the electron position after tunneling
 double rhoBirth;
-double rhoBirthOld;
 
 //We declare containers which will contains electron spectra
 map<int,double> asymptVel;
@@ -91,39 +92,45 @@ fstream dat("data.dat",ios::out);
 
 
 //Ordinary differential equations of the dynamic of an electron in coulomb potential 
-void coulomb(double* q, double t, double* qp)
+class Coulomb
 {
-  double K=Z;
+  double K;
+  double field[3];
+  string whichField;
 
-  double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter,3./2.); 
-  qp[0]=q[3];
-  qp[1]=q[4];
-  qp[2]=q[5];
-  qp[3]=-K*q[0]/a;
-  qp[4]=-K*q[1]/a;
-  qp[5]=-K*q[2]/a;
+public:
+  Coulomb(string whichField="withoutField") : whichField(whichField)
+  { 
+    K=Z;
+    double field[3]={0.,0.,0.};
+  }
 
-}
+    void operator() ( const state_type &x , state_type &dxdt , const double  t  )
+    {      
 
-//We add the electric field
-void coulomb_field(double* q, double t, double* qp)
-{
-  double K=Z;
- 
-  double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter,3./2.);
-  qp[0]=q[3];
-  qp[1]=q[4];
-  qp[2]=q[5];
-  qp[3]=-K*q[0]/a;
-  qp[4]=-K*q[1]/a;
-  qp[5]=-K*q[2]/a-fieldAmpl*cos(pulsation*t+phase);
+    //If it has been requested, we switch on the electric field
+ if(whichField=="withField")
+      {
+	field[0]=0.;
+	field[1]=0.;
+	field[2]=-fieldAmpl*cos(pulsation*t+phase);
+      }
 
-}
+    double a=pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],3./2.); 
+    dxdt[0]=x[3];
+    dxdt[1]=x[4];
+    dxdt[2]=x[5];
+    dxdt[3]=-K*x[0]/a+field[0];
+    dxdt[4]=-K*x[1]/a+field[1];
+    dxdt[5]=-K*x[2]/a+field[2];
+    }
+};
 
 //We implement the rk5 iteration for the integration of ode
 //We also imprement a embedded rk4 with a view to computing the error and then to adapting the step size
 //http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c16-2.pdf
-void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax)
+template<typename System>
+void rk5(System &system, state_type& x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax)
 {
 
   //yn+1=yn+c0*k0+c1*k1+c2*k2+c3*k3+c4*k4+c5*k5
@@ -135,8 +142,10 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
   //k5=dt*f(xn+a5*dt,yn+b50*k0+b51*k1+b52*k2+b53*k3+b54*k4)
 
   int i,j,p;
-  double qp[6][6];
-  double qm[7][6];
+ // double dxdt[6][6];
+vector<state_type> dxdt(6, state_type(6));
+  //double xm[7][6];
+vector<state_type> xm(7, state_type(7));
   double k[6][6];
 
   double a[6]={0.,1/5.,3/10.,3/5.,1.,7/8.};
@@ -148,35 +157,35 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
   double c4[6]={2825/27648.,0.,18575/48384.,13525/55296.,277/14336.,1/4.};
 
 
-  double q4[6];
-  double q5[6];
+  double x4[6];
+  double x5[6];
 
  do
     {
      
   for(i=0; i<6; i++)
     {
-      q4[i]=q[i];
-      q5[i]=q[i];
+      x4[i]=x[i];
+      x5[i]=x[i];
     }
 
        for(i=0; i<6; i++)
 	{
-	  qm[0][i]=q[i];
+	  xm[0][i]=x[i];
 	}
    
       for(j=1 ; j<=6; j++)
 	{
-	  diff(qm[j-1],t+dt*a[j-1],qp[j-1]);
+	  system(xm[j-1],dxdt[j-1],t+dt*a[j-1]);
       
 	  for(i=0; i<6; i++)
 	    {
-	      qm[j][i]=q[i];
-	      k[j-1][i]=dt*qp[j-1][i];
+	      xm[j][i]=x[i];
+	      k[j-1][i]=dt*dxdt[j-1][i];
 
 	      for(p=0; p<j && j<6 ; p++)
 		{
-		  qm[j][i]=qm[j][i]+b[j][p]*k[p][i];
+		  xm[j][i]=xm[j][i]+b[j][p]*k[p][i];
 		}
 	    }
 	}
@@ -185,7 +194,7 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
 	{
 	  for(j=0; j<6; j++)
 	    {
-	      q4[i]=q4[i]+c4[j]*k[j][i];
+	      x4[i]=x4[i]+c4[j]*k[j][i];
 	    }
 	}
 
@@ -193,11 +202,11 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
 	{
 	  for(j=0; j<6; j++)
 	    {
-	      q5[i]=q5[i]+c5[j]*k[j][i];
+	      x5[i]=x5[i]+c5[j]*k[j][i];
 	    }
 	}
    
-      error=fabs(pow(q5[0]*q5[0]+q5[1]*q5[1]+q5[2]*q5[2],1./2.)-pow(q4[0]*q4[0]+q4[1]*q4[1]+q4[2]*q4[2],1./2.))/pow(q5[0]*q5[0]+q5[1]*q5[1]+q5[2]*q5[2],1./2.);
+      error=fabs(pow(x5[0]*x5[0]+x5[1]*x5[1]+x5[2]*x5[2],1./2.)-pow(x4[0]*x4[0]+x4[1]*x4[1]+x4[2]*x4[2],1./2.))/pow(x5[0]*x5[0]+x5[1]*x5[1]+x5[2]*x5[2],1./2.);
    
     
   if(error>desiredErrorMax)
@@ -213,7 +222,7 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
 
   for(i=0; i<6; i++)
     {
-      q[i]=q5[i];
+      x[i]=x5[i];
     }
 
   t=t+dt;
@@ -222,11 +231,11 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
 
 
 //Asymptotic energy
-double asymptoticEnergy(double* q)
+double asymptoticEnergy(const state_type& x)
 {
   double vectPot=fieldAmpl/pulsation*sin(pulsation*t+phase);
-  double Vsq=q[3]*q[3]+q[4]*q[4]+(q[5]+vectPot)*(q[5]+vectPot);
-  double dist=sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter);
+  double Vsq=x[3]*x[3]+x[4]*x[4]+(x[5]+vectPot)*(x[5]+vectPot);
+  double dist=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+softParameter*softParameter);
   double E=Vsq/2-Z/dist;
 
   return E;
@@ -298,7 +307,7 @@ void setRhoBirth()
 
 
 //We build the function which sets the initial conditions
-void IC(double* q) 
+void IC(state_type& x) 
 {
 
   //We set the initial time tBirth
@@ -320,13 +329,13 @@ void IC(double* q)
   vPerp=6E-5;
 
   //We set the IC
-  q[0]=0.;
-  q[1]=0.;
-  q[2]=rhoBirth;
-  q[3]=vPerp;
-  q[4]=0.;
-  q[5]=0.;
- 
+  x[0]=0.;
+  x[1]=0.;
+  x[2]=rhoBirth;
+  x[3]=vPerp;
+  x[4]=0.;
+  x[5]=0.;
+
  }
 
 //We set the number of point for the trajectory
@@ -356,10 +365,10 @@ void storeDataBinning()
   int range;
   
   //We compute the x value of the new point in the histogram
-  range=int(asymptoticEnergy(q)/binsWidth);
+  range=int(asymptoticEnergy(x)/binsWidth);
   
   if(range<=0) return;
-  //  if(asymptoticVelocity(q)>10.) return;
+  //  if(asymptoticVelocity(x)>10.) return;
 
   //We declare a container of map type
       //It can contains pairs with are couple of objects
@@ -449,7 +458,7 @@ static inline void loadbar(int i, int np)
   cout<<"rhoBirth= "<<rhoBirth<<endl;
   cout<<"ponderomotriveMin= "<<fieldBirth*fieldBirth/4./pulsation/pulsation<<"      "<<endl;
   cout<<"ponderomotriveMax= "<<fieldAmpl*fieldAmpl/4./pulsation/pulsation<<"       "<<endl;      
-  cout<<"asymptoticEnergy= "<<asymptoticEnergy(q)<<endl;
+  cout<<"asymptoticEnergy= "<<asymptoticEnergy(x)<<endl;
   cout<<"weight= "<<weight<<"        "<<endl;
   cout<<"phaseBirth= "<<pulsation*tBirth*180./M_PI<<"    "<<endl;
   cout<<"vPerp= "<<vPerp<<endl;
@@ -472,20 +481,23 @@ int main()
   //second, for each perpendicular velocity along yPrime
   //third, for each perpendicular velocity along zPrime
 
-  for(iField=0; iField<=nField; iField++)
+    Coulomb m_coulomb("withField");
+
+  for(iField=1; iField<=nField; iField++)
     {
-      for(iVPerp=0; iVPerp<=nVPerp; iVPerp++)
+      for(iVPerp=1; iVPerp<=nVPerp; iVPerp++)
 	{
 	  
 	  //We call the function which will fix the initial condition
-	  IC(q);
- cout<<" "<<endl;
- cout<<" "<<endl;
- cout<<" "<<endl;
- cout<<" "<<endl;
- cout<<" "<<endl;
- cout<<" "<<endl;
+	  IC(x);
 
+ cout<<" "<<endl;
+ cout<<" "<<endl;
+ cout<<" "<<endl;
+ cout<<" "<<endl;
+ cout<<" "<<endl;
+ cout<<" "<<endl;
+   
 	  //We set the number of points for the trajectory
 	  setTrajParameters();
 	   
@@ -505,21 +517,21 @@ int main()
 	    { 
 		  
 	      //We call the function which solve eq of the motion
-	      rk5(coulomb_field,q,t,dt,error,desiredErrorMin,desiredErrorMax);
+	      rk5(m_coulomb,x,t,dt,error,desiredErrorMin,desiredErrorMax);
 
 
-	      dat<<q[0]<<" "<<q[1]<<" "<<q[2]<<" "<<t<<" "<<asymptoticEnergy(q)<<endl;
+	      dat<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<t<<" "<<asymptoticEnergy(x)<<endl;
 
 	      //We stop when the electron is fully ionized
-	      if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])>600.)
+	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>600.)
 		stopStepper=false;
 
 	      if((t-tBirth)>500.)
 		stopStepper=false;
 
 
-	      if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])<distMin) 
-		distMin=sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]);
+	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])<distMin) 
+		distMin=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
 
 	      if(error>errorMax)
 		errorMax=error;
@@ -536,7 +548,7 @@ int main()
 		  cout<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F";
 		  cout<<"distMin= "<<distMin<<endl;
 		  cout<<"softpar= "<<softParameter<<endl;
-		  cout<<"asymptoticEnergy= "<<asymptoticEnergy(q)<<endl;
+		  cout<<"asymptoticEnergy= "<<asymptoticEnergy(x)<<endl;
 		  cout<<"dt= "<<dt<<endl;
 		  cout<<"t= "<<t<<endl;
 			  cout<<"error= "<<error<<endl;

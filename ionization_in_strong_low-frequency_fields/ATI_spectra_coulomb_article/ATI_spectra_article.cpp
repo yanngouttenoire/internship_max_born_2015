@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<map>
 #include<iomanip>
+#include<vector>
 
 using namespace std;
 
@@ -27,7 +28,7 @@ double ellipticity=0.1;
 double Z=1.; //Positive charge of the nucleus
 
 //We declare a softening parameter for the soft coulomb potential
-double softParameter=0.1;
+double softParameter=0.;
 
 //We consider the rotating frame of reference (xPrime, yPrime, zPrime) where the electric field holds the xPrime direction
 double vPerp, weight;
@@ -35,17 +36,25 @@ int iField, iVPerp=0;
 int nField=100, nVPerp=100;
 
 //We fix the step
+int n=0;
 double dt=0.001; 
+double dtMin=1E-20;
+bool isdtMin;
+int dtMinNbr=0;
+int spectraPointsNbr=0;
 
 //We declare runge kutta error, its max, its min and the desired error (desired accuracy) 
 double error;
 double errorMax=1E-25;
-double desiredErrorMax=1E-10;
+double desiredErrorMax=1E-13;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare the number of points for trajectories
 int nBirth;
 int nEnd;
+
+//We control the stepper loop
+bool stopStepper;
 
 //We declare a variable for the initial time
 double tBirth;
@@ -55,13 +64,13 @@ double fieldBirth;
 
 //We declare a variable for the electron position after tunneling
 double rhoBirth;
-double rhoBirthOld;
 
 //We create the time variable
 double t;
 
 //We create the array in which we will store the orbit
-double* q=new double[6];
+typedef vector<double> state_type;
+state_type x(6);
 
 //We declare containers which will contains electron spectra
 map<int,double> asymptVel;
@@ -78,40 +87,45 @@ fstream dat("data.dat",ios::out);
 
 
 //Ordinary differential equations of the dynamic of an electron in coulomb potential 
-void coulomb(double* q, double t, double* qp)
+class Coulomb
 {
-  double K=Z;
+  double K;
+  double field[3];
+  string whichField;
 
-  double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter,3./2.); 
-  qp[0]=q[3];
-  qp[1]=q[4];
-  qp[2]=q[5];
-  qp[3]=-K*q[0]/a;
-  qp[4]=-K*q[1]/a;
-  qp[5]=-K*q[2]/a;
+public:
+  Coulomb(string whichField="withoutField") : whichField(whichField)
+  { 
+    K=Z;
+    double field[3]={0.,0.,0.};
+  }
 
-}
+    void operator() ( const state_type &x , state_type &dxdt , const double  t  )
+    {      
 
-//We add the electric field
-void coulomb_field(double* q, double t, double* qp)
-{
-  double K=Z;
- 
-  double a=pow(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter,3./2.);
-  qp[0]=q[3];
-  qp[1]=q[4];
-  qp[2]=q[5];
-  qp[3]=-K*q[0]/a-fieldAmpl*cos(pulsation*t+phase);
-  qp[4]=-K*q[1]/a;
-  qp[5]=-K*q[2]/a;
+    //If it has been requested, we switch on the electric field
+ if(whichField=="withField")
+      {
+	field[0]=0.;
+	field[1]=0.;
+	field[2]=-fieldAmpl*cos(pulsation*t+phase);
+      }
 
-}
-
+    double a=pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],3./2.); 
+    dxdt[0]=x[3];
+    dxdt[1]=x[4];
+    dxdt[2]=x[5];
+    dxdt[3]=-K*x[0]/a+field[0];
+    dxdt[4]=-K*x[1]/a+field[1];
+    dxdt[5]=-K*x[2]/a+field[2];
+    }
+};
 
 //We implement the rk5 iteration for the integration of ode
 //We also imprement a embedded rk4 with a view to computing the error and then to adapting the step size
 //http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c16-2.pdf
-void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax)
+template<typename System>
+void rk5(System &system, state_type& x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax)
 {
 
   //yn+1=yn+c0*k0+c1*k1+c2*k2+c3*k3+c4*k4+c5*k5
@@ -123,8 +137,10 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
   //k5=dt*f(xn+a5*dt,yn+b50*k0+b51*k1+b52*k2+b53*k3+b54*k4)
 
   int i,j,p;
-  double qp[6][6];
-  double qm[7][6];
+ // double dxdt[6][6];
+vector<state_type> dxdt(6, state_type(6));
+  //double xm[7][6];
+vector<state_type> xm(7, state_type(7));
   double k[6][6];
 
   double a[6]={0.,1/5.,3/10.,3/5.,1.,7/8.};
@@ -136,35 +152,35 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
   double c4[6]={2825/27648.,0.,18575/48384.,13525/55296.,277/14336.,1/4.};
 
 
-  double q4[6];
-  double q5[6];
+  double x4[6];
+  double x5[6];
 
  do
     {
      
   for(i=0; i<6; i++)
     {
-      q4[i]=q[i];
-      q5[i]=q[i];
+      x4[i]=x[i];
+      x5[i]=x[i];
     }
 
        for(i=0; i<6; i++)
 	{
-	  qm[0][i]=q[i];
+	  xm[0][i]=x[i];
 	}
    
       for(j=1 ; j<=6; j++)
 	{
-	  diff(qm[j-1],t+dt*a[j-1],qp[j-1]);
+	  system(xm[j-1],dxdt[j-1],t+dt*a[j-1]);
       
 	  for(i=0; i<6; i++)
 	    {
-	      qm[j][i]=q[i];
-	      k[j-1][i]=dt*qp[j-1][i];
+	      xm[j][i]=x[i];
+	      k[j-1][i]=dt*dxdt[j-1][i];
 
 	      for(p=0; p<j && j<6 ; p++)
 		{
-		  qm[j][i]=qm[j][i]+b[j][p]*k[p][i];
+		  xm[j][i]=xm[j][i]+b[j][p]*k[p][i];
 		}
 	    }
 	}
@@ -173,7 +189,7 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
 	{
 	  for(j=0; j<6; j++)
 	    {
-	      q4[i]=q4[i]+c4[j]*k[j][i];
+	      x4[i]=x4[i]+c4[j]*k[j][i];
 	    }
 	}
 
@@ -181,11 +197,11 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
 	{
 	  for(j=0; j<6; j++)
 	    {
-	      q5[i]=q5[i]+c5[j]*k[j][i];
+	      x5[i]=x5[i]+c5[j]*k[j][i];
 	    }
 	}
    
-      error=fabs(pow(q5[0]*q5[0]+q5[1]*q5[1]+q5[2]*q5[2],1./2.)-pow(q4[0]*q4[0]+q4[1]*q4[1]+q4[2]*q4[2],1./2.))/pow(q5[0]*q5[0]+q5[1]*q5[1]+q5[2]*q5[2],1./2.);
+      error=fabs(pow(x5[0]*x5[0]+x5[1]*x5[1]+x5[2]*x5[2],1./2.)-pow(x4[0]*x4[0]+x4[1]*x4[1]+x4[2]*x4[2],1./2.))/pow(x5[0]*x5[0]+x5[1]*x5[1]+x5[2]*x5[2],1./2.);
    
     
   if(error>desiredErrorMax)
@@ -201,7 +217,7 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
 
   for(i=0; i<6; i++)
     {
-      q[i]=q5[i];
+      x[i]=x5[i];
     }
 
   t=t+dt;
@@ -209,40 +225,21 @@ void rk5(void (&diff)(double*,double,double*), double* q, double &t, double &dt,
 }
 
 
-//We compute the asymptoticVelocity
-double asymptoticVelocityOld(double* q)
-{
-
-  double Vsq=q[3]*q[3]+q[4]*q[4]+q[5]*q[5];
-  double dist=sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter);
-  double asymptVsq=Vsq-2.*Z/dist;
-
-  if(asymptVsq<0)
-    return 0.;
-else
-  return sqrt(asymptVsq);
-
-}
-
-
-//We compute the asymptoticVelocity according the article
-double asymptoticVelocity(double* q)
+//Asymptotic energy
+double asymptoticEnergy(const state_type &x)
 {
   double vectPot=fieldAmpl/pulsation*sin(pulsation*t+phase);
-  double Vsq=(q[3]+vectPot)*(q[3]+vectPot)+q[4]*q[4]+q[5]*q[5];
-  double dist=sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+softParameter*softParameter);
-  double asymptVsq=Vsq-2.*Z/dist;
+  double Vsq=x[3]*x[3]+x[4]*x[4]+(x[5]+vectPot)*(x[5]+vectPot);
+  double dist=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+softParameter*softParameter);
+  double E=Vsq/2-Z/dist;
 
-  if(asymptVsq<0)
-    return 0.;
-else
-  return sqrt(asymptVsq);
+  return E;
 
 }
-
+       
 
 //We set the initial perpendicular velocity
-void setInitialVPerp()
+void setVPerpBirth()
 {
 
   //Width of the velocity distributions after tunneling
@@ -252,9 +249,10 @@ void setInitialVPerp()
   vPerp=2.*double(iVPerp)/double(nVPerp)*sigma_V;
   vPerp=2.*vPerp/4.;
 
+
   //Ionization rate with a given field and a given transverse velocity according ADK distribution
   //REF: J. Liu, Classical Trajectory Perspective of Atomic Ionization in Strong Laser Fields
-  weight=4./fieldBirth*exp(-2.*pow(2.*IP,3./2.)/3./fieldBirth)*fabs(vPerp)/fieldBirth*exp(-pow(2.*IP,1./2.)*vPerp*vPerp/fieldBirth);
+  weight=4./fieldBirth*exp(-2.*pow(2.*IP,3./2.)/3./fieldBirth)*fabs(vPerp)/fieldBirth/M_PI*exp(-pow(2.*IP,1./2.)*vPerp*vPerp/fieldBirth);
 
 }
 
@@ -263,7 +261,7 @@ void setTBirth()
 {
 
   //We set the initial time tBirth with a view to scanning the phase values from -pi/4 to pi/4
-  tBirth=-M_PI/4./pulsation+double(iField)/double(nField)*M_PI/2./pulsation;
+   tBirth=-M_PI/4./pulsation+double(iField)/double(nField)*M_PI/2./pulsation;
 
 }
 
@@ -275,82 +273,64 @@ void setFieldBirth()
   fieldBirth=fieldAmpl*cos(pulsation*tBirth+phase);
   fieldBirth=fabs(fieldBirth);
 
-  /*if(fieldBirth<1E-7)
-    fieldBirth=1E-7;*/
-
 }
 
-//We set the electron position after tunneling
-void setRhoBirth()
-{
- 
-  double rhoBirthSq=IP*IP-4*Z*fabs(fieldBirth);
-  rhoBirth=sqrt(IP*IP-4*Z*fabs(fieldBirth));
-  rhoBirth=(rhoBirth+IP)/(fieldBirth)/2.; 
-
-}
 
 //We set the electron position after tunneling according the article
-void setRhoBirthArt()
+void setRhoBirth()
 {
-  /*
- double q,p,s,theta,eta,e;
- e=fieldBirth;
-  
- p=-1./3./e/e+2./e;
- q=-2./9./e/e/e+2./3/e/e+1/e;
- s=sqrt(-pow(p/3.,3));
- theta=1/3.*acos(-q/2./s);
- eta=1/3./e+2.*pow(s,-3./2.)*cos(theta);
 
- rhoBirth=fabs(eta/2.);
- cout<<" e= "<<e<<" p= "<<p<<" q= "<<q<<" s= "<<s<<" theta= "<<theta<<" eta= "<<eta<<" rhoBirth= "<<rhoBirth<<endl;
-  */
-
+  //We set the initial field value
+  double  fieldBirth=fieldAmpl*cos(pulsation*tBirth+phase);
+  fieldBirth=fabs(fieldBirth);
 
   // we find the root of the function which gives us the position of the electron after tunneling
- double x=100.;
- for(int k=0; k<=50; k++)                              
-	{
-	  x=x-(-1./4./x-1./8./x/x-1./8.*fabs(fieldBirth)*x+1./8.)/(+1./4./x/x+1./4./x/x/x-fabs(fieldBirth)/8.);
-	}
+  double x=100.;
 
- rhoBirth=-x/2.*fabs(fieldBirth)/fieldBirth;
-
+  for(int k=0; k<50; k++)                       
+    {
+       x=x-(-1./4./x-1./8./x/x-1./8.*fabs(fieldBirth)*x+1./8.)/(+1./4./x/x+1./4./x/x/x-fabs(fieldBirth)/8.);
+    }
+ 
+  rhoBirth=-x/2.*fabs(fieldBirth)/fieldBirth;
 
 }
 
+
+
+
 //We build the function which sets the initial conditions
-void IC(double* q) 
+void IC(state_type &x) 
 {
 
   //We set the initial time tBirth
   setTBirth();
+  // tBirth=0.;
+
   t=tBirth; 
 
   //We set the initial field value
   setFieldBirth();
- 
-  //We set the electron position after tunneling
-  setRhoBirthArt();
+  // fieldBirth=0.06;
 
-  double rhoBirthSq=IP*IP-4*Z*fabs(fieldBirth);
-  rhoBirthOld=sqrt(IP*IP-4*Z*fabs(fieldBirth));
-  rhoBirthOld=(rhoBirth+IP)/(fieldBirth)/2.; 
+  //We set the electron position after tunneling
+  setRhoBirth();
 
   //We set vPerp and the weight associated for the two directions perpendicular to the field       
-  setInitialVPerp();
+  setVPerpBirth();
  
+  // vPerp=6E-5;
+
   //We set the IC
-  q[0]=rhoBirth;
-  q[1]=0.;
-  q[2]=0.;
-  q[3]=0.;
-  q[4]=vPerp;
-  q[5]=0.;
+  x[0]=0.;
+  x[1]=0.;
+  x[2]=rhoBirth;
+  x[3]=vPerp;
+  x[4]=0.;
+  x[5]=0.;
+ 
+ }
 
-
-}
 
 //We set the number of point for the trajectory
 void setTrajParameters()
@@ -360,7 +340,7 @@ void setTrajParameters()
 }
 
 //We set the histogram intervals width
-void setBinsWidth(int binsNumber=10000)
+void setBinsWidth(int binsNumber=100)
 {
 
   double ponderomotiveEnergy=fieldAmpl*fieldAmpl/4./pulsation/pulsation;
@@ -368,35 +348,38 @@ void setBinsWidth(int binsNumber=10000)
 
 }
 
+
+
 //We store asymptotic velocities in containers of map type
 void storeDataBinning()
 {
 
   setBinsWidth();
 
-  double asymptoticEnergy=asymptoticVelocity(q)*asymptoticVelocity(q)/2.;
   int range;
   
-      //We compute the x value of the new point in the histogram
-  range=int(asymptoticEnergy/binsWidth);
-      
-     if(range==0) return;
-      //  if(asymptoticVelocity(q)>10.) return;
+  //We compute the x value of the new point in the histogram
+  range=int(asymptoticEnergy(x)/binsWidth);
+  
+  if(range<=0 || isdtMin) return;
+  //  if(asymptoticVelocity(x)>10.) return;
 
-      //We declare a container of map type
+  //We declare a container of map type
       //It can contains pairs with are couple of objects
       //First the range, second the asymptic velocity value
 
-      map<int,double>::iterator findRange= asymptVel.find(range);
-   
-      if(findRange==asymptVel.end())
-	{
-	  asymptVel[range]=weight;
-	}
-      else
-	{
-	  asymptVel[range]=asymptVel[range]+weight;
-	}
+  map<int,double>::iterator findRange= asymptVel.find(range);
+     
+  spectraPointsNbr++;
+    
+  if(findRange==asymptVel.end())
+    {
+      asymptVel[range]=weight;
+    }
+  else
+    {
+      asymptVel[range]=asymptVel[range]+weight;
+    }
 }
 
 //Finally we write all the data binning in a file
@@ -405,12 +388,20 @@ void writeDataBinning()
   
   map<int,double>::iterator it= asymptVel.begin();
 
+  //We normalize the distribution law
+  double sum=0.;
   for(1; it!=asymptVel.end(); it++)
     {
-      dat<<(it->first)*binsWidth<<" "<<log10(it->second)<<endl;
+          sum=sum+it->second;
+    }
+
+  for(it=asymptVel.begin(); it!=asymptVel.end(); it++)
+    {
+      dat<<(it->first)*binsWidth<<" "<<log10( (it->second)/sum )<<endl;
     }
 
 }
+
 
        
 //We implement a load bar with a view to displaying the remaining time
@@ -437,7 +428,7 @@ static inline void loadbar(int i, int np)
  
   int s=cout.precision();
 
-  cout<<"\r"<<"progression= "<<setprecision(3)<<p<<"%"<<setprecision(s)<<"                "<<endl;
+  cout<<"progression= "<<setprecision(3)<<p<<"%"<<setprecision(s)<<"                "<<endl;
  
   //second top
   time_t end = time (NULL);         
@@ -465,17 +456,16 @@ static inline void loadbar(int i, int np)
       Z3=0;
     }
 
-  cout<<"\r"<<"estimated remaining time= "<<Z1<<" h "<<Z2<<" min "<<Z3<<" s "<<"    "<<endl;
+  cout<<"estimated remaining time= "<<Z1<<" h "<<Z2<<" min "<<Z3<<" s "<<"    "<<endl;
 
-  cout<<"rhoBirthArt= "<<rhoBirth<<" rhoBirthOld= "<<rhoBirthOld<<" diff= "<<rhoBirth-rhoBirthOld<<"      "<<endl;
-  cout<<"ponderomotriveMin= "<<fieldBirth*fieldBirth/4./pulsation/pulsation<<"      "<<endl;
-  cout<<"ponderomotriveMax= "<<fieldAmpl*fieldAmpl/4./pulsation/pulsation<<"       "<<endl;      
-  cout<<"asymptoticVelocityArt= "<<asymptoticVelocity(q)<<" asymptoticVelocityOld= "<<asymptoticVelocityOld(q)<<" diff= "<<asymptoticVelocity(q)-asymptoticVelocityOld(q)<<"          "<<endl;
-  cout<<"asymptoticEnergy= "<<asymptoticVelocity(q)*asymptoticVelocity(q)/2.<<endl;
+  cout<<"rhoBirth= "<<rhoBirth<<endl;
+  cout<<"ponderomotriveBirth= "<<fieldAmpl*fieldAmpl/4./pulsation/pulsation<<"       "<<endl;      
+  cout<<"asymptoticEnergy= "<<asymptoticEnergy(x)<<endl;
   cout<<"weight= "<<weight<<"        "<<endl;
   cout<<"phaseBirth= "<<pulsation*tBirth*180./M_PI<<"    "<<endl;
   cout<<"vPerp= "<<vPerp<<endl;
-
+  cout<<"dtMinNbr= "<<dtMinNbr<<" pointsNbr= "<<n-nBirth<<endl;
+  cout<<"spectraPointsNbr= "<<spectraPointsNbr<<" up to "<<nField*nVPerp<<endl;
   //We ask the cursor to go three lines up
   if(int(i)!=int(np))
     cout<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F"<<"\033[F";
@@ -493,38 +483,60 @@ int main()
   //second, for each perpendicular velocity along yPrime
   //third, for each perpendicular velocity along zPrime
 
-  for(iField=0; iField<=nField; iField++)
+  cout<<"opticalCycle= "<<opticalCycle<<endl;
+Coulomb m_coulomb("withField");	
+
+  for(iField=1; iField<=nField; iField++)
     {
-      for(iVPerp=0; iVPerp<=nVPerp; iVPerp++)
+      for(iVPerp=1; iVPerp<=nVPerp; iVPerp++)
 	{
 	  
 	  //We call the function which will fix the initial condition
-	  IC(q);
+	  IC(x);
 
-	  //We set the number of points for the trajectory
-	  setTrajParameters();
-	   
 	  //We compute the trajectory
 	  //No final loop control variable: the loop stops when the electron is completely ionized
+	
 	  //We declare a boolean variable	  
-	  bool stop=true;
-	  for(int n=nBirth; stop  ; n++)
+	  stopStepper=true; 
+	  isdtMin=false;
+
+	  double distMin=100.;
+	    for(n=nBirth; stopStepper ; n++)
 	    { 
 		  
 	      //We call the function which solve eq of the motion
-	      rk5(coulomb_field,q,t,dt,error,desiredErrorMin,desiredErrorMax);
+	      rk5(m_coulomb,x,t,dt,error,desiredErrorMin,desiredErrorMax);
 
-	      // if(nBirth%100==0) {cout<<"\033[F"<<"+1";}
+
+	      //  dat<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<t<<" "<<asymptoticEnergy(x)<<endl;
 
 	      //We stop when the electron is fully ionized
-	      if(sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2])>250.) stop=false;
+	      /* if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>600.)
+		 stopStepper=false;*/
 
-	      //  if(t>100.*opticalCycle || n>1E6) stop=false;
+	      if((t-tBirth)>500.)
+		stopStepper=false;
+
+
+	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])<distMin) 
+		distMin=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
+
+
+	      if(dt<dtMin)
+		{
+		  stopStepper=false;
+		  isdtMin=true;
+		}
+
 	    }
 
 	  //We store the asymptotic velocity in a container of map type with a view to make a data binning
 	  storeDataBinning();
-	      
+	         
+	    if(isdtMin==true)
+	      dtMinNbr+=1;
+
 	  //We update the load bar
 	  loadbar(iVPerp+(iField-1)*nVPerp, nField*nVPerp);
 
@@ -532,7 +544,8 @@ int main()
     }
 
   //Finally we write the data binning in a file
-  writeDataBinning();
+   writeDataBinning();
+
 
   //We display the spectra with gnuplot
 
@@ -541,8 +554,9 @@ int main()
 
   gnu<<"set xtics rotate out"<<endl;
   gnu<<"set multiplot  layout 1, 1"<<endl;
-  gnu<<"set key on outside left bmargin box title 'nField="<<nField<<", nVPerp="<<nVPerp<<", dt="<<dt<<"'"<<endl;
-  gnu<<"plot 'data.dat' using 1:2 w l title 'Spectra'"<<endl;
+  gnu<<"set key on outside left bmargin box title 'nField="<<nField<<", nVPerp="<<nVPerp<<", dt="<<dt<<"'"<<endl; 
+  gnu<<"plot 'data.dat' using 1:2  title 'Spectra'"<<endl;
+  // gnu<<"plot 'data.dat' index 0 using 4:5 title 'trajectories'"<<endl;
   gnu<<"unset multiplot"<<endl;
   gnu<<"pause -1"<<endl;
   gnu<<"set terminal postscript eps enhanced color font 'Helvetica,10'"<<endl;
