@@ -33,7 +33,7 @@ double softParameter=0.;
 //We consider the rotating frame of reference (xPrime, yPrime, zPrime) where the electric field holds the xPrime direction
 double vPerp, weight;
 int iField, iVPerp=0;
-int nField=100, nVPerp=100;
+int nField=2000, nVPerp=10000;
 
 //We fix the step
 int n=0;
@@ -100,7 +100,8 @@ public:
     double field[3]={0.,0.,0.};
   }
 
-    void operator() ( const state_type &x , state_type &dxdt , const double  t  )
+  template<typename T>
+    void operator() (const T &x , T &dxdt , const double  t)
     {      
 
     //If it has been requested, we switch on the electric field
@@ -137,10 +138,8 @@ void rk5(System &system, state_type& x, double &t, double &dt, double &error, do
   //k5=dt*f(xn+a5*dt,yn+b50*k0+b51*k1+b52*k2+b53*k3+b54*k4)
 
   int i,j,p;
- // double dxdt[6][6];
-vector<state_type> dxdt(6, state_type(6));
-  //double xm[7][6];
-vector<state_type> xm(7, state_type(7));
+  double dxdt[6][6];
+  double xm[7][6];
   double k[6][6];
 
   double a[6]={0.,1/5.,3/10.,3/5.,1.,7/8.};
@@ -361,7 +360,7 @@ void storeDataBinning()
   //We compute the x value of the new point in the histogram
   range=int(asymptoticEnergy(x)/binsWidth);
   
-  if(range<=0 || isdtMin) return;
+  if(range<0 || isdtMin) return;
   //  if(asymptoticVelocity(x)>10.) return;
 
   //We declare a container of map type
@@ -538,6 +537,7 @@ Coulomb m_coulomb("withField");
 	      dtMinNbr+=1;
 
 	  //We update the load bar
+	    if(iVPerp%100==0)
 	  loadbar(iVPerp+(iField-1)*nVPerp, nField*nVPerp);
 
 	}
