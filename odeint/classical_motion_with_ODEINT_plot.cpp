@@ -24,10 +24,12 @@ double phase=0;
 double ellipticity=0.1;
 double Z=1.; //Positive charge of the nucleus
 
-typedef vector<double> state_type;
+  typedef vector<double> state_type;
+
 
   //We create the array in which we will store the orbit
   state_type x(6);
+
 
   //We create the time variable
   double t;
@@ -194,7 +196,7 @@ int main()
   // integrate_adapt
   typedef controlled_runge_kutta< error_stepper_type > controlled_stepper_type;   // controlled_stepper_type controlled_stepper;
 
-  double abs_err = 1.0e-10 , rel_err = 1.0e-30 , a_x = 1.0 , a_dxdt = 1.0;
+  double abs_err = 1.0e-6 , rel_err = 1.0e-6 , a_x = 1.0 , a_dxdt = 1.0;
   controlled_stepper_type controlled_stepper(default_error_checker< double , range_algebra , default_operations >( abs_err , rel_err , a_x , a_dxdt ) );
 
 
@@ -208,7 +210,7 @@ int main()
 
 	//We call the rk4 function which solve eq of the motion
 
-  steps=integrate_adaptive( controlled_stepper , m_coulomb , x , 0.0 , 100.0 , dt,  push_back_state_and_time( x_vec , times ) );
+  steps=integrate_adaptive( controlled_stepper , m_coulomb , x , 0.0 , 10.0 , dt,  push_back_state_and_time( x_vec , times ) );
 
     // steps = integrate(m_coulomb ,  x , 0.0 , 600.0 , 0.0001, push_back_state_and_time( x_vec , times )  );
 

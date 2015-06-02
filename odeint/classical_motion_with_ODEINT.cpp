@@ -215,10 +215,7 @@ void IC(state_type& x)
   //We set the IC
 
    vPerp=6E-5;
-   //0.000304043 0 -0.000524244 -14.5082 0 55.61  
 
-   rhoBirth=0.1;
-   vPerp=0.123;
    
       x[0]=0.;
       x[1]=0.;
@@ -226,15 +223,7 @@ void IC(state_type& x)
       x[3]=vPerp;
       x[4]=0.;
       x[5]=0.;
-      /*
-    x[0]=0.000304043;
-   x[1]=0.;
-   x[2]=-0.000524244;
-   x[3]=-14.5082;
-   x[4]=0.;
-   x[5]=55.61;
-      */
-
+  
 }
 
 
@@ -393,10 +382,13 @@ int main()
    typedef runge_kutta_fehlberg78< state_type > error_stepper_type;
 
   // integrate_adapt
-  typedef controlled_runge_kutta< error_stepper_type > controlled_stepper_type;
-  controlled_stepper_type controlled_stepper(1.0E-6);
+   typedef controlled_runge_kutta< error_stepper_type > controlled_stepper_type;
 
-  coulomb m_coulomb("withoutField");
+   //We choose the accuracy (error tolerance)
+   double abs_err = 1.0e-20 , rel_err = 1.0e-30 , a_x = 1.0 , a_dxdt = 1.0;
+   controlled_stepper_type controlled_stepper(default_error_checker< double , range_algebra , default_operations >( abs_err , rel_err , a_x , a_dxdt ) );
+
+   coulomb m_coulomb("withField");
    
   vector<state_type> x_vec;
   vector<double> times;
@@ -431,7 +423,7 @@ int main()
 	  {
 	    dat<<x_vec[j][i]<<"\t";
 	  }
-	  /*	  dat<<times[j]<<"\t"<<-fieldAmpl*cos(pulsation*times[j]+phase)<<"\t"<<energy(x_vec[j])<<"\t"<<asymptoticEnergy(x_vec[j])<<"\t"<<fabs(energy(x_vec[j])-asymptoticEnergy(x_vec[j]));*/
+	  dat<<times[j]<<"\t"<<asymptoticEnergy(x_vec[j]);
 	  dat<<" "<<endl;
 	  }
 	  
@@ -446,7 +438,6 @@ int main()
 	  
 	}
     }
-
 
 
 
