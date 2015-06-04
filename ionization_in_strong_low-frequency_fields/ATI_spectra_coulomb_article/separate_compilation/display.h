@@ -15,9 +15,10 @@
 class Display
 {
 
-int displayCounter;
-
 public:
+
+int displayCounter;
+std::string elapsedTime;
 
 Display() {displayCounter=0;};
 
@@ -29,12 +30,17 @@ void loadbar(int currentPoint, int finalPoint);
 
 //We implement a method which outputs a data in the terminal
 template<typename T>
-void display(T &data)
+void operator()(std::string dataName, const T& data, std::string unit="")
 {
-  std::cout<<quote(data)<<"= "<<data<<std::endl;
+  std::cout<<dataName<<"= "<<data<<" "<<unit<<"                  "<<std::endl;
   displayCounter++;	
 }
 
+void operator()(std::string data)
+{
+  std::cout<<data<<std::endl;
+  displayCounter++;	
+}
 
 };
 

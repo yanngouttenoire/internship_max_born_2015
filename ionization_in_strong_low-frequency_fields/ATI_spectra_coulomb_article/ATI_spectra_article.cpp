@@ -33,7 +33,7 @@ double softParameter=0.;
 //We consider the rotating frame of reference (xPrime, yPrime, zPrime) where the electric field holds the xPrime direction
 double vPerp, weight;
 int iField, iVPerp=0;
-int nField=2000, nVPerp=10000;
+int nField=100, nVPerp=1000;
 
 //We fix the step
 int n=0;

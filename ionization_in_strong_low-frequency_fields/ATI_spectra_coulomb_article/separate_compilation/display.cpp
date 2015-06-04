@@ -1,7 +1,6 @@
 #include<sstream>
 
 #include"display.h"
-#include"parameters.h"
 
 
 using namespace std;

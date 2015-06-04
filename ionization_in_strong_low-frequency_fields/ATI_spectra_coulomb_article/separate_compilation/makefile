@@ -1,6 +1,28 @@
-SOURCE=main.cpp ic.cpp system.cpp solve.cpp display.cpp spectra.cpp plot.cpp parameters.cpp
-CC=g++ -std=c++11 -w
-EXEC=a.out
+CC=g++ -std=c++0x
+CFLAGS=-W -Wall -ansi -pedantic
+LDFLAGS=
+EXEC=exec.out
+SOURCE= $(wildcard *.cpp)
+OBJET= $(SOURCE:.cpp=.o)
+HEADER= $(wildcard *.h)
 
-compilation:
-	@ $(CC) $(SOURCE) $(LDFLAGS) -o $(EXEC) && ./$(EXEC)
+run: exec.out
+	@ ./exec.out
+
+exec.out: $(OBJET)
+	@ $(CC) -o $@ $^ $(LDFLAGS)
+
+main.o: $(HEADER)
+
+%.o: %.c
+	@ $(CC) -o $@ -c $< $(CFLAGS)
+
+.PHONY: clean mrproper run 
+
+clean:
+	@ rm -rf *.o
+
+mrproper: clean
+#	@ rm -rf $(EXEC)
+
+		

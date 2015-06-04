@@ -1,5 +1,3 @@
-#ifndef OBSERVER_H
-#define OBSERVER_H
 #include<iostream>
 #include<fstream>
 #include<math.h>
@@ -8,14 +6,8 @@
 #include<iomanip>
 #include<vector>
 
-class Observer
-{
+#include"electrostaticpotential.h"
 
-public:
-
+using namespace std;
 
 
-
-};
-
-#endif

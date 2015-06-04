@@ -9,27 +9,27 @@
 #include<vector>
 #include<string>
 
+#include"electricfield.h"
+#include"electrostaticpotential.h"
+
 //Ordinary differential equations of the dynamic of an electron in coulomb potential 
 template<typename state_type>
 class System
 {
-  //We declare the coulomb constant
-  double K;
-  //We declare a softening parameter in order to implement an eventual soft coulomb potential
-  double softParameter=0.;
+  //We declare an object of type ElectrostaticPotential for electrostatic potential properties
+  ElectrostaticPotential<state_type> myPotential;	
 
   //We declare field variables
-  double field[3];
-  std::string whichField;
+  ElectricField myField;		
 
   public:
 
   //Contructor 
-  System(std::string whichField);
+  System(ElectrostaticPotential<state_type> &myPotential, ElectricField &myField);
   
   //We implement the method which contains dynamic equations of motion
   //We overload the operator() for convenience interest
-  void operator() (const state_type &x , state_type &dxdt , const double  t);
+  void operator() (const state_type &x , state_type &dxdt , const double&  t);
 
 };
 
