@@ -3,7 +3,7 @@ using namespace std;
 
 
 //We display the spectra with gnuplot
-void Plot::gnuplot()
+void Plot::gnuplot(string dataFile, string columns, string title)
 {
 
 fstream gnuFile("data.gnu", ios::out);
@@ -26,7 +26,7 @@ gnuFile<<"\\n ";
 }
 gnuFile<<"\")"<<endl;
 
-gnuFile<<"plot 'data.dat' using 1:2 lc rgb 'violet' title 'Photo-electron spectrum with rk5 controlled stepper (rk4 embedded)'"<<endl;
+gnuFile<<"plot '"<<dataFile<<"' using "<<columns<<" w l rgb 'violet' title '"<<title<<"'"<<endl;
 gnuFile<<"unset multiplot"<<endl;
 
 gnuFile<<"pause -1"<<endl;

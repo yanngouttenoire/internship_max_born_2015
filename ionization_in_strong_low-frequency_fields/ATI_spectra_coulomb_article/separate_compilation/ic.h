@@ -57,7 +57,7 @@ void setVPerpBirth(int iVPerpBirth, int nVPerpBirth);
 void setRhoBirth();
 
 //We build the function which sets the initial conditions
-void setIC(state_type &x, double t);
+void setIC(state_type &x, double& t);
 
 
 };
@@ -81,6 +81,7 @@ void IC<state_type>::setTBirth(int iFieldBirth, int nFieldBirth)
 { 
 //We want to scan field phase values from -pi/4 to pi/4
 tBirth=-M_PI/4./myField.pulsation+double(iFieldBirth)/double(nFieldBirth)*M_PI/2./myField.pulsation;
+
 }
 
 
@@ -105,7 +106,6 @@ void IC<state_type>::setVPerpBirth(int iVPerpBirth, int nVPerpBirth)
   //Perpendicular velocity after tunneling
   vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V;
   vPerpBirth=2.*vPerpBirth/4.;
-
 
   //Ionization rate with a given field and a given transverse velocity according ADK distribution
   //REF: J. Liu, Classical Trajectory Perspective of Atomic Ionization in Strong Laser Fields
@@ -138,7 +138,7 @@ void IC<state_type>::setRhoBirth()
 
 //We build the function which sets the initial conditions
 template<typename state_type>
-void IC<state_type>::setIC(state_type &x, double t) 
+void IC<state_type>::setIC(state_type &x, double& t) 
 {
 
   //We set the initial time

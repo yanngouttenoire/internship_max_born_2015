@@ -24,7 +24,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=100, nVPerpBirth=1000;
+int nFieldBirth=100, nVPerpBirth=100;
 int iFieldBirth, iVPerpBirth;
 
 //We declare the time variable
@@ -38,7 +38,7 @@ state_type x(6);
 int nTraj;
 
 //We declare the duration during which we want to let the electron propagates 
-double trajDuration=500.;
+double trajDuration=5000.;
 
 //We declare a variable which will contain the minimum approach distance
 double distMin;
@@ -51,7 +51,7 @@ int dtMinReachedNbr=0;
 //We declare runge kutta error, its max allowed value, and the desired error min and max
 double error;
 double errorMax=1E-25;
-double desiredErrorMax=1E-13;
+double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare boolean controls
@@ -135,8 +135,14 @@ Plot myPlot;
 	      //We call the function which solve eq of the motion
 	      mySolve.controlledRK5(mySystem,x,t,dt,error,desiredErrorMin,desiredErrorMax);
 
+              //dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<t<<endl;	
+
 	      //The trajectory stops when the electron has sufficiently propagated 
 	      if((t-myIC.tBirth)>trajDuration)
+		stopStepper=false;
+
+             //We stop when the electron is fully ionized
+	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>600.)
 		stopStepper=false;
 
               //We look for the best approach (not important)
@@ -158,7 +164,7 @@ Plot myPlot;
 	      dtMinReachedNbr+=1;
 
 	  //We update the load bar and display some informations
-          if(iVPerpBirth%10==0)
+          if(iVPerpBirth%100==0)
           {
 	  myDisplay.loadbar(iVPerpBirth+(iFieldBirth-1)*nVPerpBirth, nFieldBirth*nVPerpBirth);
 	  myDisplay("distMin",distMin);
@@ -192,7 +198,7 @@ Plot myPlot;
    myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");
    myPlot.addKey("duration",myDisplay.elapsedTime);
  
-   myPlot.gnuplot();
+   myPlot.gnuplot("data.dat", "1:2", "Photo-electron spectrum with Runge-Kutta 5 + adaptative step-size");
 
 
   return 0;

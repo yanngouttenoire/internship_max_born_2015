@@ -22,12 +22,12 @@ double charge; //Positive charge of the nucleus
 double softParameter;
 
 //radial distance
-double radialDistance;
+double radialDistanceCube;
 
 //Constructor
 ElectrostaticPotential();
 
-//Method which sets the radial distance  (it is used to compute radialDistance in advance and then decrease the number of operations)
+//Method which sets the radial distance  (it is used to compute radialDistanceCube in advance and then decrease the number of operations)
 void preparePotential(const state_type &x);
 
 //Methods which return the coulomb force on each components 
@@ -56,7 +56,7 @@ softParameter=0.;
 template<typename state_type>
 void ElectrostaticPotential<state_type>::preparePotential(const state_type &x)
 {
-radialDistance=pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+softParameter*softParameter,3./2.); 
+radialDistanceCube=pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+softParameter*softParameter,3./2.); 
 }
 
 
@@ -67,13 +67,13 @@ double ElectrostaticPotential<state_type>::operator()(char component, const stat
 switch(component)
 {
 case 'X' :
-return -charge*x[0]/radialDistance;
+return -charge*x[0]/radialDistanceCube;
 
 case 'Y' :
-return -charge*x[1]/radialDistance;
+return -charge*x[1]/radialDistanceCube;
 
 case 'Z' :
-return -charge*x[2]/radialDistance;
+return -charge*x[2]/radialDistanceCube;
 }
 }
 

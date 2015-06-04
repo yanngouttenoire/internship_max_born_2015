@@ -40,9 +40,6 @@ Spectra(ElectrostaticPotential<state_type> myPotential, ElectricField myField, d
 //We compute the asymptotic energy
 double asymptoticEnergy(const state_type& x, const double& t);
 
-//We set the histogram intervals width
-void setBinsWidth(int binsNumber=100);
-
 //We store asymptotic velocities in containers of map type
 void storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const bool& inexpectedStop);
 

@@ -40,7 +40,7 @@ case 'Y' :
 return 0.;
 
 case 'Z' :
-return fieldAmpl*cos(pulsation*t+phase);
+return -fieldAmpl*cos(pulsation*t+phase);
 }
 }
 
