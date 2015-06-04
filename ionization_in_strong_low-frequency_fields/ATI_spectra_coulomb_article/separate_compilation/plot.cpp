@@ -3,7 +3,7 @@ using namespace std;
 
 
 //We display the spectra with gnuplot
-void Plot::gnuplot(string dataFile, string columns, string title)
+void Plot::gnuplot(string dataFile, string columns, string lineType, string title)
 {
 
 fstream gnuFile("data.gnu", ios::out);
@@ -26,7 +26,7 @@ gnuFile<<"\\n ";
 }
 gnuFile<<"\")"<<endl;
 
-gnuFile<<"plot '"<<dataFile<<"' using "<<columns<<" w l rgb 'violet' title '"<<title<<"'"<<endl;
+gnuFile<<"plot '"<<dataFile<<"' using "<<columns<<" "<<lineType<<" rgb 'violet' title '"<<title<<"'"<<endl;
 gnuFile<<"unset multiplot"<<endl;
 
 gnuFile<<"pause -1"<<endl;

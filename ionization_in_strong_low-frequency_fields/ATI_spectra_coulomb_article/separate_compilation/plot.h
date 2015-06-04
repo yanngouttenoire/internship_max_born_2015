@@ -35,7 +35,7 @@ legend.push_back(key);
 }
 
  //We display the spectra with gnuplot
- void gnuplot(std::string dataFile, std::string columns, std::string title);
+ void gnuplot(std::string dataFile, std::string columns, std::string lineType, std::string title);
 
 
 };

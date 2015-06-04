@@ -24,15 +24,15 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=100, nVPerpBirth=100;
+int nFieldBirth=10, nVPerpBirth=100;
 int iFieldBirth, iVPerpBirth;
 
 //We declare the time variable
 double t;
 
 //We declare the array in which we will store the orbit
-typedef vector<double> state_type;
-state_type x(6);
+typedef double state_type[6];
+state_type x;
 
 //We declare a variable which contains the current nbr of trajectories
 int nTraj;
@@ -198,7 +198,7 @@ Plot myPlot;
    myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");
    myPlot.addKey("duration",myDisplay.elapsedTime);
  
-   myPlot.gnuplot("data.dat", "1:2", "Photo-electron spectrum with Runge-Kutta 5 + adaptative step-size");
+   myPlot.gnuplot("data.dat", "1:2", "lc", "Photo-electron spectrum with Runge-Kutta 5 + adaptative step-size");
 
 
   return 0;

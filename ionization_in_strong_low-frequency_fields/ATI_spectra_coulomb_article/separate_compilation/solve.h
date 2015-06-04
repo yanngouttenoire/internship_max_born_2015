@@ -24,7 +24,7 @@ public:
 //The adaptive step-size algorithm uses Runge-Kutta of order 4 embedded in RK5
 //For more details: http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c16-2.pdf
 
-void controlledRK5(System<state_type> &system, state_type& x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax);
+void controlledRK5(System<state_type> &system, state_type &x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax);
 
 
 };
@@ -36,7 +36,7 @@ void controlledRK5(System<state_type> &system, state_type& x, double &t, double 
 //For more details: http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c16-2.pdf
 
 template<typename state_type>
-void Solve<state_type>::controlledRK5(System<state_type> &system, state_type& x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax)
+void Solve<state_type>::controlledRK5(System<state_type> &system, state_type &x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax)
 {
 
   //The iteration of yn is
@@ -53,10 +53,10 @@ void Solve<state_type>::controlledRK5(System<state_type> &system, state_type& x,
   //Temporary variables
   int i,j,p;
   double k[6][6];
-  std::vector<state_type> xm(7, state_type(7));
+  double xm[7][6];
 
   //First derivative of the ODE
-  std::vector<state_type> dxdt(6, state_type(6));
+  double dxdt[6][6];
  
   //Butcher's coefficients
 

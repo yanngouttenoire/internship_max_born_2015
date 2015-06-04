@@ -31,5 +31,5 @@ template<typename state_type>
 
 
 template class System <vector<double> >;
-template class System <double* >;
+template class System <double[6]>;
 //For more details about templates, see https://www.cs.umd.edu/class/fall2002/cmsc214/Projects/P2/proj2.temp.html
