@@ -175,6 +175,7 @@ Plot myPlot;
 	  myDisplay("distMin",distMin);
           myDisplay("rhoBirth",myIC.rhoBirth);
           myDisplay("phaseBirth",myField.pulsation*myIC.tBirth*180./M_PI);
+          myDisplay("vPerpBirth", myIC.vPerpBirth);
           myDisplay("vYPerpBirth", myIC.vYPerpBirth);
           myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
           myDisplay("step", dt);
@@ -184,7 +185,8 @@ Plot myPlot;
           myDisplay("asymptoticEnergy",mySpectra.asymptoticEnergy(x,t));
           myDisplay("weightIonization",myIC.weightIonization);
           myDisplay("spectraPointNbr", mySpectra.spectraPointsNbr);
-          myDisplay("dtMinReachedNbr", dtMinReachedNbr/mySpectra.spectraPointsNbr*100., "%");
+          myDisplay("ptsNumber", nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
+          myDisplay("dtMinReachedNbr", double(dtMinReachedNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 
           }
         }         
@@ -206,8 +208,10 @@ Plot myPlot;
    myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");
    myPlot.addKey("duration",myDisplay.elapsedTime);
  
-   myPlot.gnuplot("data.dat", "1:2", "lc", "Photo-electron spectrum with Runge-Kutta 5 + adaptative step-size");
+   myPlot.addPlot("data.dat", "index 0", "1:2", "violet", "Photo-electron spectrum with vY positive");
+   myPlot.addPlot("data.dat", "index 1", "1:2", "green",  "Photo-electron spectrum with vY negative");
 
+   myPlot.gnuplot();
 
   return 0;
 }

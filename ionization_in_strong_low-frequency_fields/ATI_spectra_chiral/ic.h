@@ -30,6 +30,9 @@ double tBirth;
 //We declare a variable for the initial field value
 double fieldBirth;
 
+//We declare the norm of the initial perpendicular velocity
+double vPerpBirth;
+
 //We declare the initial perpendicular velocity along Y
 double vYPerpBirth;
 
@@ -133,9 +136,9 @@ vYPerpBirth=getVPerpBirth(iVYPerpBirth, nVYPerpBirth);
 template<typename state_type>
 void IC<state_type>::setVXZPerpBirth(int iVZPrimPerpBirth, int nVZPrimPerpBirth)
 {
-double vPerpRadial=getVPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
-vZPerpBirth=+vPerpRadial*myField('X',tBirth)/fieldBirth;
-vXPerpBirth=-vPerpRadial*myField('Z',tBirth)/fieldBirth;
+vZPrimPerpBirth=getVPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
+vZPerpBirth=+vZPrimPerpBirth*myField('X',tBirth)/fieldBirth;
+vXPerpBirth=-vZPrimPerpBirth*myField('Z',tBirth)/fieldBirth;
 }
 
 //Ionization rate with a given field and a given transverse velocity according ADK distribution
@@ -143,7 +146,7 @@ vXPerpBirth=-vPerpRadial*myField('Z',tBirth)/fieldBirth;
 template<typename state_type>
 void IC<state_type>::setWeightIonization()
 {
-  double vPerpBirth=pow(vXPerpBirth*vXPerpBirth+vYPerpBirth*vYPerpBirth+vZPerpBirth*vZPerpBirth, 1./2.);
+  vPerpBirth=pow(vXPerpBirth*vXPerpBirth+vYPerpBirth*vYPerpBirth+vZPerpBirth*vZPerpBirth, 1./2.);
 
   weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential.IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential.IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
 }
@@ -154,7 +157,7 @@ template<typename state_type>
 void IC<state_type>::setRhoBirth()
 {
   //We approximate the radial position of the electron after tunneling like:
-  rhoBirth=myPotential.IP/fieldBirth;	
+  rhoBirth=-myPotential.IP/fieldBirth;	
 }
 
 

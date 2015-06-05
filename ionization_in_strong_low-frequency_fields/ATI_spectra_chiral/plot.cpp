@@ -2,8 +2,14 @@
 using namespace std;
 
 
+ //We add a plot 
+void Plot::addPlot(std::string dataFile, std::string index, std::string columns, std::string color, std::string title)
+{
+plot.push_back("'"+dataFile+"'"+" "+index+" using "+columns+" lc rgb "+"'"+color+"'"+" title "+"'"+title+"'");
+}
+
 //We display the spectra with gnuplot
-void Plot::gnuplot(string dataFile, string columns, string lineType, string title)
+void Plot::gnuplot()
 {
 
 fstream gnuFile("data.gnu", ios::out);
@@ -16,6 +22,7 @@ gnuFile<<"set ylabel 'Probability (log)'"<<endl;
 
 gnuFile<<"set multiplot  layout 1, 1"<<endl;
 
+
 gnuFile<<"set key on outside left bmargin box title sprintf(\"";
 vector<string>::iterator it=legend.begin();
 for(int k=1; it!=legend.end(); it++, k++)
@@ -26,7 +33,18 @@ gnuFile<<"\\n ";
 }
 gnuFile<<"\")"<<endl;
 
-gnuFile<<"plot '"<<dataFile<<"' using "<<columns<<" "<<lineType<<" rgb 'violet' title '"<<title<<"'"<<endl;
+
+it = plot.begin();
+gnuFile<<"plot ";
+for(int k=0; it!=plot.end(); it++, k++)
+{
+if(k!=0)
+gnuFile<<", \\"<<endl;
+gnuFile<<*it;
+}
+gnuFile<<" "<<endl;
+
+
 gnuFile<<"unset multiplot"<<endl;
 
 gnuFile<<"pause -1"<<endl;
