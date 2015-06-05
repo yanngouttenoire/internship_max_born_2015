@@ -10,7 +10,8 @@
 
 using namespace std;
 
-ElectricField::ElectricField()
+ElectricField::ElectricField(double ellipticity)
+: ellipticity(ellipticity)
 {
 
 //CONSTANTS
@@ -25,8 +26,6 @@ pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
 opticalCycle=2.*M_PI/pulsation;
 pulseDuration=3.*opticalCycle;
 phase=0.;
-ellipticity=0.1;
-
 }
 
 double ElectricField::operator()(char component, const double& t)
@@ -34,7 +33,7 @@ double ElectricField::operator()(char component, const double& t)
 switch(component)
 {
 case 'X' :
-return 0.;
+return 0.;//ellipticity*fieldAmpl*sin(pulsation*t+phase);
 
 case 'Y' :
 return 0.;

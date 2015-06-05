@@ -36,8 +36,12 @@ double vPerpBirth;
 //We declare a variable for the probability of ionization with a given fieldBirth and a given vPerpBirth
 double weightIonization;
 
-//We declare a variable for the electron position after tunneling
+//We declare electron radial position after tunneling
 double rhoBirth;
+
+//We declare polar coordinnates of the electron after tunneling
+double ZBirth;
+double XBirth;
 
 
 
@@ -53,14 +57,21 @@ void setFieldBirth();
 //We set the initial perpendicular velocity
 void setVPerpBirth(int iVPerpBirth, int nVPerpBirth);
 
-//We set the electron position after tunneling according the article
+//We compute the ionization rate with a given field and a given transverse velocity
+void setWeightIonization();
+
+//We set the electron position after tunneling
 void setRhoBirth();
+
+//We set the electron polar position after tunneling
+void setPolarCoordBirth();
 
 //We build the function which sets the initial conditions
 void setIC(state_type &x, double& t);
 
 
 };
+
 
 //We declare constructor
 template<typename state_type>
@@ -71,17 +82,12 @@ setRhoBirth();
 }
 
 
-
-
-
-
 //we set the initial ionization time tBirth
 template<typename state_type>
 void IC<state_type>::setTBirth(int iFieldBirth, int nFieldBirth)
 { 
 //We want to scan field phase values from -pi/4 to pi/4
 tBirth=-M_PI/4./myField.pulsation+double(iFieldBirth)/double(nFieldBirth)*M_PI/2./myField.pulsation;
-
 }
 
 
@@ -90,8 +96,9 @@ template<typename state_type>
 void IC<state_type>::setFieldBirth()
 {
 //We use tBirth
-fieldBirth=myField.fieldAmpl*cos(myField.pulsation*tBirth+myField.phase);
-fieldBirth=fabs(fieldBirth);
+ // double  fieldBirth=myField.fieldAmpl*sqrt(pow(cos(myField.pulsation*tBirth+myField.phase),2)+pow(myField.ellipticity*sin(myField.pulsation*tBirth+myField.phase),2));
+double  fieldBirth=myField.fieldAmpl;
+  fieldBirth=fabs(fieldBirth);
 }
 
 
@@ -99,7 +106,6 @@ fieldBirth=fabs(fieldBirth);
 template<typename state_type>
 void IC<state_type>::setVPerpBirth(int iVPerpBirth, int nVPerpBirth)
 {
-
   //Width of the velocity distributions after tunneling
   double sigma_V=sqrt(fieldBirth/sqrt(2.*myPotential.IP));
 
@@ -107,25 +113,34 @@ void IC<state_type>::setVPerpBirth(int iVPerpBirth, int nVPerpBirth)
   vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V;
   vPerpBirth=2.*vPerpBirth/4.;
 
-  //Ionization rate with a given field and a given transverse velocity according ADK distribution
-  //REF: J. Liu, Classical Trajectory Perspective of Atomic Ionization in Strong Laser Fields
-  weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential.IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential.IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
-
+weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential.IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential.IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
 }
 
 
-//We set the electron position after tunneling according the article
+//Ionization rate with a given field and a given transverse velocity according ADK distribution
+//REF: J. Liu, Classical Trajectory Perspective of Atomic Ionization in Strong Laser Fields
+template<typename state_type>
+void IC<state_type>::setWeightIonization()
+{
+  weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential.IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential.IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
+}
+
+
+//We set the electron radial position after tunneling
 template<typename state_type>
 void IC<state_type>::setRhoBirth()
 {
+  //We approximate the radial position of the electron after tunneling like:
+  rhoBirth=myPotential.IP/fieldBirth;	
+}
 
-  //We set the initial field value
-  double  fieldBirth=myField.fieldAmpl*cos(myField.pulsation*tBirth+myField.phase);
-  fieldBirth=fabs(fieldBirth);
 
-  // we approximate the position of the electron after tunneling like:
-  rhoBirth=-myPotential.IP/fieldBirth;	
-
+//We set the electron polar position after tunneling
+template<typename state_type>
+void IC<state_type>::setPolarCoordBirth()
+{
+ /*ZBirth=-rhoBirth*myField('Z',tBirth)/fieldBirth;
+ XBirth=-rhoBirth*myField('X',tBirth)/fieldBirth;*/
 }
 
 
@@ -138,9 +153,9 @@ void IC<state_type>::setIC(state_type &x, double& t)
    t=tBirth; 
 
   //We set the initial position in phase space
-  x[0]=0.;
+  x[0]=rhoBirth;
   x[1]=0.;
-  x[2]=rhoBirth;
+  x[2]=0.;
   x[3]=vPerpBirth;
   x[4]=0.;
   x[5]=0.;

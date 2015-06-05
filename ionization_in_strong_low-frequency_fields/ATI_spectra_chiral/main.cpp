@@ -119,7 +119,9 @@ Plot myPlot;
 	  myIC.setTBirth(iFieldBirth, nFieldBirth);
 	  myIC.setFieldBirth();
 	  myIC.setVPerpBirth(iVPerpBirth, nVPerpBirth);
+         // myIC.setWeightIonization();
 	  myIC.setRhoBirth();
+         // myIC.setPolarCoordBirth();
 	  myIC.setIC(x,t);
 
 	  //We initialise the boolean controls	  

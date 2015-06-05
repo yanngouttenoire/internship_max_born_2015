@@ -25,7 +25,7 @@ double phase;
 double ellipticity;
 
 //Constructor
-ElectricField();
+ElectricField(double ellipticity=0.1);
 
 //Methods which return the force induced by the electric field on the electron on each cartesian components 
 double operator()(char component, const double& t);
