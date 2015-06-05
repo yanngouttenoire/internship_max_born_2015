@@ -24,8 +24,8 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=10, nVPerpBirth=100;
-int iFieldBirth, iVPerpBirth;
+int nFieldBirth=10, nVYPerpBirth=100, nVZPrimPerpBirth=10;
+int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare the time variable
 double t;
@@ -108,9 +108,11 @@ Plot myPlot;
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
-      for(iVPerpBirth=1; iVPerpBirth<=nVPerpBirth; iVPerpBirth++)
-	{
-	  
+      for(iVZPrimPerpBirth=1; iVZPrimPerpBirth<=nVZPrimPerpBirth; iVZPrimPerpBirth++)
+       {
+         for(iVYPerpBirth=1; iVYPerpBirth<=nVYPerpBirth; iVYPerpBirth++)
+	   {
+	   
           //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
           myDisplay.moveCursorBackUp();	
 
@@ -118,10 +120,11 @@ Plot myPlot;
           //We set the ionization time
 	  myIC.setTBirth(iFieldBirth, nFieldBirth);
 	  myIC.setFieldBirth();
-	  myIC.setVPerpBirth(iVPerpBirth, nVPerpBirth);
-         // myIC.setWeightIonization();
+	  myIC.setVYPerpBirth(iVYPerpBirth, nVYPerpBirth);
+	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
+          myIC.setWeightIonization();
 	  myIC.setRhoBirth();
-         // myIC.setPolarCoordBirth();
+          myIC.setPolarCoordBirth();
 	  myIC.setIC(x,t);
 
 	  //We initialise the boolean controls	  
@@ -166,13 +169,14 @@ Plot myPlot;
 	      dtMinReachedNbr+=1;
 
 	  //We update the load bar and display some informations
-          if(iVPerpBirth%100==0)
+          if(iVYPerpBirth%100==0)
           {
-	  myDisplay.loadbar(iVPerpBirth+(iFieldBirth-1)*nVPerpBirth, nFieldBirth*nVPerpBirth);
+	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
 	  myDisplay("distMin",distMin);
           myDisplay("rhoBirth",myIC.rhoBirth);
           myDisplay("phaseBirth",myField.pulsation*myIC.tBirth*180./M_PI);
-          myDisplay("vPerpBirth", myIC.vPerpBirth);
+          myDisplay("vYPerpBirth", myIC.vYPerpBirth);
+          myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
           myDisplay("step", dt);
           myDisplay("stepMin", dtMin);
           myDisplay("error", error);
@@ -183,7 +187,8 @@ Plot myPlot;
           myDisplay("dtMinReachedNbr", dtMinReachedNbr/mySpectra.spectraPointsNbr*100., "%");
 
           }
-	}
+        }         
+      }
     }
 
   //Finally we write the data binning in the file "dataFile"
@@ -191,7 +196,8 @@ Plot myPlot;
 
   //We build the legend of the plot
    myPlot.addKey("nField",nFieldBirth);
-   myPlot.addKey("nVPerp",nVPerpBirth);
+   myPlot.addKey("nVYPerp",nVYPerpBirth);
+   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
    myPlot.addKey("ErrorMax",desiredErrorMax);
    myPlot.addKey("dtMin",dtMin);
    myPlot.addKey("dtMinReachedNbr",dtMinReachedNbr);

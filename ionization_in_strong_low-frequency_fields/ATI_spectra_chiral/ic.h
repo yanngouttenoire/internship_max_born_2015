@@ -30,10 +30,17 @@ double tBirth;
 //We declare a variable for the initial field value
 double fieldBirth;
 
-//We declare a variable for the initial perpendicular velocity
-double vPerpBirth;
+//We declare the initial perpendicular velocity along Y
+double vYPerpBirth;
 
-//We declare a variable for the probability of ionization with a given fieldBirth and a given vPerpBirth
+//We declare the initial perpendicular velocity along Z', a vector of the rotating frame
+double vZPrimPerpBirth;
+
+//We declare the initial perpendicular velocity along X and Z which depend on the one along Z'
+double vXPerpBirth;
+double vZPerpBirth;
+
+//We declare the probability of ionization with a given fieldBirth and a given vPerpBirth
 double weightIonization;
 
 //We declare electron radial position after tunneling
@@ -43,10 +50,8 @@ double rhoBirth;
 double ZBirth;
 double XBirth;
 
-
-
 //We declare constructor
-IC(ElectrostaticPotential<state_type> myPotential, ElectricField myField, double tBirth=0.871, double vPerpBirth=6E-5);
+IC(ElectrostaticPotential<state_type> myPotential, ElectricField myField);
  
 //we set the initial ionization time
 void setTBirth(int iFieldBirth, int nFieldBirth);
@@ -54,8 +59,14 @@ void setTBirth(int iFieldBirth, int nFieldBirth);
 //We set the initial field value
 void setFieldBirth();
 
-//We set the initial perpendicular velocity
-void setVPerpBirth(int iVPerpBirth, int nVPerpBirth);
+//The following method gives a values to the initial perpendicular velocity
+double getVPerpBirth(int iVPerpBirth, int nVPerpBirth);
+
+//We set the initial perpendicular velocity along Y
+void setVYPerpBirth(int iVYPerpBirth, int nVYPerpBirth);
+
+//We set the initial perpendicular velocity along X and Z
+void setVXZPerpBirth(int iVZPrimPerpBirth, int nVZPrimPerpBirth);
 
 //We compute the ionization rate with a given field and a given transverse velocity
 void setWeightIonization();
@@ -75,11 +86,7 @@ void setIC(state_type &x, double& t);
 
 //We declare constructor
 template<typename state_type>
-IC<state_type>::IC(ElectrostaticPotential<state_type> myPotential, ElectricField myField, double tBirth, double vPerpBirth) : tBirth(tBirth), vPerpBirth(vPerpBirth) 
-{
-setFieldBirth(); 
-setRhoBirth();
-}
+IC<state_type>::IC(ElectrostaticPotential<state_type> myPotential, ElectricField myField) : myPotential(myPotential), myField(myField){}
 
 
 //we set the initial ionization time tBirth
@@ -96,32 +103,48 @@ template<typename state_type>
 void IC<state_type>::setFieldBirth()
 {
 //We use tBirth
- // double  fieldBirth=myField.fieldAmpl*sqrt(pow(cos(myField.pulsation*tBirth+myField.phase),2)+pow(myField.ellipticity*sin(myField.pulsation*tBirth+myField.phase),2));
-double  fieldBirth=myField.fieldAmpl;
+  fieldBirth=myField.fieldAmpl*sqrt(pow(cos(myField.pulsation*tBirth+myField.phase),2)+pow(myField.ellipticity*sin(myField.pulsation*tBirth+myField.phase),2));
   fieldBirth=fabs(fieldBirth);
 }
 
-
-//We set the initial perpendicular velocity
+//The following method gives a values to the initial perpendicular velocity
 template<typename state_type>
-void IC<state_type>::setVPerpBirth(int iVPerpBirth, int nVPerpBirth)
+double IC<state_type>::getVPerpBirth(int iVPerpBirth, int nVPerpBirth)
 {
   //Width of the velocity distributions after tunneling
   double sigma_V=sqrt(fieldBirth/sqrt(2.*myPotential.IP));
 
   //Perpendicular velocity after tunneling
-  vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V;
+  double vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V;
   vPerpBirth=2.*vPerpBirth/4.;
 
-weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential.IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential.IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
+  return vPerpBirth;
 }
 
+
+//We set the initial perpendicular velocity along Y
+template<typename state_type>
+void IC<state_type>::setVYPerpBirth(int iVYPerpBirth, int nVYPerpBirth)
+{
+vYPerpBirth=getVPerpBirth(iVYPerpBirth, nVYPerpBirth);
+}
+
+//We set the initial perpendicular velocity along X and Z
+template<typename state_type>
+void IC<state_type>::setVXZPerpBirth(int iVZPrimPerpBirth, int nVZPrimPerpBirth)
+{
+double vPerpRadial=getVPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
+vZPerpBirth=+vPerpRadial*myField('X',tBirth)/fieldBirth;
+vXPerpBirth=-vPerpRadial*myField('Z',tBirth)/fieldBirth;
+}
 
 //Ionization rate with a given field and a given transverse velocity according ADK distribution
 //REF: J. Liu, Classical Trajectory Perspective of Atomic Ionization in Strong Laser Fields
 template<typename state_type>
 void IC<state_type>::setWeightIonization()
 {
+  double vPerpBirth=pow(vXPerpBirth*vXPerpBirth+vYPerpBirth*vYPerpBirth+vZPerpBirth*vZPerpBirth, 1./2.);
+
   weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential.IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential.IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
 }
 
@@ -139,8 +162,8 @@ void IC<state_type>::setRhoBirth()
 template<typename state_type>
 void IC<state_type>::setPolarCoordBirth()
 {
- /*ZBirth=-rhoBirth*myField('Z',tBirth)/fieldBirth;
- XBirth=-rhoBirth*myField('X',tBirth)/fieldBirth;*/
+ ZBirth=-rhoBirth*myField('Z',tBirth)/fieldBirth;
+ XBirth=-rhoBirth*myField('X',tBirth)/fieldBirth;
 }
 
 
@@ -153,12 +176,12 @@ void IC<state_type>::setIC(state_type &x, double& t)
    t=tBirth; 
 
   //We set the initial position in phase space
-  x[0]=rhoBirth;
+  x[0]=XBirth;
   x[1]=0.;
-  x[2]=0.;
-  x[3]=vPerpBirth;
-  x[4]=0.;
-  x[5]=0.;
+  x[2]=ZBirth;
+  x[3]=vXPerpBirth;
+  x[4]=vYPerpBirth;
+  x[5]=vZPerpBirth;
  
 }
 

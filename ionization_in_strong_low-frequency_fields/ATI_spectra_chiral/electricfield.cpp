@@ -33,7 +33,7 @@ double ElectricField::operator()(char component, const double& t)
 switch(component)
 {
 case 'X' :
-return 0.;//ellipticity*fieldAmpl*sin(pulsation*t+phase);
+return ellipticity*fieldAmpl*sin(pulsation*t+phase);
 
 case 'Y' :
 return 0.;
