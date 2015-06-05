@@ -209,8 +209,9 @@ Plot myPlot;
    myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");
    myPlot.addKey("duration",myDisplay.elapsedTime);
  
-   myPlot.addPlot("data.dat", "index 0", "1:2", "violet", "Photo-electron spectrum with vY positive");
-   myPlot.addPlot("data.dat", "index 1", "1:2", "green",  "Photo-electron spectrum with vY negative");
+myPlot.setPlotType("plot");
+   myPlot.addPlot("'data.dat' index 0 using 1:2 w l lc rgb 'violet' title 'Photo-electron spectrum with vY positive'");
+   myPlot.addPlot("'data.dat' index 1 using 1:2 w l lc rgb 'violet' title 'Photo-electron spectrum with vY negative'");
 
    myPlot.gnuplot();
 

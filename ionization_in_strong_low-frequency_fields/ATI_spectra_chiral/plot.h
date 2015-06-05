@@ -21,6 +21,7 @@ class Plot
 public:
 std::vector<std::string> legend;
 std::vector<std::string> plot;
+std::string plotType;
 
 template<typename T>
 void addKey(std::string keyName, const T &key, std::string unit="")
@@ -34,9 +35,13 @@ void addKey(std::string key)
 {
 legend.push_back(key);
 }
+  
+  //We choose the type of plot
+void setPlotType(std::string plotType);
 
  //We add a plot 
-void addPlot(std::string dataFile, std::string index, std::string columns, std::string color, std::string title);
+void addPlot(std::string instruction);
+
  //We display the spectra with gnuplot
  void gnuplot();
 

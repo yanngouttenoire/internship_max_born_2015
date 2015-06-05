@@ -2,10 +2,17 @@
 using namespace std;
 
 
- //We add a plot 
-void Plot::addPlot(std::string dataFile, std::string index, std::string columns, std::string color, std::string title)
+
+ //We set the plot type
+void Plot::setPlotType(std::string m_plotType)
 {
-plot.push_back("'"+dataFile+"'"+" "+index+" using "+columns+" lc rgb "+"'"+color+"'"+" title "+"'"+title+"'");
+plotType=m_plotType;
+}
+
+ //We add a plot 
+void Plot::addPlot(std::string instruction)
+{
+plot.push_back(instruction);
 }
 
 //We display the spectra with gnuplot
@@ -35,7 +42,7 @@ gnuFile<<"\")"<<endl;
 
 
 it = plot.begin();
-gnuFile<<"plot ";
+gnuFile<<plotType<<" ";
 for(int k=0; it!=plot.end(); it++, k++)
 {
 if(k!=0)
