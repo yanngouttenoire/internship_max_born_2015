@@ -24,7 +24,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=10, nVYPerpBirth=100, nVZPrimPerpBirth=10;
+int nFieldBirth=10, nVYPerpBirth=1, nVZPrimPerpBirth=100;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare the time variable
@@ -34,15 +34,6 @@ double t;
 typedef double state_type[6];
 state_type x;
 
-//We declare a variable which contains the current nbr of trajectories
-int nTraj;
-
-//We declare the duration during which we want to let the electron propagates 
-double trajDuration=5000.;
-
-//We declare a variable which will contain the minimum approach distance
-double distMin;
-
 //We declare a variable for the step in controlledRK5, the min allowed value and a counter which count how many events have not been accepted because dt was smaller than dtMin
 double dt=0.001; 
 double dtMin=1E-20;
@@ -50,7 +41,6 @@ int unexpectedStopNbr=0;
 
 //We declare runge kutta error, its max allowed value, and the desired error min and max
 double error;
-double errorMax=1E-25;
 double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
@@ -81,7 +71,7 @@ cout<<" "<<endl;
 ElectrostaticPotential<state_type> myPotential;
 
 //Contains the electric field properties
-ElectricField myField;
+ElectricField myField(0.);
 
 //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
 IC<state_type> myIC(myPotential, myField);
@@ -100,7 +90,6 @@ Spectra<state_type> mySpectra(myPotential, myField);
 
 //Contains methods for drawing curves
 Plot myPlot;
-
 
   //We perform two loops
   //first, for each ionization time (initial field value)
@@ -130,30 +119,22 @@ Plot myPlot;
 	  //We initialise the boolean controls	  
 	  stopStepper=false; 
 	  unexpectedStop=false;
-	  distMin=100.;
 
 	  //We compute the trajectory
 
-	    for(nTraj=0; !stopStepper; nTraj++)
+	    for(int nTraj=0; !stopStepper; nTraj++)
 	    { 
 		  
 	      //We call the function which solve eq of the motion
 	      mySolve.controlledRK5(mySystem,x,t,dt,error,desiredErrorMin,desiredErrorMax);
-
-              //dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<t<<endl;	
-
 	     
-          //If the electron is always bonded to the attractor, we do not consider the event 
+             //If the electron is always bonded to the attractor, we do not consider the event 
 	      if((t-myIC.tBirth)>10.*myField.opticalCycle)
 		stopStepper=true;
 
              //We stop when the electron is fully ionized
 	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>400.)
 		stopStepper=true;
-
-              //We look for the best approach (not important)
-	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])<distMin) 
-		distMin=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
 
               //We check if the step is no too small (otherwise the simulation will take too much time)
 	      if(dt<dtMin)
@@ -173,7 +154,6 @@ Plot myPlot;
           if(iVYPerpBirth%100==0)
           {
 	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
-	  myDisplay("distMin",distMin);
           myDisplay("rhoBirth",myIC.rhoBirth);
           myDisplay("phaseBirth",myField.pulsation*myIC.tBirth*180./M_PI);
           myDisplay("vPerpBirth", myIC.vPerpBirth);

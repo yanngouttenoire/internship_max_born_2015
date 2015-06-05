@@ -118,8 +118,7 @@ double IC<state_type>::getVPerpBirth(int iVPerpBirth, int nVPerpBirth)
   double sigma_V=sqrt(fieldBirth/sqrt(2.*myPotential.IP));
 
   //Perpendicular velocity after tunneling
-  double vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V;
-  vPerpBirth=2.*vPerpBirth/4.+1E-3;
+  double vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-sigma_V+1E-3;
   return vPerpBirth;
 }
 
@@ -129,6 +128,8 @@ template<typename state_type>
 void IC<state_type>::setVYPerpBirth(int iVYPerpBirth, int nVYPerpBirth)
 {
 vYPerpBirth=getVPerpBirth(iVYPerpBirth, nVYPerpBirth);
+//Uncomment this line and you modify the spectrum a lot
+vYPerpBirth=0.;
 }
 
 //We set the initial perpendicular velocity along X and Z
@@ -136,8 +137,10 @@ template<typename state_type>
 void IC<state_type>::setVXZPerpBirth(int iVZPrimPerpBirth, int nVZPrimPerpBirth)
 {
 vZPrimPerpBirth=getVPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
+
 vZPerpBirth=+vZPrimPerpBirth*myField('X',tBirth)/fieldBirth;
 vXPerpBirth=-vZPrimPerpBirth*myField('Z',tBirth)/fieldBirth;
+
 }
 
 //Ionization rate with a given field and a given transverse velocity according ADK distribution
@@ -156,7 +159,7 @@ template<typename state_type>
 void IC<state_type>::setRhoBirth()
 {
   //We approximate the radial position of the electron after tunneling like:
-  rhoBirth=-myPotential.IP/fieldBirth;	
+  rhoBirth=myPotential.IP/fieldBirth;	
 }
 
 
@@ -164,8 +167,8 @@ void IC<state_type>::setRhoBirth()
 template<typename state_type>
 void IC<state_type>::setPolarCoordBirth()
 {
- ZBirth=-rhoBirth*myField('Z',tBirth)/fieldBirth;
- XBirth=-rhoBirth*myField('X',tBirth)/fieldBirth;
+   ZBirth=-rhoBirth*myField('Z',tBirth)/fieldBirth;
+   XBirth=-rhoBirth*myField('X',tBirth)/fieldBirth;
 }
 
 
