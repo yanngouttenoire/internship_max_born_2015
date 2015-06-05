@@ -46,7 +46,7 @@ double distMin;
 //We declare a variable for the step in controlledRK5, the min allowed value and a counter which count how many events have not been accepted because dt was smaller than dtMin
 double dt=0.001; 
 double dtMin=1E-20;
-int dtMinReachedNbr=0;
+int unexpectedStopNbr=0;
 
 //We declare runge kutta error, its max allowed value, and the desired error min and max
 double error;
@@ -56,7 +56,7 @@ double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare boolean controls
 bool stopStepper;
-bool isdtMin;
+bool unexpectedStop;
 
 //Bins width
 double binsWidth;
@@ -108,9 +108,9 @@ Plot myPlot;
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
-      for(iVZPrimPerpBirth=1; iVZPrimPerpBirth<=nVZPrimPerpBirth; iVZPrimPerpBirth++)
+      for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<=nVZPrimPerpBirth; iVZPrimPerpBirth++)
        {
-         for(iVYPerpBirth=1; iVYPerpBirth<=nVYPerpBirth; iVYPerpBirth++)
+         for(iVYPerpBirth=0; iVYPerpBirth<=nVYPerpBirth; iVYPerpBirth++)
 	   {
 	   
           //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
@@ -128,13 +128,13 @@ Plot myPlot;
 	  myIC.setIC(x,t);
 
 	  //We initialise the boolean controls	  
-	  stopStepper=true; 
-	  isdtMin=false;
+	  stopStepper=false; 
+	  unexpectedStop=false;
 	  distMin=100.;
 
 	  //We compute the trajectory
 
-	    for(nTraj=0; stopStepper; nTraj++)
+	    for(nTraj=0; !stopStepper; nTraj++)
 	    { 
 		  
 	      //We call the function which solve eq of the motion
@@ -142,13 +142,14 @@ Plot myPlot;
 
               //dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<t<<endl;	
 
-	      //The trajectory stops when the electron has sufficiently propagated 
-	      if((t-myIC.tBirth)>trajDuration)
-		stopStepper=false;
+	     
+          //If the electron is always bonded to the attractor, we do not consider the event 
+	      if((t-myIC.tBirth)>10.*myField.opticalCycle)
+		stopStepper=true;
 
              //We stop when the electron is fully ionized
-	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>600.)
-		stopStepper=false;
+	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>400.)
+		stopStepper=true;
 
               //We look for the best approach (not important)
 	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])<distMin) 
@@ -157,16 +158,16 @@ Plot myPlot;
               //We check if the step is no too small (otherwise the simulation will take too much time)
 	      if(dt<dtMin)
 		{
-		  stopStepper=false;
-		  isdtMin=true;
+		  stopStepper=true;
+		  unexpectedStop=true;
 		}
 	    }
 
 	  //We store the asymptotic velocity in a container of map type with a view to making a data binning
-	  mySpectra.storeDataBinning(x, t, myIC.weightIonization, isdtMin);
+	  mySpectra.storeDataBinning(x, t, myIC.weightIonization, unexpectedStop);
 	         
-	    if(isdtMin==true)
-	      dtMinReachedNbr+=1;
+	    if(unexpectedStop==true)
+	      unexpectedStopNbr+=1;
 
 	  //We update the load bar and display some informations
           if(iVYPerpBirth%100==0)
@@ -186,7 +187,7 @@ Plot myPlot;
           myDisplay("weightIonization",myIC.weightIonization);
           myDisplay("spectraPointNbr", mySpectra.spectraPointsNbr);
           myDisplay("ptsNumber", nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
-          myDisplay("dtMinReachedNbr", double(dtMinReachedNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+          myDisplay("unexpectedStopNbr", double(unexpectedStopNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 
           }
         }         
@@ -202,7 +203,7 @@ Plot myPlot;
    myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
    myPlot.addKey("ErrorMax",desiredErrorMax);
    myPlot.addKey("dtMin",dtMin);
-   myPlot.addKey("dtMinReachedNbr",dtMinReachedNbr);
+   myPlot.addKey("unexpectedStopNbr",unexpectedStopNbr);
    myPlot.addKey("linear field");
    myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
    myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");

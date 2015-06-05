@@ -119,8 +119,7 @@ double IC<state_type>::getVPerpBirth(int iVPerpBirth, int nVPerpBirth)
 
   //Perpendicular velocity after tunneling
   double vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V;
-  vPerpBirth=2.*vPerpBirth/4.;
-
+  vPerpBirth=2.*vPerpBirth/4.+1E-3;
   return vPerpBirth;
 }
 
