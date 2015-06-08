@@ -6,6 +6,11 @@
 #include<iomanip>
 #include<vector>
 
+
+#include <boost/numeric/odeint.hpp>
+using namespace boost::numeric::odeint;
+
+
 #include"system.h"
 #include"solve.h"
 #include"spectra.h"
@@ -24,15 +29,16 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=100, nVYPerpBirth=1, nVZPrimPerpBirth=100;
+int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare the time variable
 double t;
 
 //We declare the array in which we will store the orbit
-typedef double state_type[6];
-state_type x;
+//typedef double state_type[6];
+typedef vector<double> state_type;
+state_type x(6);
 
 //We declare a variable for the step in controlledRK5, the min allowed value
 double dt=0.1; 
@@ -49,7 +55,7 @@ double desiredErrorMax=1E-8;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightMinThreshold=1E-4;
+double weightMinThreshold=6E-4;
 
 //We declare boolean controls
 bool stopStepper;
@@ -100,6 +106,37 @@ Spectra<state_type> mySpectra(myPotential, myField);
 Plot myPlot;
 
 
+//[ integrate_observer
+struct push_back_state_and_time
+{
+    std::vector< state_type >& m_states;
+    std::vector< double >& m_times;
+
+    push_back_state_and_time( std::vector< state_type > &states , std::vector< double > &times )
+    : m_states( states ) , m_times( times ) { }
+
+    void operator()( const state_type &x , double t )
+    {
+        m_states.push_back( x );
+        m_times.push_back( t );
+    }
+};
+
+  // define_adapt_stepper
+  typedef runge_kutta_cash_karp54< state_type > error_stepper_type;
+  // integrate_adapt
+  typedef controlled_runge_kutta< error_stepper_type > controlled_stepper_type;   // controlled_stepper_type controlled_stepper;
+
+  double abs_err = 1.0e-6 , rel_err = 1.0e-6 , a_x = 1.0 , a_dxdt = 1.0;
+  controlled_stepper_type controlled_stepper(default_error_checker< double , range_algebra , default_operations >( abs_err , rel_err , a_x , a_dxdt ) );
+
+
+  
+    vector<state_type> x_vec;
+    vector<double> times;
+    size_t steps;
+
+
   //We perform two loops
   //first, for each ionization time (initial field value)
   //second, for each perpendicular velocity
@@ -147,10 +184,12 @@ Plot myPlot;
 	    { 
 		  
 	      //We call the function which solve eq of the motion
-	      mySolve.controlledRK5(mySystem,x,t,dt,error,desiredErrorMin,desiredErrorMax);
+	     // mySolve.controlledRK5(mySystem,x,t,dt,error,desiredErrorMin,desiredErrorMax);
+
+	     integrate_adaptive( controlled_stepper , mySystem , x , 0.0 , 5.*myField.opticalCycle, dt,  push_back_state_and_time( x_vec , times ) );
 
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if((t-myIC.tBirth)>15.*myField.opticalCycle)
+	      if((t-myIC.tBirth)>10.*myField.opticalCycle)
                 {
                 unexpectedStop=true;
 		stopStepper=true;
@@ -211,20 +250,19 @@ Plot myPlot;
    myPlot.addKey("nField",nFieldBirth);
    myPlot.addKey("nVYPerp",nVYPerpBirth);
    myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
-   myPlot.addKey("weightMinThreshold",weightMinThreshold);
-   myPlot.addKey("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
-   myPlot.addKey("spectraPointNbr", mySpectra.spectraPointsNbr);
-   myPlot.addKey("unexpectedStopNbr",unexpectedStopNbr);
    myPlot.addKey("ErrorMax",desiredErrorMax);
    myPlot.addKey("dtMin",dtMin);
+   myPlot.addKey("weightMinThreshold",weightMinThreshold);
+   myPlot.addKey("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+   myPlot.addKey("unexpectedStopNbr",unexpectedStopNbr);
    myPlot.addKey("linear field");
    myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
    myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");
    myPlot.addKey("duration",myDisplay.elapsedTime);
  
 myPlot.setPlotType("plot");
-   myPlot.addPlot("'data.dat' index 0 using 1:2 lc rgb 'violet' title 'Photo-electron spectrum with vY positive'");
-   myPlot.addPlot("'data.dat' index 1 using 1:2 lc rgb 'violet' title 'Photo-electron spectrum with vY negative'");
+   myPlot.addPlot("'data.dat' index 0 using 1:2 w l lc rgb 'violet' title 'Photo-electron spectrum with vY positive'");
+   myPlot.addPlot("'data.dat' index 1 using 1:2 w l lc rgb 'violet' title 'Photo-electron spectrum with vY negative'");
 
    myPlot.gnuplot();
 

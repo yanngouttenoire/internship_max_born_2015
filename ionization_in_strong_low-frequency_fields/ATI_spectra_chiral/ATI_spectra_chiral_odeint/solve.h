@@ -55,11 +55,16 @@ void Solve<state_type>::controlledRK5(System<state_type> &system, state_type &x,
 
   double k[6][6];
  
-  double xm[7][6];
+  /* double xm[7][6];
 
   //First derivative of the ODE
-  double dxdt[6][6];
+  double dxdt[6][6];*/
 
+  std::vector<state_type> xm(7, state_type(7));
+
+  //First derivative of the ODE
+  std::vector<state_type> dxdt(6, state_type(6));
+ 
   //Butcher's coefficients
 
   double a[6]={0.,1/5.,3/10.,3/5.,1.,7/8.};
@@ -137,8 +142,8 @@ int kk=0;
 	dt=dt*pow(desiredErrorMin/error,0.2);
 
  kk=kk+1;
-//if(kk>100)
-//error=desiredErrorMax;
+if(kk>100)
+error=desiredErrorMax;
      }
 
   //We do not exit from the loop while error is not the one expected
