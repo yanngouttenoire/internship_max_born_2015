@@ -132,6 +132,9 @@ void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double
           sum=sum+it->second;
     }
 
+  //Remove the following line if you wan a normalized distribution law
+  sum=1.;
+
   //We write the histogram in a file	
   for(it=asymptEnergy.begin(); it!=asymptEnergy.end(); it++)
     {

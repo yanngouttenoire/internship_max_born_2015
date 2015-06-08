@@ -24,7 +24,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=10, nVYPerpBirth=1, nVZPrimPerpBirth=100;
+int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare the time variable
@@ -34,19 +34,27 @@ double t;
 typedef double state_type[6];
 state_type x;
 
-//We declare a variable for the step in controlledRK5, the min allowed value and a counter which count how many events have not been accepted because dt was smaller than dtMin
-double dt=0.001; 
+//We declare a variable for the step in controlledRK5, the min allowed value
+double dt=0.1; 
 double dtMin=1E-20;
+
+//We declare a counter which counts how many events have not been accepted because dt was smaller than dtMin
 int unexpectedStopNbr=0;
+//And a counter which counts how many initial conditions have not been accepted because the probality of ionization was too small
+int weightTooSmallNbr=0;
 
 //We declare runge kutta error, its max allowed value, and the desired error min and max
 double error;
-double desiredErrorMax=1E-10;
+double desiredErrorMax=1E-8;
 double desiredErrorMin=desiredErrorMax/10.;
+
+//We declare a minimum threshold value for the probability of ionization
+double weightMinThreshold=6E-4;
 
 //We declare boolean controls
 bool stopStepper;
 bool unexpectedStop;
+bool isWeightTooSmall;
 
 //Bins width
 double binsWidth;
@@ -97,13 +105,21 @@ Plot myPlot;
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
-      for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<=nVZPrimPerpBirth; iVZPrimPerpBirth++)
+      for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
        {
-         for(iVYPerpBirth=0; iVYPerpBirth<=nVYPerpBirth; iVYPerpBirth++)
+         for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
 	   {
 	   
           //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
           myDisplay.moveCursorBackUp();	
+
+          //We initialise the boolean controls	  
+ 	  stopStepper=false; 
+	  unexpectedStop=false;
+          isWeightTooSmall=false;
+
+          //We update the step dt
+          dt=0.001; 
 
 	  //INITIAL CONDITIONS
           //We set the ionization time
@@ -112,17 +128,21 @@ Plot myPlot;
 	  myIC.setVYPerpBirth(iVYPerpBirth, nVYPerpBirth);
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
+
+          //We check if weightIonization is big enough
+          if(myIC.weightIonization < weightMinThreshold)
+          { 
+           isWeightTooSmall=true;
+           stopStepper=true;
+          }
+         
 	  myIC.setRhoBirth();
           myIC.setPolarCoordBirth();
 	  myIC.setIC(x,t);
 
-	  //We initialise the boolean controls	  
-	  stopStepper=false; 
-	  unexpectedStop=false;
-
 	  //We compute the trajectory
 
-	    for(int nTraj=0; !stopStepper; nTraj++)
+	    for(int nTraj=0; !stopStepper ; nTraj++)
 	    { 
 		  
 	      //We call the function which solve eq of the motion
@@ -130,10 +150,13 @@ Plot myPlot;
 	     
              //If the electron is always bonded to the attractor, we do not consider the event 
 	      if((t-myIC.tBirth)>10.*myField.opticalCycle)
+                {
+                unexpectedStop=true;
 		stopStepper=true;
-
+                }
+                 
              //We stop when the electron is fully ionized
-	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>400.)
+	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>300.)
 		stopStepper=true;
 
               //We check if the step is no too small (otherwise the simulation will take too much time)
@@ -145,13 +168,17 @@ Plot myPlot;
 	    }
 
 	  //We store the asymptotic velocity in a container of map type with a view to making a data binning
-	  mySpectra.storeDataBinning(x, t, myIC.weightIonization, unexpectedStop);
-	         
+	  mySpectra.storeDataBinning(x, t, myIC.weightIonization, unexpectedStop || isWeightTooSmall);
+	   
+            
 	    if(unexpectedStop==true)
 	      unexpectedStopNbr+=1;
+            if(isWeightTooSmall==true)
+	      weightTooSmallNbr+=1;
+
 
 	  //We update the load bar and display some informations
-          if(iVYPerpBirth%100==0)
+          if(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth)%100==0)
           {
 	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
           myDisplay("rhoBirth",myIC.rhoBirth);
@@ -168,8 +195,10 @@ Plot myPlot;
           myDisplay("spectraPointNbr", mySpectra.spectraPointsNbr);
           myDisplay("ptsNumber", nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
           myDisplay("unexpectedStopNbr", double(unexpectedStopNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
-
+          myDisplay("weightMinThreshold",weightMinThreshold);
+          myDisplay("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
           }
+
         }         
       }
     }
@@ -183,6 +212,8 @@ Plot myPlot;
    myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
    myPlot.addKey("ErrorMax",desiredErrorMax);
    myPlot.addKey("dtMin",dtMin);
+   myPlot.addKey("weightMinThreshold",weightMinThreshold);
+   myPlot.addKey("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
    myPlot.addKey("unexpectedStopNbr",unexpectedStopNbr);
    myPlot.addKey("linear field");
    myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");

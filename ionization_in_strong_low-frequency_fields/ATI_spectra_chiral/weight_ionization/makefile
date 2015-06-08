@@ -1,6 +1,6 @@
 CC=g++ -std=c++0x
 CFLAGS=-W -Wall -ansi -pedantic
-LDFLAGS=-I ~/Documents/boost_1_58_0
+LDFLAGS=
 EXEC=exec.out
 SOURCE= $(wildcard *.cpp)
 OBJET= $(SOURCE:.cpp=.o)

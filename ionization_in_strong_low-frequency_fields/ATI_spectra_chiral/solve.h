@@ -20,7 +20,6 @@ class Solve
 
 public:
 
-
 //We implement a method which solves an ode system using Runge-Kutta of order 5 with adaptive step-size algorithm 
 //The adaptive step-size algorithm uses Runge-Kutta of order 4 embedded in RK5
 //For more details: http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c16-2.pdf
@@ -76,6 +75,7 @@ void Solve<state_type>::controlledRK5(System<state_type> &system, state_type &x,
   //RK5 solution variable
   double x5[6];
 
+int kk=0;
 
  do
     {
@@ -135,6 +135,9 @@ void Solve<state_type>::controlledRK5(System<state_type> &system, state_type &x,
   if(error<desiredErrorMin && error!=0.)
 	dt=dt*pow(desiredErrorMin/error,0.2);
 
+ kk=kk+1;
+if(kk>100)
+error=desiredErrorMax;
      }
 
   //We do not exit from the loop while error is not the one expected
