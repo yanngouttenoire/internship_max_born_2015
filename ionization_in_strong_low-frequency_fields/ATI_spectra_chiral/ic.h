@@ -118,7 +118,7 @@ double IC<state_type>::getVPerpBirth(int iVPerpBirth, int nVPerpBirth)
   double sigma_V=sqrt(fieldBirth/sqrt(2.*myPotential.IP));
 
   //Perpendicular velocity after tunneling
-  double vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-sigma_V;
+  double vPerpBirth=4.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-2*sigma_V;
   return vPerpBirth;
    
   if(vPerpBirth<1E-2)

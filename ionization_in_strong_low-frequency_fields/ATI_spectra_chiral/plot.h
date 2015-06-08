@@ -19,8 +19,9 @@ class Plot
 {
 
 public:
-std::vector<std::string> legend;
+std::vector<std::string> keys;
 std::vector<std::string> plot;
+std::vector<std::string> instructions;
 std::string plotType;
 
 template<typename T>
@@ -28,16 +29,19 @@ void addKey(std::string keyName, const T &key, std::string unit="")
 {
 std::ostringstream ostringKey;
 ostringKey<<keyName<<" = "<<key<<unit;
-legend.push_back(ostringKey.str());
+keys.push_back(ostringKey.str());
 }
 
 void addKey(std::string key)
 {
-legend.push_back(key);
+keys.push_back(key);
 }
   
   //We choose the type of plot
 void setPlotType(std::string plotType);
+
+  //We add a plot instruction
+void addInstruction(std::string instruction);
 
  //We add a plot 
 void addPlot(std::string instruction);

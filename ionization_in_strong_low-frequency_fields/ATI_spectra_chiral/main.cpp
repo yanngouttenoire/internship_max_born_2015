@@ -45,11 +45,11 @@ int weightTooSmallNbr=0;
 
 //We declare runge kutta error, its max allowed value, and the desired error min and max
 double error;
-double desiredErrorMax=1E-8;
+double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightMinThreshold=1E-4;
+double weightMinThreshold=1E-5;
 
 //We declare boolean controls
 bool stopStepper;
@@ -94,7 +94,7 @@ Solve<state_type> mySolve;
 Display myDisplay;
 
 //Contains methods for doing a binning procedure and build a spectrum
-Spectra<state_type> mySpectra(myPotential, myField);
+Spectra<state_type> mySpectra(myPotential, myField,0.005);
 
 //Contains methods for drawing curves
 Plot myPlot;
@@ -110,9 +110,9 @@ Plot myPlot;
        {
          for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
 	   {
-	   
-          //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
-          myDisplay.moveCursorBackUp();	
+
+	    //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
+          myDisplay.moveCursorBackUp();         	
 
           //We initialise the boolean controls	  
  	  stopStepper=false; 
@@ -145,7 +145,7 @@ Plot myPlot;
 
 	    for(int nTraj=0; !stopStepper ; nTraj++)
 	    { 
-		  
+
 	      //We call the function which solve eq of the motion
 	      mySolve.controlledRK5(mySystem,x,t,dt,error,desiredErrorMin,desiredErrorMax);
 
@@ -177,9 +177,8 @@ Plot myPlot;
             if(isWeightTooSmall==true)
 	      weightTooSmallNbr+=1;
 
-
-	  //We update the load bar and display some informations
-          if(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth)%100==0)
+		    //We update the load bar and display some informations
+          if(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth)%1000==0)
           {
 	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
           myDisplay("rhoBirth",myIC.rhoBirth);
@@ -200,7 +199,7 @@ Plot myPlot;
           myDisplay("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
           }
 
-        }         
+	 }         
       }
     }
 
@@ -221,10 +220,14 @@ Plot myPlot;
    myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
    myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");
    myPlot.addKey("duration",myDisplay.elapsedTime);
+     
+   myPlot.addInstruction("set xlabel 'Asymptotic energy (au)'");
+   myPlot.addInstruction("set ylabel 'Probability (log)'");
+   myPlot.addInstruction("set xrange [0:1]");
  
-myPlot.setPlotType("plot");
-   myPlot.addPlot("'data.dat' index 0 using 1:2 lc rgb 'violet' title 'Photo-electron spectrum with vY positive'");
-   myPlot.addPlot("'data.dat' index 1 using 1:2 lc rgb 'violet' title 'Photo-electron spectrum with vY negative'");
+   myPlot.setPlotType("plot");
+   myPlot.addPlot("'data.dat' index 0 using 1:2 w l lc rgb 'violet' title 'Photo-electron spectrum with vY positive'");
+   myPlot.addPlot("'data.dat' index 1 using 1:2 w l lc rgb 'violet' title 'Photo-electron spectrum with vY negative'");
 
    myPlot.gnuplot();
 

@@ -76,7 +76,7 @@ void Solve<state_type>::controlledRK5(System<state_type> &system, state_type &x,
   //RK5 solution variable
   double x5[6];
 
-int kk=0;
+int preventInstableError=0;
 
  do
     {
@@ -136,10 +136,17 @@ int kk=0;
   if(error<desiredErrorMin && error!=0.)
 	dt=dt*pow(desiredErrorMin/error,0.2);
 
- kk=kk+1;
-//if(kk>100)
-//error=desiredErrorMax;
-     }
+//NOTE: DUE TO THE FACT THAT SOMETIMES ERROR WAS INSTABLE, THE PREVIOUS OPERATIONS MIGHT BE WRONG
+//That's why, we do the following: we consider that the error is correct after 3 passes through the loop
+
+preventInstableError++;
+if(preventInstableError>=3)
+{
+error=desiredErrorMax;
+}
+
+} 
+
 
   //We do not exit from the loop while error is not the one expected
   while(error>desiredErrorMax || error<desiredErrorMin && error!=0.);

@@ -2,12 +2,18 @@
 using namespace std;
 
 
+  //We add a plot instruction
+void Plot::addInstruction(std::string instruction)
+{
+instructions.push_back(instruction);
+}
 
  //We set the plot type
 void Plot::setPlotType(std::string m_plotType)
 {
 plotType=m_plotType;
 }
+
 
  //We add a plot 
 void Plot::addPlot(std::string instruction)
@@ -23,16 +29,19 @@ fstream gnuFile("data.gnu", ios::out);
 
 gnuFile<<"set terminal postscript eps enhanced color font 'Helvetica,10'"<<endl;
 gnuFile<<"set output 'spectrum.eps'"<<endl;
-
-gnuFile<<"set xlabel 'Asymptotic energy (au)'"<<endl;
-gnuFile<<"set ylabel 'Probability (log)'"<<endl;
-
 gnuFile<<"set multiplot  layout 1, 1"<<endl;
 
 
+vector<string>::iterator it=instructions.begin();
+for(1; it!=instructions.end(); it++)
+{
+gnuFile<<*it<<endl;
+}
+
+
 gnuFile<<"set key on outside left bmargin box title sprintf(\"";
-vector<string>::iterator it=legend.begin();
-for(int k=1; it!=legend.end(); it++, k++)
+it=keys.begin();
+for(int k=1; it!=keys.end(); it++, k++)
 {
 gnuFile<<*it<<", ";
 if(k%5==0) 
