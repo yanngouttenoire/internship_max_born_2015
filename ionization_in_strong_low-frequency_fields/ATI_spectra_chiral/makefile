@@ -1,4 +1,4 @@
-CC=g++ -std=c++0x
+CC=g++ -std=c++11
 CFLAGS=-W -Wall -ansi -pedantic
 LDFLAGS=
 EXEC=exec.out

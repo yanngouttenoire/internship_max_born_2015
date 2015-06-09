@@ -13,6 +13,8 @@
 #include"display.h"
 #include"plot.h"
 #include"electrostaticpotential.h"
+#include"molecule.h"
+#include"hydrogen.h"
 #include"electricfield.h"
 
 
@@ -49,7 +51,7 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightMinThreshold=1E-6;
+double weightMinThreshold=6E-4;
 
 //We declare boolean controls
 bool stopStepper;
@@ -76,7 +78,8 @@ cout<<" "<<endl;
 //Each object will execute a specific task
 
 //Contains the electrostatic potential properties
-ElectrostaticPotential<state_type> myPotential;
+//ElectrostaticPotential<state_type> myPotential;
+Molecule<state_type> myPotential;
 
 //Contains the electric field properties
 ElectricField myField(0.);
@@ -94,7 +97,7 @@ Solve<state_type> mySolve;
 Display myDisplay;
 
 //Contains methods for doing a binning procedure and build a spectrum
-Spectra<state_type> mySpectra(myPotential, myField,0.005);
+Spectra<state_type> mySpectra(myPotential, myField,0.001);
 
 //Contains methods for drawing curves
 Plot myPlot;
@@ -214,7 +217,7 @@ Plot myPlot;
    myPlot.addKey("weightMinThreshold",weightMinThreshold);
    myPlot.addKey("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
    myPlot.addKey("spectraPointNbr", mySpectra.spectraPointsNbr);
-   myPlot.addKey("unexpectedStopNbr",unexpectedStopNbr);
+   myPlot.addKey("unexpectedStopNbr", double(unexpectedStopNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
    myPlot.addKey("binsWidth",mySpectra.binsWidth);
    myPlot.addKey("ErrorMax",desiredErrorMax);
    myPlot.addKey("dtMin",dtMin);
