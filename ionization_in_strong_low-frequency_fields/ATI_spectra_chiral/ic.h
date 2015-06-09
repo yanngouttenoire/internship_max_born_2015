@@ -22,7 +22,7 @@ public:
 ElectricField myField;
 
 //We declare an object of type ElectrostaticPotential in order to access electrostatic potential properties
-ElectrostaticPotential<state_type> myPotential;
+ElectrostaticPotential<state_type> *myPotential;
 
 //We declare a variable for the initial time
 double tBirth;
@@ -54,7 +54,7 @@ double ZBirth;
 double XBirth;
 
 //We declare constructor
-IC(ElectrostaticPotential<state_type> myPotential, ElectricField myField);
+IC(ElectrostaticPotential<state_type> *myPotential, ElectricField myField);
  
 //we set the initial ionization time
 void setTBirth(int iFieldBirth, int nFieldBirth);
@@ -89,7 +89,7 @@ void setIC(state_type &x, double& t);
 
 //We declare constructor
 template<typename state_type>
-IC<state_type>::IC(ElectrostaticPotential<state_type> myPotential, ElectricField myField) : myPotential(myPotential), myField(myField){}
+IC<state_type>::IC(ElectrostaticPotential<state_type> *myPotential, ElectricField myField) : myPotential(myPotential), myField(myField){}
 
 
 //we set the initial ionization time tBirth
@@ -115,7 +115,7 @@ template<typename state_type>
 double IC<state_type>::getVPerpBirth(int iVPerpBirth, int nVPerpBirth)
 {
   //Width of the velocity distributions after tunneling
-  double sigma_V=sqrt(fieldBirth/sqrt(2.*myPotential.IP));
+  double sigma_V=sqrt(fieldBirth/sqrt(2.*myPotential->IP));
 
   //Perpendicular velocity after tunneling
   double vPerpBirth=4.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-2*sigma_V;
@@ -154,7 +154,7 @@ void IC<state_type>::setWeightIonization()
 {
   vPerpBirth=pow(vXPerpBirth*vXPerpBirth+vYPerpBirth*vYPerpBirth+vZPerpBirth*vZPerpBirth, 1./2.);
 
-  weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential.IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential.IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
+  weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential->IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential->IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
 }
 
 
@@ -163,7 +163,7 @@ template<typename state_type>
 void IC<state_type>::setRhoBirth()
 {
   //We approximate the radial position of the electron after tunneling like:
-  rhoBirth=myPotential.IP/fieldBirth;	
+  rhoBirth=myPotential->IP/fieldBirth;	
 }
 
 

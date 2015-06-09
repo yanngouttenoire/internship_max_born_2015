@@ -10,7 +10,7 @@
 #include<string>
 
 #include"electrostaticpotential.h"
-/*
+
 
 template<typename state_type> class B : public A<double>
 {
@@ -24,7 +24,8 @@ void preparePotential(const state_type &x);
 template<typename state_type> void B<state_type>::preparePotential(const state_type &x)
 {
 b=this->softParameter;
-}*/
+}
+
 
 template<typename state_type> class Molecule : public ElectrostaticPotential<state_type>
 {

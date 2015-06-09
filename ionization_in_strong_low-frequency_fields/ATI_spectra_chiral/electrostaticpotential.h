@@ -8,7 +8,7 @@
 #include<iomanip>
 #include<vector>
 #include<string>
-/*
+
 template<typename state_type> class A
 {
 public:
@@ -20,15 +20,9 @@ A()
 a=0.5;
 softParameter=0.;
 }
-virtual void preparePotential(const state_type &x);
+virtual void preparePotential(const state_type &x)=0;
 };
-template<typename state_type>
-void A<state_type>::preparePotential(const state_type &x)
-{
-radialDistanceCube=pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+softParameter*softParameter,3./2.); 
-}
 
-*/
 
 //Define characteristics and properties of an eletric field
 template<typename state_type> class ElectrostaticPotential
@@ -48,13 +42,13 @@ IP=0.5;
 softParameter=0.;
 }
 
-virtual void preparePotential(const state_type &x);
+virtual void preparePotential(const state_type &x)=0;
 
 //Methods which return the coulomb force on each components 
-virtual double operator()(char component, const state_type &x);
+virtual double operator()(char component, const state_type &x)=0;
 
 //Method which returns the electrostatic potential energy
-virtual double potentialEnergy(const state_type &x);
+virtual double potentialEnergy(const state_type &x)=0;
 
 };
 

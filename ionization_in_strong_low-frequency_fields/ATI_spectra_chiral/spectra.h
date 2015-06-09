@@ -33,14 +33,14 @@ double binsWidth;
 int spectraPointsNbr;
 
 //We declare an object of type ElectrostaticPotential
-ElectrostaticPotential<state_type> myPotential;
+ElectrostaticPotential<state_type> *myPotential;
 
 //We declare an object of type ElectricField
 ElectricField myField;
 
 
 //Constructor
-Spectra(ElectrostaticPotential<state_type> myPotential, ElectricField myField, double binsWidth=0.1);
+Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, double binsWidth=0.1);
 
 //We compute the asymptotic energy
 double asymptoticEnergy(const state_type& x, const double& t);
@@ -62,7 +62,7 @@ void getFromMap(std::fstream& dataFile, std::map<int,double>& asymptEnergy);
 
 //We set the histogram intervals width
 template<typename state_type>
-Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> myPotential, ElectricField myField, double binsWidth) : myPotential(myPotential), myField(myField), binsWidth(binsWidth) {spectraPointsNbr=0;}
+Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, double binsWidth) : myPotential(myPotential), myField(myField), binsWidth(binsWidth) {spectraPointsNbr=0;}
 
 
 //We store asymptotic energies in containers of map type with a view to make a data binning
@@ -149,7 +149,7 @@ template<typename state_type>
 double Spectra<state_type>::asymptoticEnergy(const state_type &x, const double& t)
 {
   double Vsq=(x[3]-myField.vectPot('X',t))*(x[3]-myField.vectPot('X',t))+(x[4]-myField.vectPot('Y',t))*(x[4]-myField.vectPot('Y',t))+(x[5]-myField.vectPot('Z',t))*(x[5]-myField.vectPot('Z',t));
-   double E=Vsq/2-myPotential.potentialEnergy(x);
+   double E=Vsq/2-myPotential->potentialEnergy(x);
 
   return E;
 

@@ -51,7 +51,7 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightMinThreshold=1E-6;
+double weightMinThreshold=5E-4;
 
 //We declare boolean controls
 bool stopStepper;
@@ -79,7 +79,7 @@ cout<<" "<<endl;
 
 //Contains the electrostatic potential properties
 //ElectrostaticPotential<state_type> myPotential;
-Hydrogen<state_type> myPotential;
+Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
 //Molecule<state_type> myPotential;
 
 //Contains the electric field properties

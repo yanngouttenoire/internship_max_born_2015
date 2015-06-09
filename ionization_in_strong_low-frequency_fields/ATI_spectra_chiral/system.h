@@ -17,7 +17,7 @@ template<typename state_type>
 class System
 {
   //We declare an object of type ElectrostaticPotential for electrostatic potential properties
-  ElectrostaticPotential<state_type> myPotential;	
+  ElectrostaticPotential<state_type> *myPotential;	
 
   //We declare field variables
   ElectricField myField;		
@@ -25,7 +25,7 @@ class System
   public:
 
   //Contructor 
-  System(ElectrostaticPotential<state_type> &myPotential, ElectricField &myField);
+  System(ElectrostaticPotential<state_type> *myPotential, ElectricField &myField);
   
   //We implement the method which contains dynamic equations of motion
   //We overload the operator() for convenience interest
