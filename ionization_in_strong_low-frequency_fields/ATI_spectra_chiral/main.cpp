@@ -24,7 +24,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=100, nVYPerpBirth=1, nVZPrimPerpBirth=100;
+int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare the time variable
@@ -49,7 +49,7 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightMinThreshold=1E-5;
+double weightMinThreshold=1E-6;
 
 //We declare boolean controls
 bool stopStepper;
@@ -150,7 +150,7 @@ Plot myPlot;
 	      mySolve.controlledRK5(mySystem,x,t,dt,error,desiredErrorMin,desiredErrorMax);
 
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if((t-myIC.tBirth)>15.*myField.opticalCycle)
+	      if((t-myIC.tBirth)>10.*myField.opticalCycle)
                 {
                 unexpectedStop=true;
 		stopStepper=true;
@@ -192,6 +192,7 @@ Plot myPlot;
           myDisplay("errorMin", desiredErrorMin);
           myDisplay("asymptoticEnergy",mySpectra.asymptoticEnergy(x,t));
           myDisplay("weightIonization",myIC.weightIonization);
+          myDisplay("binsWidth",mySpectra.binsWidth);
           myDisplay("spectraPointNbr", mySpectra.spectraPointsNbr);
           myDisplay("ptsNumber", nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
           myDisplay("unexpectedStopNbr", double(unexpectedStopNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
@@ -214,6 +215,7 @@ Plot myPlot;
    myPlot.addKey("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
    myPlot.addKey("spectraPointNbr", mySpectra.spectraPointsNbr);
    myPlot.addKey("unexpectedStopNbr",unexpectedStopNbr);
+   myPlot.addKey("binsWidth",mySpectra.binsWidth);
    myPlot.addKey("ErrorMax",desiredErrorMax);
    myPlot.addKey("dtMin",dtMin);
    myPlot.addKey("linear field");
