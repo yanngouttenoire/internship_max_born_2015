@@ -11,21 +11,25 @@
 
 #include"electrostaticpotential.h"
 
-
-template<typename state_type>
-class Hydrogen : public ElectrostaticPotential<state_type>
+template<typename state_type> class Hydrogen : public ElectrostaticPotential<state_type>
 {
 
 public:
-double IP;
-double softParameter;
 
 //Electrostatic potential parameters
 double charge;
 double inverseRadialDistanceCube;
 
 //Constructor
-Hydrogen();
+Hydrogen()
+{
+//CONSTANTS
+double uaEnergy=27.211608;
+
+//Ionization potential
+this->IP=13.605804/uaEnergy;
+}
+
 
 //Method which compute some quantities in advance
 void preparePotential(const state_type &x);
@@ -38,25 +42,12 @@ double potentialEnergy(const state_type &x);
 
 };
 
-template<typename state_type>
-Hydrogen<state_type>::Hydrogen()
-{
-
-//CONSTANTS
-double uaEnergy=27.211608;
-
-//Ionization potential
-IP=13.605804/uaEnergy;
-
-
-}
-
 
 template<typename state_type>
 void Hydrogen<state_type>::preparePotential(const state_type &x)
 {
 
-inverseRadialDistanceCube = charge/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+softParameter*softParameter,3./2.) ; 
+inverseRadialDistanceCube = charge/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ; 
 
 }
 
@@ -84,8 +75,10 @@ template<typename state_type>
 double Hydrogen<state_type>::potentialEnergy(const state_type& x)
 {
 
-return -charge/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+softParameter*softParameter,1./2.); 
+return -charge/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,1./2.); 
 
 }
+
+
 
 #endif
