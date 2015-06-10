@@ -7,6 +7,7 @@
 #include<map>
 #include<iomanip>
 #include<vector>
+#include<stdarg.h>
 
 //Preprocessor function
 //Display x (not the content of x)
@@ -41,6 +42,19 @@ void operator()(std::string data)
   std::cout<<data<<std::endl;
   displayCounter++;	
 }
+
+template<typename T>
+void variableArg(std::string dataName, int n,...)
+{
+std::cout<<dataName<<"= ";
+va_list ap;
+va_start(ap,n);
+for(int i=0; i<n; i++) std::cout<<va_arg(ap,T)<<" ";
+va_end(ap);
+std::cout<<" "<<std::endl;
+displayCounter++;
+}
+
 
 };
 

@@ -12,21 +12,7 @@
 #include"electrostaticpotential.h"
 
 
-template<typename state_type> class B : public A<double>
-{
-public:
-double b;
-B(): A<double>()
-{}
-void preparePotential(const state_type &x);
-};
-
-template<typename state_type> void B<state_type>::preparePotential(const state_type &x)
-{
-b=this->softParameter;
-}
-
-
+//Define characteristics and properties of an electrostatic potential for a given molecule
 template<typename state_type> class Molecule : public ElectrostaticPotential<state_type>
 {
 
@@ -40,20 +26,7 @@ double inverseRadialDistanceCube[4];
 double sumInverseRadialDistanceCube;
 
 //Constructor
-Molecule(): ElectrostaticPotential<state_type>()
-{
-
-//Nuclei charges
-charge[0]=0.4;
-charge[1]=0.2;
-charge[2]=0.2;
-charge[3]=0.2;
-//Covalent bond length
-bondLength[0]=2.0;
-bondLength[1]=1.0;
-bondLength[2]=3.0;
-}
-
+Molecule();
 
 //Method which compute some quantities in advance
 void preparePotential(const state_type &x);
@@ -65,17 +38,11 @@ double operator()(char component, const state_type &x);
 double potentialEnergy(const state_type &x);
 
 };
-/*
+
 template<typename state_type>
-Molecule<state_type>::Molecule(): ElectrostaticPotential(0.5)
+Molecule<state_type>::Molecule()
 {
 
-
-//CONSTANTS
-double uaEnergy=27.211608;
-
-//Ionization potential
-this->IP=13.6/uaEnergy;
 //Nuclei charges
 charge[0]=0.4;
 charge[1]=0.2;
@@ -85,10 +52,12 @@ charge[3]=0.2;
 bondLength[0]=2.0;
 bondLength[1]=1.0;
 bondLength[2]=3.0;
-
+//Ionization potential
+double uaEnergy=27.211608;
+this->IP=13.6/uaEnergy;
 
 }
-*/
+
 
 
 

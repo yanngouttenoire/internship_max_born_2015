@@ -30,7 +30,7 @@ fstream gnuFile("data.gnu", ios::out);
 gnuFile<<"set terminal postscript eps enhanced color font 'Helvetica,10'"<<endl;
 gnuFile<<"set output 'spectrum.eps'"<<endl;
 gnuFile<<"set multiplot  layout 1, 1"<<endl;
-
+gnuFile<<"set key width -15"<<endl;
 
 vector<string>::iterator it=instructions.begin();
 for(1; it!=instructions.end(); it++)
@@ -39,7 +39,7 @@ gnuFile<<*it<<endl;
 }
 
 
-gnuFile<<"set key on outside left bmargin box title sprintf(\"";
+gnuFile<<"set key on outside center bmargin Left reverse box title sprintf(\"";
 it=keys.begin();
 for(int k=1; it!=keys.end(); it++, k++)
 {

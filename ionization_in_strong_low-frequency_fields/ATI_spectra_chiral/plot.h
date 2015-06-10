@@ -9,7 +9,7 @@
 #include<vector>
 #include<string>
 #include<sstream>
-
+#include<stdarg.h>
 
 //Preprocessor function
 //Display x (not the content of x)
@@ -29,6 +29,19 @@ void addKey(std::string keyName, const T &key, std::string unit="")
 {
 std::ostringstream ostringKey;
 ostringKey<<keyName<<" = "<<key<<unit;
+keys.push_back(ostringKey.str());
+}
+
+template<typename T>
+void addKeyVariableArg(std::string keyName, int n, ...)
+{
+std::ostringstream ostringKey;
+ostringKey<<keyName<<" = ";
+va_list ap;
+va_start(ap,n);
+for(int i=0; i<n; i++) ostringKey<<va_arg(ap,T)<<" ";
+va_end(ap);
+std::cout<<" "<<std::endl;
 keys.push_back(ostringKey.str());
 }
 

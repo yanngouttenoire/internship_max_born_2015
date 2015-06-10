@@ -51,7 +51,7 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightMinThreshold=5E-4;
+double weightMinThreshold=6.4E-4;
 
 //We declare boolean controls
 bool stopStepper;
@@ -78,9 +78,8 @@ cout<<" "<<endl;
 //Each object will execute a specific task
 
 //Contains the electrostatic potential properties
-//ElectrostaticPotential<state_type> myPotential;
-Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
-//Molecule<state_type> myPotential;
+//Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
+Molecule<state_type> *myPotential=new Molecule<state_type>();
 
 //Contains the electric field properties
 ElectricField myField(0.);
@@ -190,6 +189,8 @@ Plot myPlot;
           myDisplay("vPerpBirth", myIC.vPerpBirth);
           myDisplay("vYPerpBirth", myIC.vYPerpBirth);
           myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
+          myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
+          myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
           myDisplay("step", dt);
           myDisplay("stepMin", dtMin);
           myDisplay("error", error);
@@ -215,10 +216,12 @@ Plot myPlot;
    myPlot.addKey("nField",nFieldBirth);
    myPlot.addKey("nVYPerp",nVYPerpBirth);
    myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
-   myPlot.addKey("weightMinThreshold",weightMinThreshold);
-   myPlot.addKey("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+   myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
+   myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+   myPlot.addKey("weightThreshold",weightMinThreshold);
+   myPlot.addKey("weightTooSmallNbr", int(double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
    myPlot.addKey("spectraPointNbr", mySpectra.spectraPointsNbr);
-   myPlot.addKey("unexpectedStopNbr",unexpectedStopNbr);
+   myPlot.addKey("unexpectedStopNbr",int(double(unexpectedStopNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
    myPlot.addKey("binsWidth",mySpectra.binsWidth);
    myPlot.addKey("ErrorMax",desiredErrorMax);
    myPlot.addKey("dtMin",dtMin);

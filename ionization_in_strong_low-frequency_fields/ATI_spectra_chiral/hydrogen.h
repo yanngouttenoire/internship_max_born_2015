@@ -21,15 +21,7 @@ double charge;
 double inverseRadialDistanceCube;
 
 //Constructor
-Hydrogen()
-{
-//CONSTANTS
-double uaEnergy=27.211608;
-
-//Ionization potential
-this->IP=13.605804/uaEnergy;
-}
-
+Hydrogen();
 
 //Method which compute some quantities in advance
 void preparePotential(const state_type &x);
@@ -41,6 +33,17 @@ double operator()(char component, const state_type &x);
 double potentialEnergy(const state_type &x);
 
 };
+
+template<typename state_type>
+Hydrogen<state_type>::Hydrogen()
+{
+
+//Nuclei charges
+charge=1.;
+//Ionization potential
+this->IP=0.5;
+
+}
 
 
 template<typename state_type>
