@@ -82,7 +82,7 @@ cout<<" "<<endl;
 Molecule<state_type> *myPotential=new Molecule<state_type>();
 
 //Contains the electric field properties
-ElectricField myField(0.);
+ElectricField myField(0.1);
 
 //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
 IC<state_type> myIC(myPotential, myField);
@@ -184,6 +184,7 @@ Plot myPlot;
           if(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth)%1000==0)
           {
 	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
+          myDisplay("ellipticity", myField.ellipticity);
           myDisplay("rhoBirth",myIC.rhoBirth);
           myDisplay("phaseBirth",myField.pulsation*myIC.tBirth*180./M_PI);
           myDisplay("vPerpBirth", myIC.vPerpBirth);
@@ -225,7 +226,7 @@ Plot myPlot;
    myPlot.addKey("binsWidth",mySpectra.binsWidth);
    myPlot.addKey("ErrorMax",desiredErrorMax);
    myPlot.addKey("dtMin",dtMin);
-   myPlot.addKey("linear field");
+   myPlot.addKey("ellipticity", myField.ellipticity);
    myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
    myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");
    myPlot.addKey("duration",myDisplay.elapsedTime);
