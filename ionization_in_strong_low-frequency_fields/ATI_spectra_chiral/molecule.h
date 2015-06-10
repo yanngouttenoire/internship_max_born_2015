@@ -53,9 +53,7 @@ bondLength[0]=2.0;
 bondLength[1]=1.0;
 bondLength[2]=3.0;
 //Ionization potential
-double uaEnergy=27.211608;
-this->IP=13.6/uaEnergy;
-
+this->IP=0.32772257;
 }
 
 

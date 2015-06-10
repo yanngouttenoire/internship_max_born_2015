@@ -39,6 +39,9 @@ integer, Parameter :: FFTW_ESTIMATE=0,FFTW_MEASURE=1
 
 integer*8 :: planf,planb
 
+real, dimension(4) :: charge   
+real, dimension(3) :: bondLength
+
 !!
 !! BEGIN
 !!
@@ -85,12 +88,29 @@ enddo
 nsize=nx*ny*nz
 
 !Define Potential
+
+ charge(1)=0.4
+ charge(2)=0.2
+ charge(3)=0.2
+ charge(4)=0.2
+!Covalent bond length
+
+ bondLength(1)=2.0
+ bondLength(2)=1.0
+ bondLength(3)=3.0
+ !bondLength(1)=0.
+ !bondLength(2)=0.
+ !bondLength(3)=0.
+
 Allocate(V(nx,ny,nz))
 open(1,file='potential.dat',status='unknown') !Saving the potential in eV
 do kx=1,nx
  do ky=1,ny
   do kz=1,nz
-   V(kx,ky,kz) = 0.5d0 * rm * (wx*wx*x(kx)*x(kx)+wy*wy*y(ky)*y(ky)+wz*wz*z(kz)*z(kz)) !Harmonic potential
+   V(kx,ky,kz) = -charge(1)/sqrt(x(kx)*x(kx)+y(ky)*y(ky)+z(kz)*z(kz))&
+-charge(2)/sqrt((x(kx)-bondLength(1))*(x(kx)-bondLength(1))+y(ky)*y(ky)+z(kz)*z(kz))&
+-charge(3)/sqrt(x(kx)*x(kx)+(y(ky)-bondLength(2))*(y(ky)-bondLength(2))+z(kz)*z(kz))&
+-charge(4)/sqrt(x(kx)*x(kx)+y(ky)*y(ky)+(z(kz)-bondLength(3))*(z(kz)-bondLength(3)))
    write(1,fmt="(4(e13.6,1x))") x(kx),y(ky),z(kz),V(kx,ky,kz)*conv_au_eV
   enddo
  enddo
