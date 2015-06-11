@@ -51,7 +51,7 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightMinThreshold=6.4E-4;
+double weightMinThreshold=0.0;
 
 //We declare boolean controls
 bool stopStepper;
@@ -82,7 +82,7 @@ cout<<" "<<endl;
 Molecule<state_type> *myPotential=new Molecule<state_type>();
 
 //Contains the electric field properties
-ElectricField myField(0.1);
+ElectricField myField(0.0);
 
 //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
 IC<state_type> myIC(myPotential, myField);

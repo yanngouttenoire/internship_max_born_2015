@@ -121,7 +121,7 @@ double IC<state_type>::getVPerpBirth(int iVPerpBirth, int nVPerpBirth)
   double vPerpBirth=4.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-2*sigma_V;
   return vPerpBirth;
    
-  if(vPerpBirth<1E-2)
+  if(fabs(vPerpBirth)<1E-2)
   vPerpBirth=1E-2; 
  
 }
