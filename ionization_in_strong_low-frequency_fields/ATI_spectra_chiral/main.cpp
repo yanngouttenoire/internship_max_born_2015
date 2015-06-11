@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
+int nFieldBirth=100, nVYPerpBirth=1, nVZPrimPerpBirth=10;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare the time variable
@@ -51,7 +51,7 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightMinThreshold=0.0;
+double weightMinThreshold=0;
 
 //We declare boolean controls
 bool stopStepper;

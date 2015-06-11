@@ -114,15 +114,19 @@ void IC<state_type>::setFieldBirth()
 template<typename state_type>
 double IC<state_type>::getVPerpBirth(int iVPerpBirth, int nVPerpBirth)
 {
+//if nVPerpBirth equals to 1, we set VPerpBirth equals to 0
+//Thus, we can choose to put VYPerpBirth or VZPrimPerpBirth equals to 0 for all the simulation
+if(nVPerpBirth==1)
+return 0.0;
+else
+{
   //Width of the velocity distributions after tunneling
   double sigma_V=sqrt(fieldBirth/sqrt(2.*myPotential->IP));
 
   //Perpendicular velocity after tunneling
   double vPerpBirth=4.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-2*sigma_V;
   return vPerpBirth;
-   
-  if(fabs(vPerpBirth)<1E-2)
-  vPerpBirth=1E-2; 
+}
  
 }
 
@@ -132,8 +136,6 @@ template<typename state_type>
 void IC<state_type>::setVYPerpBirth(int iVYPerpBirth, int nVYPerpBirth)
 {
 vYPerpBirth=getVPerpBirth(iVYPerpBirth, nVYPerpBirth);
-//Uncomment this line and you modify the spectrum a lot
-vYPerpBirth=0.;
 }
 
 //We set the initial perpendicular velocity along X and Z
