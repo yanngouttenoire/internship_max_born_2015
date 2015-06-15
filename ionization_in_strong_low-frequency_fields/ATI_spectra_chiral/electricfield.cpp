@@ -20,40 +20,52 @@ double uaTime=24.1888421562712E-18;
 double lightSpeed=2.99792458E8;
 
 //Field parameters
-waveLenght=1064E-9;
-fieldAmpl=sqrt(13*(1E13)/uaIntensity);
+waveLenght=2E-6;
+fieldAmpl=0.0534;
+cyclesNbr=20;
+phase=0.;
 pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
 opticalCycle=2.*M_PI/pulsation;
-pulseDuration=3.*opticalCycle;
-phase=0.;
 }
 
+//The electric field is a pulse whose full duration at half maximum contains 2 optical cycles
 double ElectricField::operator()(char component, const double& t)
 {
+if(fabs(t)<opticalCycle*cyclesNbr)
+{
 switch(component)
 {
 case 'X' :
-return ellipticity*fieldAmpl*sin(pulsation*t+phase);
+return pow(cos(M_PI*t/2./opticalCycle/cyclesNbr),2)*ellipticity*fieldAmpl*sin(pulsation*t+phase);
 
 case 'Y' :
 return 0.;
 
 case 'Z' :
-return fieldAmpl*cos(pulsation*t+phase);
+return pow(cos(M_PI*t/2./opticalCycle/cyclesNbr),2)*fieldAmpl*cos(pulsation*t+phase);
 }
+}
+else
+return 0.;
 }
 
+//We build the asssociated vector potential
 double ElectricField::vectPot(char component, const double& t)
 {
+if(fabs(t)<opticalCycle*cyclesNbr)
+{
 switch(component)
 {
 case 'X' :
-return 0.;
+return pow(cos(M_PI*t/2./opticalCycle/cyclesNbr),2)*ellipticity*fieldAmpl/pulsation*cos(pulsation*t+phase);
 
 case 'Y' :
 return 0.;
 
 case 'Z' :
-return -fieldAmpl/pulsation*sin(pulsation*t+phase);
+return -pow(cos(M_PI*t/2./opticalCycle/cyclesNbr),2)*fieldAmpl/pulsation*sin(pulsation*t+phase);
 }
+}
+else
+return 0.;
 }
