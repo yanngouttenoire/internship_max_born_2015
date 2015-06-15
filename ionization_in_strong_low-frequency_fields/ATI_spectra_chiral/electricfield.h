@@ -20,7 +20,7 @@ double waveLenght;
 double fieldAmpl;
 double pulsation;
 double opticalCycle;
-double pulseDuration;
+unsigned int cyclesNbr;
 double phase;
 double ellipticity;
 

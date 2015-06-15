@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=100, nVYPerpBirth=1, nVZPrimPerpBirth=10;
+int nFieldBirth=1000, nVYPerpBirth=100, nVZPrimPerpBirth=1;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare the time variable
@@ -37,11 +37,11 @@ typedef double state_type[6];
 state_type x;
 
 //We declare a variable for the step in controlledRK5, the min allowed value
-double dt=0.1; 
-double dtMin=1E-20;
+double step; 
+double stepMin=1E-20;
 
-//We declare a counter which counts how many events have not been accepted because dt was smaller than dtMin
-int unexpectedStopNbr=0;
+//We declare a counter which counts how many events have not been accepted because step was smaller than stepMin
+int stepTooSmallNbr=0;
 //And a counter which counts how many initial conditions have not been accepted because the probality of ionization was too small
 int weightTooSmallNbr=0;
 
@@ -51,11 +51,11 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightMinThreshold=0;
+double weightThreshold=0.;
 
 //We declare boolean controls
 bool stopStepper;
-bool unexpectedStop;
+bool isStepTooSmall;
 bool isWeightTooSmall;
 
 //Bins width
@@ -78,11 +78,11 @@ cout<<" "<<endl;
 //Each object will execute a specific task
 
 //Contains the electrostatic potential properties
-//Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
-Molecule<state_type> *myPotential=new Molecule<state_type>();
+Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
+//Molecule<state_type> *myPotential=new Molecule<state_type>();
 
 //Contains the electric field properties
-ElectricField myField(0.0);
+ElectricField myField(0.1);
 
 //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
 IC<state_type> myIC(myPotential, myField);
@@ -119,11 +119,11 @@ Plot myPlot;
 
           //We initialise the boolean controls	  
  	  stopStepper=false; 
-	  unexpectedStop=false;
+	  isStepTooSmall=false;
           isWeightTooSmall=false;
 
-          //We update the step dt
-          dt=0.001; 
+          //We update the step step
+          step=0.001; 
 
 	  //INITIAL CONDITIONS
           //We set the ionization time
@@ -134,7 +134,7 @@ Plot myPlot;
           myIC.setWeightIonization();
 
           //We check if weightIonization is big enough
-          if(myIC.weightIonization < weightMinThreshold)
+          if(myIC.weightIonization < weightThreshold)
           { 
            isWeightTooSmall=true;
            stopStepper=true;
@@ -150,33 +150,27 @@ Plot myPlot;
 	    { 
 
 	      //We call the function which solve eq of the motion
-	      mySolve.controlledRK5(mySystem,x,t,dt,error,desiredErrorMin,desiredErrorMax);
-
+	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
+if(nTraj%10000==0)
+cout<<"\033[F"<<t<<" "<<step<<endl;
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if((t-myIC.tBirth)>10.*myField.opticalCycle)
-                {
-                unexpectedStop=true;
-		stopStepper=true;
-                }
+	      if(t>10.*myField.opticalCycle)
+                stopStepper=true;
                  
-             //We stop when the electron is fully ionized
-	      if(sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>300.)
-		stopStepper=true;
-
               //We check if the step is no too small (otherwise the simulation will take too much time)
-	      if(dt<dtMin)
+	      if(step<stepMin)
 		{
 		  stopStepper=true;
-		  unexpectedStop=true;
+		  isStepTooSmall=true;
 		}
 	    }
 
 	  //We store the asymptotic velocity in a container of map type with a view to making a data binning
-	  mySpectra.storeDataBinning(x, t, myIC.weightIonization, unexpectedStop || isWeightTooSmall);
+	  mySpectra.storeDataBinning(x, t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 	   
             
-	    if(unexpectedStop==true)
-	      unexpectedStopNbr+=1;
+	    if(isStepTooSmall==true)
+	      stepTooSmallNbr+=1;
             if(isWeightTooSmall==true)
 	      weightTooSmallNbr+=1;
 
@@ -190,20 +184,21 @@ Plot myPlot;
           myDisplay("vPerpBirth", myIC.vPerpBirth);
           myDisplay("vYPerpBirth", myIC.vYPerpBirth);
           myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
-          myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
-          myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
-          myDisplay("step", dt);
-          myDisplay("stepMin", dtMin);
+         // myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
+          //myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+          myDisplay("step", step);
+          myDisplay("stepMin", stepMin);
           myDisplay("error", error);
           myDisplay("errorMin", desiredErrorMin);
           myDisplay("asymptoticEnergy",mySpectra.asymptoticEnergy(x,t));
           myDisplay("weightIonization",myIC.weightIonization);
-          myDisplay("binsWidth",mySpectra.binsWidth);
-          myDisplay("spectraPointNbr", mySpectra.spectraPointsNbr);
           myDisplay("ptsNumber", nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
-          myDisplay("unexpectedStopNbr", double(unexpectedStopNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
-          myDisplay("weightMinThreshold",weightMinThreshold);
+          myDisplay("spectraPointNbr", double(mySpectra.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+          myDisplay("trappedElectronNbr", double(mySpectra.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+          myDisplay("stepTooSmallNbr", double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
           myDisplay("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+          myDisplay("weightThreshold",weightThreshold);
+          myDisplay("binsWidth",mySpectra.binsWidth);
           }
 
 	 }         
@@ -217,18 +212,18 @@ Plot myPlot;
    myPlot.addKey("nField",nFieldBirth);
    myPlot.addKey("nVYPerp",nVYPerpBirth);
    myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
-   myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
-   myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
-   myPlot.addKey("weightThreshold",weightMinThreshold);
+  // myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
+  // myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+   myPlot.addKey("spectraPointNbr", double(mySpectra.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+   myPlot.addKey("stepTooSmallNbr",int(double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
    myPlot.addKey("weightTooSmallNbr", int(double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
-   myPlot.addKey("spectraPointNbr", mySpectra.spectraPointsNbr);
-   myPlot.addKey("unexpectedStopNbr",int(double(unexpectedStopNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+   myPlot.addKey("weightThreshold",weightThreshold);
    myPlot.addKey("binsWidth",mySpectra.binsWidth);
    myPlot.addKey("ErrorMax",desiredErrorMax);
-   myPlot.addKey("dtMin",dtMin);
+   myPlot.addKey("stepMin",stepMin);
    myPlot.addKey("ellipticity", myField.ellipticity);
    myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
-   myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");
+   myPlot.addKey("waveLenght",myField.waveLenght*1.E6, "micro-m");
    myPlot.addKey("duration",myDisplay.elapsedTime);
      
    myPlot.addInstruction("set xlabel 'Asymptotic energy (au)'");

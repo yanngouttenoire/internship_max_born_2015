@@ -32,6 +32,9 @@ double binsWidth;
 //We declare a counter for the number of events stored
 int spectraPointsNbr;
 
+//We declare a counter for the number of events not stored because the electron always trapped by the atom after the pulse
+int trappedElectronNbr;
+
 //We declare an object of type ElectrostaticPotential
 ElectrostaticPotential<state_type> *myPotential;
 
@@ -62,7 +65,11 @@ void getFromMap(std::fstream& dataFile, std::map<int,double>& asymptEnergy);
 
 //We set the histogram intervals width
 template<typename state_type>
-Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, double binsWidth) : myPotential(myPotential), myField(myField), binsWidth(binsWidth) {spectraPointsNbr=0;}
+Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, double binsWidth) : myPotential(myPotential), myField(myField), binsWidth(binsWidth) 
+{
+spectraPointsNbr=0;
+trappedElectronNbr=0;
+}
 
 
 //We store asymptotic energies in containers of map type with a view to make a data binning
@@ -74,9 +81,16 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
   if(unexpectedStop) return;
   
   //We compute the x value of the new point in the histogram
- int  range=int(asymptoticEnergy(x,t)/binsWidth);
+  int  range=int(asymptoticEnergy(x,t)/binsWidth);
+
+  //If the energy of the electron is negative, the electron is not free and we do not consider the event
+  if(range<0) 
+  {
+  trappedElectronNbr++;
+  return;
+  }
   
-//we insert values associated with the new event in the corresponding container
+//we insert values associated with the new event in the corresponding container according if the electron propagated in y>0 or y<0
 if(x[1]>=0)
  insertInMap(asymptEnergyUp, range, weightIonization);
 else
