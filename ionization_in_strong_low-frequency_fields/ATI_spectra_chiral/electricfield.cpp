@@ -22,13 +22,16 @@ double lightSpeed=2.99792458E8;
 //Field parameters
 waveLenght=2E-6;
 fieldAmpl=0.0534;
-cyclesNbr=2;
+cyclesNbr=1;
 phase=0.;
 pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
 opticalCycle=2.*M_PI/pulsation;
 }
 
 //The electric field is a pulse whose full duration at half maximum contains 2 optical cycles
+//The envelope can be
+//either exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))
+//or pow(cos(M_PI*t/2./opticalCycle/cyclesNbr),2)
 double ElectricField::operator()(char component, const double& t)
 {
 if(fabs(t)<opticalCycle*cyclesNbr)
@@ -36,13 +39,13 @@ if(fabs(t)<opticalCycle*cyclesNbr)
 switch(component)
 {
 case 'X' :
-return pow(cos(M_PI*t/2./opticalCycle/cyclesNbr),2)*ellipticity*fieldAmpl*sin(pulsation*t+phase);
+return exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*ellipticity*fieldAmpl*sin(pulsation*t+phase);
 
 case 'Y' :
 return 0.;
 
 case 'Z' :
-return pow(cos(M_PI*t/2./opticalCycle/cyclesNbr),2)*fieldAmpl*cos(pulsation*t+phase);
+return exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*fieldAmpl*cos(pulsation*t+phase);
 }
 }
 else
@@ -57,13 +60,13 @@ if(fabs(t)<opticalCycle*cyclesNbr)
 switch(component)
 {
 case 'X' :
-return pow(cos(M_PI*t/2./opticalCycle/cyclesNbr),2)*ellipticity*fieldAmpl/pulsation*cos(pulsation*t+phase);
+return exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*ellipticity*fieldAmpl/pulsation*cos(pulsation*t+phase);
 
 case 'Y' :
 return 0.;
 
 case 'Z' :
-return -pow(cos(M_PI*t/2./opticalCycle/cyclesNbr),2)*fieldAmpl/pulsation*sin(pulsation*t+phase);
+return -exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*fieldAmpl/pulsation*sin(pulsation*t+phase);
 }
 }
 else

@@ -84,7 +84,8 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
   int  range=int(asymptoticEnergy(x,t)/binsWidth);
 
   //If the energy of the electron is negative, the electron is not free and we do not consider the event
-  if(range<0) 
+  //If the range equals zero we do not consider this neither (esthetic choice)
+  if(range<=0) 
   {
   trappedElectronNbr++;
   return;

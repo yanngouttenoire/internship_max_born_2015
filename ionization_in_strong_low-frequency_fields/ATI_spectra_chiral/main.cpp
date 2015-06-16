@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=1000, nVYPerpBirth=100, nVZPrimPerpBirth=1;
+int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare the time variable
@@ -51,7 +51,7 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThreshold=1E-5;
+double weightThreshold=5E-5;
 
 //We declare boolean controls
 bool stopStepper;
@@ -82,7 +82,7 @@ Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
 //Molecule<state_type> *myPotential=new Molecule<state_type>();
 
 //Contains the electric field properties
-ElectricField myField(0.1);
+ElectricField myField(0.0);
 
 //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
 IC<state_type> myIC(myPotential, myField);
@@ -151,10 +151,9 @@ Plot myPlot;
 
 	      //We call the function which solve eq of the motion
 	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
-if(nTraj%10000==0)
-cout<<"\033[F"<<t<<" "<<step<<endl;
+
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if(t>4.*myField.opticalCycle)
+	      if(t>3.*myField.cyclesNbr*myField.opticalCycle)
                 stopStepper=true;
                  
               //We check if the step is no too small (otherwise the simulation will take too much time)
@@ -226,13 +225,17 @@ cout<<"\033[F"<<t<<" "<<step<<endl;
    myPlot.addKey("waveLenght",myField.waveLenght*1.E6, "micro-m");
    myPlot.addKey("duration",myDisplay.elapsedTime);
      
-   myPlot.addInstruction("set xlabel 'Asymptotic energy (au)'");
+   myPlot.addInstruction("set xlabel 'Asymptotic energy (au)' offset 0,4");
    myPlot.addInstruction("set ylabel 'Probability (log)'");
-   myPlot.addInstruction("set xrange [0:1]");
+   myPlot.addInstruction("set xrange [0:0.2]");
+   myPlot.addInstruction("set xtics offset 0,0.3");
+
+   myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 2 "); //red
+   myPlot.addInstruction("set style line 2 lc rgb '#062be5' pt 6 ps 1 lt 1 lw 2 "); //blue
  
    myPlot.setPlotType("plot");
-   myPlot.addPlot("'data.dat' index 0 using 1:2 w l lc rgb 'violet' title 'Photo-electron spectrum with vY positive'");
-   myPlot.addPlot("'data.dat' index 1 using 1:2 w l lc rgb 'violet' title 'Photo-electron spectrum with vY negative'");
+   myPlot.addPlot("'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electron spectrum with vY positive'");
+   myPlot.addPlot("'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electron spectrum with vY negative'");
 
    myPlot.gnuplot();
 

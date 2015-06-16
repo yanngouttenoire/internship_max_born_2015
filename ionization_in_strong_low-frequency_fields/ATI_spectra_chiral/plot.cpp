@@ -32,6 +32,7 @@ gnuFile<<"set output 'spectrum.eps'"<<endl;
 gnuFile<<"set multiplot  layout 1, 1"<<endl;
 gnuFile<<"set key width -15"<<endl;
 
+
 vector<string>::iterator it=instructions.begin();
 for(1; it!=instructions.end(); it++)
 {
