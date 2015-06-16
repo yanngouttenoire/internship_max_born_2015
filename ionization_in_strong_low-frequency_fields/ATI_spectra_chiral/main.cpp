@@ -51,7 +51,7 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThreshold=0.;
+double weightThreshold=1E-5;
 
 //We declare boolean controls
 bool stopStepper;
@@ -154,7 +154,7 @@ Plot myPlot;
 if(nTraj%10000==0)
 cout<<"\033[F"<<t<<" "<<step<<endl;
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if(t>10.*myField.opticalCycle)
+	      if(t>4.*myField.opticalCycle)
                 stopStepper=true;
                  
               //We check if the step is no too small (otherwise the simulation will take too much time)
