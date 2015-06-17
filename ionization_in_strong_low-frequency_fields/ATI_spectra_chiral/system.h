@@ -20,12 +20,12 @@ class System
   ElectrostaticPotential<state_type> *myPotential;	
 
   //We declare field variables
-  ElectricField myField;		
+  ElectricField *myField;		
 
   public:
 
   //Contructor 
-  System(ElectrostaticPotential<state_type> *myPotential, ElectricField &myField);
+  System(ElectrostaticPotential<state_type> *myPotential, ElectricField *myField);
   
   //We implement the method which contains dynamic equations of motion
   //We overload the operator() for convenience interest
