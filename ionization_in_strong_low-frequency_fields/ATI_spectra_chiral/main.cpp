@@ -29,6 +29,9 @@ using namespace std;
 int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
+
+
+
 //We declare the time variable
 double t;
 
@@ -51,7 +54,7 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThreshold=5E-5;
+double weightThreshold=1E-11;
 
 //We declare boolean controls
 bool stopStepper;
@@ -79,10 +82,16 @@ cout<<" "<<endl;
 
 //Contains the electrostatic potential properties
 Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
+myPotential->setIP(0.5792);
 //Molecule<state_type> *myPotential=new Molecule<state_type>();
 
 //Contains the electric field properties
 ElectricField myField(0.0);
+
+//Specific to the article
+double L=6.*myField.cyclesNbr*myField.opticalCycle/0.5;
+nFieldBirth=L/0.5;
+cout<<"nFieldBirth"<<"="<<nFieldBirth<<endl;
 
 //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
 IC<state_type> myIC(myPotential, myField);
@@ -97,7 +106,7 @@ Solve<state_type> mySolve;
 Display myDisplay;
 
 //Contains methods for doing a binning procedure and build a spectrum
-Spectra<state_type> mySpectra(myPotential, myField,0.005);
+Spectra<state_type> mySpectra(myPotential, myField,0.002);
 
 //Contains methods for drawing curves
 Plot myPlot;
@@ -109,6 +118,7 @@ Plot myPlot;
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
+
       for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
        {
          for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
@@ -146,6 +156,7 @@ Plot myPlot;
 
 	  //We compute the trajectory
 
+
 	    for(int nTraj=0; !stopStepper ; nTraj++)
 	    { 
 
@@ -181,6 +192,7 @@ Plot myPlot;
           myDisplay("rhoBirth",myIC.rhoBirth);
           myDisplay("phaseBirth",myField.pulsation*myIC.tBirth*180./M_PI);
           myDisplay("vPerpBirth", myIC.vPerpBirth);
+          myDisplay("fieldpBirth", myIC.fieldBirth);
           myDisplay("vYPerpBirth", myIC.vYPerpBirth);
           myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
          // myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
@@ -204,6 +216,7 @@ Plot myPlot;
       }
     }
 
+
   //Finally we write the data binning in the file "dataFile"
    mySpectra.writeDataBinning(dataFile);
 
@@ -225,13 +238,15 @@ Plot myPlot;
    myPlot.addKey("waveLenght",myField.waveLenght*1.E6, "micro-m");
    myPlot.addKey("duration",myDisplay.elapsedTime);
      
-   myPlot.addInstruction("set xlabel 'Asymptotic energy (au)' offset 0,4");
+//Specific to the article eV
+   myPlot.addInstruction("set xlabel 'Asymptotic energy (eV)' offset 0,4");
    myPlot.addInstruction("set ylabel 'Probability (log)'");
-   myPlot.addInstruction("set xrange [0:0.2]");
+//Specific to the article 8
+   myPlot.addInstruction("set xrange [0:8]");
    myPlot.addInstruction("set xtics offset 0,0.3");
 
    myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 2 "); //red
-   myPlot.addInstruction("set style line 2 lc rgb '#062be5' pt 6 ps 1 lt 1 lw 2 "); //blue
+   myPlot.addInstruction("set style line 2 lc rgb '#062be5' pt 6 ps 1 lt 1 lw 2 "); //blue '#0060ad'
  
    myPlot.setPlotType("plot");
    myPlot.addPlot("'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electron spectrum with vY positive'");

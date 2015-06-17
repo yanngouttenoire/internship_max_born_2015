@@ -97,7 +97,11 @@ template<typename state_type>
 void IC<state_type>::setTBirth(int iFieldBirth, int nFieldBirth)
 { 
 //We want to scan field phase values from -pi/2 to pi/2 (or -T/4 to T/4)
-tBirth=-2.*M_PI/myField.pulsation/4.+double(iFieldBirth)/double(nFieldBirth)*2.*M_PI/myField.pulsation/2.;
+//tBirth=-2.*M_PI/myField.pulsation/4.+double(iFieldBirth)/double(nFieldBirth)*2.*M_PI/myField.pulsation/2.;
+
+//Specific to the article
+double L=6.*myField.cyclesNbr*myField.opticalCycle;
+tBirth=-L/2.+double(iFieldBirth)/double(nFieldBirth)*L;
 }
 
 
@@ -106,7 +110,7 @@ template<typename state_type>
 void IC<state_type>::setFieldBirth()
 {
 //We use tBirth
-  fieldBirth=myField.fieldAmpl*sqrt(pow(cos(myField.pulsation*tBirth+myField.phase),2)+pow(myField.ellipticity*sin(myField.pulsation*tBirth+myField.phase),2));
+  fieldBirth=myField.getInstFieldAmpl(tBirth);
   fieldBirth=fabs(fieldBirth);
 }
 
@@ -121,10 +125,14 @@ return 0.0;
 else
 {
   //Width of the velocity distributions after tunneling
-  double sigma_V=4*sqrt(fieldBirth/sqrt(2.*myPotential->IP));
+  //double sigma_V=4*sqrt(fieldBirth/sqrt(2.*myPotential->IP));
 
   //Perpendicular velocity after tunneling
-  double vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-sigma_V;
+ // double vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-sigma_V;
+
+//Specific to the article
+  double vPerpBirth=double(iVPerpBirth)/double(nVPerpBirth);
+
   return vPerpBirth;
 }
  
@@ -156,7 +164,11 @@ void IC<state_type>::setWeightIonization()
 {
   vPerpBirth=pow(vXPerpBirth*vXPerpBirth+vYPerpBirth*vYPerpBirth+vZPerpBirth*vZPerpBirth, 1./2.);
 
-  weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential->IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential->IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
+ // weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential->IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential->IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
+
+//Specific to the article
+ weightIonization=1./fieldBirth/fieldBirth*exp(-2.*pow((2.*myPotential->IP+vPerpBirth*vPerpBirth),3./2.)/3/fieldBirth)*vPerpBirth/sqrt(1+vPerpBirth*vPerpBirth/2./myPotential->IP);
+
 }
 
 

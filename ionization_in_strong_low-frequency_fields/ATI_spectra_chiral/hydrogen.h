@@ -23,6 +23,9 @@ double inverseRadialDistanceCube;
 //Constructor
 Hydrogen();
 
+//We set the ionization potential
+void setIP(double a_IP);
+
 //Method which compute some quantities in advance
 void preparePotential(const state_type &x);
 
@@ -44,6 +47,13 @@ charge=1.;
 this->IP=0.5;
 
 }
+
+template<typename state_type>
+void Hydrogen<state_type>::setIP(double a_IP)
+{
+this->IP=a_IP;
+}
+
 
 
 template<typename state_type>

@@ -153,7 +153,8 @@ void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double
   //We write the histogram in a file	
   for(it=asymptEnergy.begin(); it!=asymptEnergy.end(); it++)
     {
-      dataFile<<(it->first)*binsWidth<<" "<<log10( (it->second)/sum )<<std::endl;
+//Specific to the article *37.3eV
+      dataFile<<(it->first)*binsWidth*37.3<<" "<<log10( (it->second)/sum )<<std::endl;
     }
 
 }

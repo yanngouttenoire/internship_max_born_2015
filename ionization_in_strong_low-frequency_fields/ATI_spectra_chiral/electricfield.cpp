@@ -32,9 +32,8 @@ opticalCycle=2.*M_PI/pulsation;
 //The envelope can be
 //either exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))
 //or pow(cos(M_PI*t/2./opticalCycle/cyclesNbr),2)
+//with if(fabs(t)<opticalCycle*cyclesNbr) return [..] else return 0
 double ElectricField::operator()(char component, const double& t)
-{
-if(fabs(t)<opticalCycle*cyclesNbr)
 {
 switch(component)
 {
@@ -47,18 +46,24 @@ return 0.;
 case 'Z' :
 return exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*fieldAmpl*cos(pulsation*t+phase);
 }
+
 }
-else
-return 0.;
+
+//We build a method which returns the instantaneous field amplitude for a given time
+double ElectricField::getInstFieldAmpl(const double& t)
+{
+return sqrt(pow(operator()('X',t),2)+pow(operator()('Y',t),2)+pow(operator()('Z',t),2));
 }
 
 //We build the asssociated vector potential
 double ElectricField::vectPot(char component, const double& t)
 {
-if(fabs(t)<opticalCycle*cyclesNbr)
-{
+
 switch(component)
 {
+//specific to the article
+return 0;
+
 case 'X' :
 return exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*ellipticity*fieldAmpl/pulsation*cos(pulsation*t+phase);
 
@@ -68,7 +73,5 @@ return 0.;
 case 'Z' :
 return -exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*fieldAmpl/pulsation*sin(pulsation*t+phase);
 }
-}
-else
-return 0.;
+
 }
