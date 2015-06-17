@@ -18,6 +18,7 @@
 #include"electricfield.h"
 
 
+
 using namespace std;
 
 //Plateau in above-threashold-ionization spectra and chaotic behavior in rescattering processes
@@ -26,11 +27,11 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
+int nFieldBirth=1, nVYPerpBirth=1, nVZPrimPerpBirth=1;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 
-
+double asymptEnergy[3];
 
 //We declare the time variable
 double t;
@@ -38,6 +39,7 @@ double t;
 //We declare the array in which we will store the orbit
 typedef double state_type[6];
 state_type x;
+
 
 //We declare a variable for the step in controlledRK5, the min allowed value
 double step; 
@@ -50,12 +52,11 @@ int weightTooSmallNbr=0;
 
 //We declare runge kutta error, its max allowed value, and the desired error min and max
 double error;
-double desiredErrorMax=1E-10;
+double desiredErrorMax=1E-14;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThreshold=1E-11;
-
+double weightThreshold=0.;
 //We declare boolean controls
 bool stopStepper;
 bool isStepTooSmall;
@@ -82,22 +83,18 @@ cout<<" "<<endl;
 
 //Contains the electrostatic potential properties
 Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
-myPotential->setIP(0.5792);
+//myPotential->setIP(0.5792);
 //Molecule<state_type> *myPotential=new Molecule<state_type>();
 
 //Contains the electric field properties
 ElectricField myField(0.0);
 
-//Specific to the article
-double L=6.*myField.cyclesNbr*myField.opticalCycle/0.5;
-nFieldBirth=L/0.5;
-cout<<"nFieldBirth"<<"="<<nFieldBirth<<endl;
 
 //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
 IC<state_type> myIC(myPotential, myField);
 
 //Contains the ordinary differential system of equations of motion of the electron in the electrostatic potential and the electric field
-System<state_type> mySystem(myPotential, myField);	
+System<state_type> mySystem(myPotential, &myField);	
 
 //Contains the method which solves ODE: runge kutta 5 with controlled step-size algorithm
 Solve<state_type> mySolve;
@@ -124,6 +121,14 @@ Plot myPlot;
          for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
 	   {
 
+
+
+for(int i=1; i<=6; i++)
+{
+//int j=(2+2*i);
+//desiredErrorMax=pow(10,-j);
+//desiredErrorMin=desiredErrorMax/10.;
+
 	    //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
           myDisplay.moveCursorBackUp();         	
 
@@ -137,11 +142,32 @@ Plot myPlot;
 
 	  //INITIAL CONDITIONS
           //We set the ionization time
-	  myIC.setTBirth(iFieldBirth, nFieldBirth);
+if(i==1)
+{
+	  myIC.tBirth=8.050;
 	  myIC.setFieldBirth();
-	  myIC.setVYPerpBirth(iVYPerpBirth, nVYPerpBirth);
+	  myIC.vYPerpBirth=0.123;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
+}
+
+if(i==2)
+{
+	  myIC.tBirth=-6.356;
+	  myIC.setFieldBirth();
+	  myIC.vYPerpBirth=0.120;
+	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
+          myIC.setWeightIonization();
+}
+if(i==3)
+{
+	  myIC.tBirth=0.871;
+	  myIC.setFieldBirth();
+	  myIC.vYPerpBirth=6E-5;
+	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
+          myIC.setWeightIonization();
+}
+
 
           //We check if weightIonization is big enough
           if(myIC.weightIonization < weightThreshold)
@@ -154,6 +180,10 @@ Plot myPlot;
           myIC.setPolarCoordBirth();
 	  myIC.setIC(x,t);
 
+
+//myField.fieldAmpl=0.;
+
+
 	  //We compute the trajectory
 
 
@@ -163,9 +193,14 @@ Plot myPlot;
 	      //We call the function which solve eq of the motion
 	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
+dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField.getInstFieldAmpl(t)<<endl;	
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if(t>3.*myField.cyclesNbr*myField.opticalCycle)
-                stopStepper=true;
+	      //if(t>10.*myField.cyclesNbr*myField.opticalCycle)
+/*if(t>20000)                
+stopStepper=true;*/
+
+if( sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>580 )
+stopStepper=true;
                  
               //We check if the step is no too small (otherwise the simulation will take too much time)
 	      if(step<stepMin)
@@ -175,8 +210,10 @@ Plot myPlot;
 		}
 	    }
 
+asymptEnergy[i-1]=mySpectra.asymptoticEnergy(x,t);
+
 	  //We store the asymptotic velocity in a container of map type with a view to making a data binning
-	  mySpectra.storeDataBinning(x, t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
+	  //mySpectra.storeDataBinning(x, t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 	   
             
 	    if(isStepTooSmall==true)
@@ -185,7 +222,7 @@ Plot myPlot;
 	      weightTooSmallNbr+=1;
 
 		    //We update the load bar and display some informations
-          if(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth)%1000==0)
+          //if(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth)%1000==0)
           {
 	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
           myDisplay("ellipticity", myField.ellipticity);
@@ -212,45 +249,84 @@ Plot myPlot;
           myDisplay("binsWidth",mySpectra.binsWidth);
           }
 
+
+dataFile<<" "<<endl;
+dataFile<<" "<<endl;
+
+}
+
+
 	 }         
       }
     }
 
 
   //Finally we write the data binning in the file "dataFile"
-   mySpectra.writeDataBinning(dataFile);
+   //mySpectra.writeDataBinning(dataFile);
 
   //We build the legend of the plot
-   myPlot.addKey("nField",nFieldBirth);
+  /* myPlot.addKey("nField",nFieldBirth);
    myPlot.addKey("nVYPerp",nVYPerpBirth);
-   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
+   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);*/
   // myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
   // myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
-   myPlot.addKey("spectraPointNbr", double(mySpectra.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+
+ /*  myPlot.addKey("spectraPointNbr", double(mySpectra.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
    myPlot.addKey("stepTooSmallNbr",int(double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
    myPlot.addKey("weightTooSmallNbr", int(double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
    myPlot.addKey("weightThreshold",weightThreshold);
-   myPlot.addKey("binsWidth",mySpectra.binsWidth);
-   myPlot.addKey("ErrorMax",desiredErrorMax);
+   myPlot.addKey("binsWidth",mySpectra.binsWidth);*/
+   
+   /*
+   myPlot.addKey("tBirth",myIC.tBirth);
+   myPlot.addKey("vPerpBirth",myIC.vPerpBirth);
+   myPlot.addKey("weightIonization",myIC.weightIonization);
+   myPlot.addKey("asymptoticEnergy",mySpectra.asymptoticEnergy(x,t));
+   //myPlot.addKey("ErrorMax",desiredErrorMax);
    myPlot.addKey("stepMin",stepMin);
    myPlot.addKey("ellipticity", myField.ellipticity);
    myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
-   myPlot.addKey("waveLenght",myField.waveLenght*1.E6, "micro-m");
+   myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");
    myPlot.addKey("duration",myDisplay.elapsedTime);
+*/
      
 //Specific to the article eV
-   myPlot.addInstruction("set xlabel 'Asymptotic energy (eV)' offset 0,4");
-   myPlot.addInstruction("set ylabel 'Probability (log)'");
+   myPlot.addInstruction("set xlabel 'Z' offset 0,4");
+   myPlot.addInstruction("set ylabel 'Y'");
 //Specific to the article 8
-   myPlot.addInstruction("set xrange [0:8]");
+   //myPlot.addInstruction("set xrange [0:8]");
    myPlot.addInstruction("set xtics offset 0,0.3");
+   myPlot.addInstruction("set key on outside bmargin");
+   myPlot.addInstruction("set multiplot  layout 2, 2");
 
-   myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 2 "); //red
+   myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 0.1 "); //red
    myPlot.addInstruction("set style line 2 lc rgb '#062be5' pt 6 ps 1 lt 1 lw 2 "); //blue '#0060ad'
  
-   myPlot.setPlotType("plot");
-   myPlot.addPlot("'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electron spectrum with vY positive'");
-   myPlot.addPlot("'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electron spectrum with vY negative'");
+   //myPlot.setPlotType("plot");
+   //myPlot.addPlot("'data.dat' index 0 using 3:2 w l ls 1 title 'Photo-electron trajectories, errorMax=1E-6'");
+
+std::ostringstream asymptEnergy0;
+asymptEnergy0<<"plot 'data.dat' index 0 using 3:2 w l ls 1 title '(a) tBirth=8.050, vPerpBirth=0.123, asymptEnergy="<<asymptEnergy[0]<<" (au)'";
+std::ostringstream asymptEnergy1;
+asymptEnergy1<<"plot 'data.dat' index 1 using 3:2 w l ls 1 title '(b) tBirth=-6.356, vPerpBirth=0.130, asymptEnergy="<<asymptEnergy[1]<<" (au)'";
+std::ostringstream asymptEnergy2;
+asymptEnergy2<<"plot 'data.dat' index 2 using 3:2 w l ls 1 title '(c) tBirth=0.871, vPerpBirth=6E-5, asymptEnergy="<<asymptEnergy[2]<<" (au)'";
+
+
+   myPlot.addInstruction(asymptEnergy0.str());
+   myPlot.addInstruction(asymptEnergy1.str());
+   myPlot.addInstruction(asymptEnergy2.str());
+   /*myPlot.addInstruction("plot 'data.dat' index 3 using 3:2 w l ls 1 title 'errorMax=1E-10'");
+   myPlot.addInstruction("plot 'data.dat' index 4 using 3:2 w l ls 1 title 'errorMax=1E-12'");
+   myPlot.addInstruction("plot 'data.dat' index 5 using 3:2 w l ls 1 title 'errorMax=1E-14'");*/
+  
+   myPlot.addInstruction("unset multiplot");
+
+
+
+   //myPlot.addPlot("'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electron spectrum with vY negative'");
+
+   //myPlot.addInstruction("plot 'data.dat' using 7:8 w l ls 1 title 'field'"); //blue '#0060ad'
 
    myPlot.gnuplot();
 

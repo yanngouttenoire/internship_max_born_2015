@@ -164,10 +164,10 @@ void IC<state_type>::setWeightIonization()
 {
   vPerpBirth=pow(vXPerpBirth*vXPerpBirth+vYPerpBirth*vYPerpBirth+vZPerpBirth*vZPerpBirth, 1./2.);
 
- // weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential->IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential->IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
+  weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential->IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential->IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
 
 //Specific to the article
- weightIonization=1./fieldBirth/fieldBirth*exp(-2.*pow((2.*myPotential->IP+vPerpBirth*vPerpBirth),3./2.)/3/fieldBirth)*vPerpBirth/sqrt(1+vPerpBirth*vPerpBirth/2./myPotential->IP);
+ //weightIonization=1./fieldBirth/fieldBirth*exp(-2.*pow((2.*myPotential->IP+vPerpBirth*vPerpBirth),3./2.)/3/fieldBirth)*vPerpBirth/sqrt(1+vPerpBirth*vPerpBirth/2./myPotential->IP);
 
 }
 

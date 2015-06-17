@@ -29,7 +29,7 @@ fstream gnuFile("data.gnu", ios::out);
 
 gnuFile<<"set terminal postscript eps enhanced color font 'Helvetica,10'"<<endl;
 gnuFile<<"set output 'spectrum.eps'"<<endl;
-gnuFile<<"set multiplot  layout 1, 1"<<endl;
+
 gnuFile<<"set key width -15"<<endl;
 
 
@@ -62,7 +62,7 @@ gnuFile<<*it;
 gnuFile<<" "<<endl;
 
 
-gnuFile<<"unset multiplot"<<endl;
+
 
 gnuFile<<"pause -1"<<endl;
 gnuFile<<"set terminal postscript eps enhanced color font 'Helvetica,10'"<<endl;

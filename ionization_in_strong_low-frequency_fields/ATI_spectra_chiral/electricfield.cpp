@@ -20,8 +20,8 @@ double uaTime=24.1888421562712E-18;
 double lightSpeed=2.99792458E8;
 
 //Field parameters
-waveLenght=2E-6;
-fieldAmpl=0.0534;
+waveLenght=1.064E-6;
+fieldAmpl=0.06;
 cyclesNbr=1;
 phase=0.;
 pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
@@ -38,13 +38,13 @@ double ElectricField::operator()(char component, const double& t)
 switch(component)
 {
 case 'X' :
-return exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*ellipticity*fieldAmpl*sin(pulsation*t+phase);
+return ellipticity*fieldAmpl*sin(pulsation*t+phase);
 
 case 'Y' :
 return 0.;
 
 case 'Z' :
-return exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*fieldAmpl*cos(pulsation*t+phase);
+return fieldAmpl*cos(pulsation*t+phase);
 }
 
 }
@@ -65,13 +65,13 @@ switch(component)
 return 0;
 
 case 'X' :
-return exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*ellipticity*fieldAmpl/pulsation*cos(pulsation*t+phase);
+return ellipticity*fieldAmpl/pulsation*cos(pulsation*t+phase);
 
 case 'Y' :
 return 0.;
 
 case 'Z' :
-return -exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*fieldAmpl/pulsation*sin(pulsation*t+phase);
+return -fieldAmpl/pulsation*sin(pulsation*t+phase);
 }
 
 }
