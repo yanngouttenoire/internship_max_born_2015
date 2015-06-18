@@ -140,7 +140,7 @@ int preventInstableError=0;
 //That's why, we do the following: we consider that the error is correct after 3 passes through the loop
 
 preventInstableError++;
-if(preventInstableError>=3)
+if(preventInstableError>=500)
 {
 error=desiredErrorMax;
 }

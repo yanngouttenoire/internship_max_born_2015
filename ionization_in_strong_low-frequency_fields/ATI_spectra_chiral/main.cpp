@@ -54,7 +54,7 @@ double desiredErrorMax=1E-10;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThreshold=1E-11;
+double weightThreshold=1E-6;
 
 //We declare boolean controls
 bool stopStepper;
@@ -89,7 +89,7 @@ myPotential->setIP(0.5792);
 ElectricField myField(0.0);
 
 //Specific to the article
-double L=6.*myField.cyclesNbr*myField.opticalCycle/0.5;
+double L=1.*myField.cyclesNbr*myField.opticalCycle/0.5;
 nFieldBirth=L/0.5;
 cout<<"nFieldBirth"<<"="<<nFieldBirth<<endl;
 
@@ -164,7 +164,7 @@ Plot myPlot;
 	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if(t>3.*myField.cyclesNbr*myField.opticalCycle)
+	      if(t>6.*myField.cyclesNbr*myField.opticalCycle)
                 stopStepper=true;
                  
               //We check if the step is no too small (otherwise the simulation will take too much time)
