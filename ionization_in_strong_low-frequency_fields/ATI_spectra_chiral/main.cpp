@@ -144,26 +144,26 @@ for(int i=1; i<=6; i++)
           //We set the ionization time
 if(i==1)
 {
-	  myIC.tBirth=8.050;
+	  myIC.tBirth=0.;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.123;
+	  myIC.vYPerpBirth=0.08;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
 
 if(i==2)
 {
-	  myIC.tBirth=-6.356;
+	  myIC.tBirth=0.;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.120;
+	  myIC.vYPerpBirth=0.100;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
 if(i==3)
 {
-	  myIC.tBirth=0.871;
+	  myIC.tBirth=0.;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=6E-5;
+	  myIC.vYPerpBirth=0.150;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
@@ -193,14 +193,14 @@ if(i==3)
 	      //We call the function which solve eq of the motion
 	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
-dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField.getInstFieldAmpl(t)<<endl;	
+dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField('Z',t)<<endl;	
              //If the electron is always bonded to the attractor, we do not consider the event 
 	      //if(t>10.*myField.cyclesNbr*myField.opticalCycle)
-/*if(t>20000)                
-stopStepper=true;*/
-
-if( sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>580 )
+if(t>2.*myField.cyclesNbr*myField.opticalCycle)                
 stopStepper=true;
+
+/*if( sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>580 )
+stopStepper=true;*/
                  
               //We check if the step is no too small (otherwise the simulation will take too much time)
 	      if(step<stepMin)
@@ -291,7 +291,7 @@ dataFile<<" "<<endl;
 */
      
 //Specific to the article eV
-   myPlot.addInstruction("set xlabel 'Z' offset 0,4");
+   myPlot.addInstruction("set xlabel 'Z' ");
    myPlot.addInstruction("set ylabel 'Y'");
 //Specific to the article 8
    //myPlot.addInstruction("set xrange [0:8]");
@@ -306,18 +306,18 @@ dataFile<<" "<<endl;
    //myPlot.addPlot("'data.dat' index 0 using 3:2 w l ls 1 title 'Photo-electron trajectories, errorMax=1E-6'");
 
 std::ostringstream asymptEnergy0;
-asymptEnergy0<<"plot 'data.dat' index 0 using 3:2 w l ls 1 title '(a) tBirth=8.050, vPerpBirth=0.123, asymptEnergy="<<asymptEnergy[0]<<" (au)'";
+asymptEnergy0<<"plot 'data.dat' index 0 using 3:2 w l ls 1 title '(a) tBirth=8.050, vPerpBirth=0.123, asymptEnergy="<<asymptEnergy[0]*37.3<<" (eV)'";
 std::ostringstream asymptEnergy1;
-asymptEnergy1<<"plot 'data.dat' index 1 using 3:2 w l ls 1 title '(b) tBirth=-6.356, vPerpBirth=0.130, asymptEnergy="<<asymptEnergy[1]<<" (au)'";
+asymptEnergy1<<"plot 'data.dat' index 1 using 3:2 w l ls 1 title '(b) tBirth=-6.356, vPerpBirth=0.130, asymptEnergy="<<asymptEnergy[1]*37.3<<" (eV)'";
 std::ostringstream asymptEnergy2;
-asymptEnergy2<<"plot 'data.dat' index 2 using 3:2 w l ls 1 title '(c) tBirth=0.871, vPerpBirth=6E-5, asymptEnergy="<<asymptEnergy[2]<<" (au)'";
+asymptEnergy2<<"plot 'data.dat' index 2 using 3:2 w l ls 1 title '(c) tBirth=0.871, vPerpBirth=6E-5, asymptEnergy="<<asymptEnergy[2]*37.3<<" (eV)'";
 
 
    myPlot.addInstruction(asymptEnergy0.str());
    myPlot.addInstruction(asymptEnergy1.str());
    myPlot.addInstruction(asymptEnergy2.str());
-   /*myPlot.addInstruction("plot 'data.dat' index 3 using 3:2 w l ls 1 title 'errorMax=1E-10'");
-   myPlot.addInstruction("plot 'data.dat' index 4 using 3:2 w l ls 1 title 'errorMax=1E-12'");
+   myPlot.addInstruction("plot 'data.dat' index 0 using 7:8 w l ls 1 title 'laser field'");
+   /*myPlot.addInstruction("plot 'data.dat' index 4 using 3:2 w l ls 1 title 'errorMax=1E-12'");
    myPlot.addInstruction("plot 'data.dat' index 5 using 3:2 w l ls 1 title 'errorMax=1E-14'");*/
   
    myPlot.addInstruction("unset multiplot");
