@@ -10,6 +10,7 @@
 
 #include"electricfield.h"
 #include"electrostaticpotential.h"
+#include"ic.h"
 
 //We implement a class for computing the photo-electron spectrum as an histogram of asymptotic Energy according probability of ionization (weightIonization)
 template<typename state_type>
@@ -41,9 +42,12 @@ ElectrostaticPotential<state_type> *myPotential;
 //We declare an object of type ElectricField
 ElectricField myField;
 
+//We declare an object of type IC
+IC<state_type> *myIC;
+
 
 //Constructor
-Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, double binsWidth=0.1);
+Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *myIC, double binsWidth=0.1);
 
 //We compute the asymptotic energy
 double asymptoticEnergy(const state_type& x, const double& t);
@@ -65,7 +69,7 @@ void getFromMap(std::fstream& dataFile, std::map<int,double>& asymptEnergy);
 
 //We set the histogram intervals width
 template<typename state_type>
-Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, double binsWidth) : myPotential(myPotential), myField(myField), binsWidth(binsWidth) 
+Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *a_myIC, double binsWidth) : myPotential(myPotential), myField(myField), myIC(a_myIC), binsWidth(binsWidth) 
 {
 spectraPointsNbr=0;
 trappedElectronNbr=0;
@@ -85,17 +89,22 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
 
   //If the energy of the electron is negative, the electron is not free and we do not consider the event
   //If the range equals zero we do not consider this neither (esthetic choice)
-  if(range<=0) 
+  if(range<=0 ) 
   {
   trappedElectronNbr++;
   return;
   }
   
 //we insert values associated with the new event in the corresponding container according if the electron propagated in y>0 or y<0
-if(x[1]>=0)
+//Specific to the article
+//We consider electron differently depending if they are detected along the polarization of the field or not
+if(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5]))*180./M_PI<=5)
+{
+if(x[2]*myField('Z',myIC->tBirth)>=0)
  insertInMap(asymptEnergyUp, range, weightIonization);
 else
  insertInMap(asymptEnergyDown, range, weightIonization);
+}
 }
 
 //The following method is called by storeDataBinning and insert element <range,weightIonization> in map asympEnergy

@@ -100,7 +100,7 @@ void IC<state_type>::setTBirth(int iFieldBirth, int nFieldBirth)
 //tBirth=-2.*M_PI/myField.pulsation/4.+double(iFieldBirth)/double(nFieldBirth)*2.*M_PI/myField.pulsation/2.;
 
 //Specific to the article
-double L=1.*myField.cyclesNbr*myField.opticalCycle;
+double L=6.*myField.cyclesNbr*myField.opticalCycle;
 tBirth=-L/2.+double(iFieldBirth)/double(nFieldBirth)*L;
 }
 

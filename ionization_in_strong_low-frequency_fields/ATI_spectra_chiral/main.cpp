@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
+int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=10000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 
@@ -50,11 +50,11 @@ int weightTooSmallNbr=0;
 
 //We declare runge kutta error, its max allowed value, and the desired error min and max
 double error;
-double desiredErrorMax=1E-10;
+double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThreshold=1E-6;
+double weightThreshold=1E-10;
 
 //We declare boolean controls
 bool stopStepper;
@@ -89,7 +89,7 @@ myPotential->setIP(0.5792);
 ElectricField myField(0.0);
 
 //Specific to the article
-double L=1.*myField.cyclesNbr*myField.opticalCycle/0.5;
+double L=6.*myField.cyclesNbr*myField.opticalCycle/0.5;
 nFieldBirth=L/0.5;
 cout<<"nFieldBirth"<<"="<<nFieldBirth<<endl;
 
@@ -106,7 +106,7 @@ Solve<state_type> mySolve;
 Display myDisplay;
 
 //Contains methods for doing a binning procedure and build a spectrum
-Spectra<state_type> mySpectra(myPotential, myField,0.002);
+Spectra<state_type> mySpectra(myPotential, myField, &myIC, 0.005);
 
 //Contains methods for drawing curves
 Plot myPlot;
@@ -133,7 +133,7 @@ Plot myPlot;
           isWeightTooSmall=false;
 
           //We update the step step
-          step=0.001; 
+          step=0.0001; 
 
 	  //INITIAL CONDITIONS
           //We set the ionization time
@@ -164,7 +164,7 @@ Plot myPlot;
 	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if(t>6.*myField.cyclesNbr*myField.opticalCycle)
+	      if(t>8.*myField.cyclesNbr*myField.opticalCycle)
                 stopStepper=true;
                  
               //We check if the step is no too small (otherwise the simulation will take too much time)
@@ -249,8 +249,10 @@ Plot myPlot;
    myPlot.addInstruction("set style line 2 lc rgb '#062be5' pt 6 ps 1 lt 1 lw 2 "); //blue '#0060ad'
  
    myPlot.setPlotType("plot");
-   myPlot.addPlot("'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electron spectrum with vY positive'");
-   myPlot.addPlot("'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electron spectrum with vY negative'");
+//Specific to the article
+//We consider electron differently depending if they are detected along the polarization of the field or not
+   myPlot.addPlot("'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electron detected upward according the initial field (angle<5°) '");
+   myPlot.addPlot("'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electron detected downward according the initial field (angle<5°)'");
 
    myPlot.gnuplot();
 
