@@ -71,6 +71,13 @@ void Spectra<state_type>::writeData(const state_type& x, const double& t, double
   return;
   }
 
+//Angular resolution
+//We consider electrons differently depending if they are detected along the polarization of the field or not
+if(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5]))*180./M_PI>5)
+return;
+//if(x[2]*myField('Z',myIC->tBirth)>=0)
+
+
   //If all is ok, we increment the trajectory ID
   spectraPointsNbr++;
   

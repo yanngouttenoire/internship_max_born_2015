@@ -27,7 +27,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=10, nVYPerpBirth=1, nVZPrimPerpBirth=10;
+int nFieldBirth=100, nVYPerpBirth=1, nVZPrimPerpBirth=100;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //Closest approach
