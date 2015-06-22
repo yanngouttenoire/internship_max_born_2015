@@ -40,7 +40,7 @@ Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, 
 double asymptoticEnergy(const state_type& x, const double& t);
 
 //We store asymptotic velocities in containers of map type
-void writeData(const state_type& x, const double& t, double fieldBirth, double vPerpBirth, double closestApproach, double weightIonization, std::fstream& dataFile, const bool& inexpectedStop);
+void writeData(const state_type& x, const double& t, double tBirth, double fieldBirth, double vPerpBirth, double closestApproach, double weightIonization, std::fstream& dataFile, const bool& inexpectedStop);
 
 };
 
@@ -55,7 +55,7 @@ trappedElectronNbr=0;
 
 //We store asymptotic energies in containers of map type with a view to make a data binning
 template<typename state_type>
-void Spectra<state_type>::writeData(const state_type& x, const double& t, double fieldBirth, double vPerpBirth, double closestApproach, double weightIonization, std::fstream& dataFile, const bool& unexpectedStop)
+void Spectra<state_type>::writeData(const state_type& x, const double& t, double tBirth, double fieldBirth, double vPerpBirth, double closestApproach, double weightIonization, std::fstream& dataFile, const bool& unexpectedStop)
 {
 
   //If the computation of the trajectory has been stopped unexpectedly, we do not consider the event
@@ -82,7 +82,7 @@ return;
   spectraPointsNbr++;
   
 //We write data in a file
- dataFile<<spectraPointsNbr<<" "<<fieldBirth<<" "<<vPerpBirth<<" "<<closestApproach<<" "<<weightIonization<<" "<<energy*37.3<<std::endl;
+ dataFile<<spectraPointsNbr<<" "<<fieldBirth<<" "<<vPerpBirth<<" "<<closestApproach<<" "<<weightIonization<<" "<<energy*37.3<<" "<<tBirth<<std::endl;
 
 }
 

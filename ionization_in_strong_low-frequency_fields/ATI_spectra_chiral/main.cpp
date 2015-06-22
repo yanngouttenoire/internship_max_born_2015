@@ -182,7 +182,7 @@ Plot myPlot;
 
 
 	  //We write data in a file
-	    mySpectra.writeData(x, t, myIC.fieldBirth, myIC.vPerpBirth, closestApproach, myIC.weightIonization, dataFile, isStepTooSmall || isWeightTooSmall);
+	    mySpectra.writeData(x, t, myIC.tBirth, myIC.fieldBirth, myIC.vPerpBirth, closestApproach, myIC.weightIonization, dataFile, isStepTooSmall || isWeightTooSmall);
 	   
             
 	    if(isStepTooSmall==true)
