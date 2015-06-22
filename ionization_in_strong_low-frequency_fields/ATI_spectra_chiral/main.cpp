@@ -32,6 +32,8 @@ int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 
 double asymptEnergy[3];
+double tBirth[3];
+double vPerpBirth[3];
 
 //We declare the time variable
 double t;
@@ -144,26 +146,26 @@ for(int i=1; i<=6; i++)
           //We set the ionization time
 if(i==1)
 {
-	  myIC.tBirth=0.;
+	  myIC.tBirth=-5.05388;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.08;
+	  myIC.vYPerpBirth=0.03;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
 
 if(i==2)
 {
-	  myIC.tBirth=0.;
+	  myIC.tBirth=-5.05388;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.100;
+	  myIC.vYPerpBirth=0.04;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
 if(i==3)
 {
-	  myIC.tBirth=0.;
+	  myIC.tBirth=-5.05388;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.150;
+	  myIC.vYPerpBirth=0.05;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
@@ -211,6 +213,8 @@ stopStepper=true;*/
 	    }
 
 asymptEnergy[i-1]=mySpectra.asymptoticEnergy(x,t);
+tBirth[i-1]=myIC.tBirth;
+vPerpBirth[i-1]=myIC.vPerpBirth;
 
 	  //We store the asymptotic velocity in a container of map type with a view to making a data binning
 	  //mySpectra.storeDataBinning(x, t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
@@ -291,7 +295,7 @@ dataFile<<" "<<endl;
 */
      
 //Specific to the article eV
-   myPlot.addInstruction("set xlabel 'Z' ");
+   myPlot.addInstruction("set xlabel 'Z' offset 0,1");
    myPlot.addInstruction("set ylabel 'Y'");
 //Specific to the article 8
    //myPlot.addInstruction("set xrange [0:8]");
@@ -305,17 +309,22 @@ dataFile<<" "<<endl;
    //myPlot.setPlotType("plot");
    //myPlot.addPlot("'data.dat' index 0 using 3:2 w l ls 1 title 'Photo-electron trajectories, errorMax=1E-6'");
 
-std::ostringstream asymptEnergy0;
-asymptEnergy0<<"plot 'data.dat' index 0 using 3:2 w l ls 1 title '(a) tBirth=8.050, vPerpBirth=0.123, asymptEnergy="<<asymptEnergy[0]*37.3<<" (eV)'";
-std::ostringstream asymptEnergy1;
-asymptEnergy1<<"plot 'data.dat' index 1 using 3:2 w l ls 1 title '(b) tBirth=-6.356, vPerpBirth=0.130, asymptEnergy="<<asymptEnergy[1]*37.3<<" (eV)'";
-std::ostringstream asymptEnergy2;
-asymptEnergy2<<"plot 'data.dat' index 2 using 3:2 w l ls 1 title '(c) tBirth=0.871, vPerpBirth=6E-5, asymptEnergy="<<asymptEnergy[2]*37.3<<" (eV)'";
 
 
-   myPlot.addInstruction(asymptEnergy0.str());
-   myPlot.addInstruction(asymptEnergy1.str());
-   myPlot.addInstruction(asymptEnergy2.str());
+std::ostringstream traj0;
+traj0<<"plot 'data.dat' index 0 using 3:2 w l ls 1 title '(a) tBirth="<<tBirth[0]<<", vPerp="<<vPerpBirth[0]<<", asymptEnergy="<<asymptEnergy[0]*37.3<<"(eV)'";
+std::ostringstream traj1;
+traj1<<"plot 'data.dat' index 1 using 3:2 w l ls 1 title '(b) tBirth="<<tBirth[1]<<", vPerp="<<vPerpBirth[1]<<", asymptEnergy="<<asymptEnergy[1]*37.3<<"(eV)'";
+std::ostringstream traj2;
+traj2<<"plot 'data.dat' index 2 using 3:2 w l ls 1 title '(c) tBirth="<<tBirth[2]<<", vPerp="<<vPerpBirth[2]<<", asymptEnergy="<<asymptEnergy[2]*37.3<<"(eV)'";
+
+
+   myPlot.addInstruction(traj0.str());
+
+   myPlot.addInstruction(traj1.str());
+
+   myPlot.addInstruction(traj2.str());
+
    myPlot.addInstruction("plot 'data.dat' index 0 using 7:8 w l ls 1 title 'laser field'");
    /*myPlot.addInstruction("plot 'data.dat' index 4 using 3:2 w l ls 1 title 'errorMax=1E-12'");
    myPlot.addInstruction("plot 'data.dat' index 5 using 3:2 w l ls 1 title 'errorMax=1E-14'");*/
