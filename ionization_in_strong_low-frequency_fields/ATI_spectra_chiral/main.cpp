@@ -162,7 +162,7 @@ Plot myPlot;
 	     //We call the function which solve eq of the motion
 	     mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
-             plotFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField('Z',t)<<endl;
+             //plotFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField('Z',t)<<endl;
 	
              //If the electron is always bonded to the attractor, we do not consider the event 
 	     //if(t>10.*myField.cyclesNbr*myField.opticalCycle)
@@ -181,8 +181,8 @@ Plot myPlot;
 	    }
 
 
-	  //We store the asymptotic velocity in a container of map type with a view to making a data binning
-	    mySpectra.storeDataBinning(x, t, myIC.fieldBirth, myIC.vPerpBirth, closestApproach, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
+	  //We write data in a file
+	    mySpectra.writeData(x, t, myIC.fieldBirth, myIC.vPerpBirth, closestApproach, myIC.weightIonization, dataFile, isStepTooSmall || isWeightTooSmall);
 	   
             
 	    if(isStepTooSmall==true)
@@ -228,9 +228,6 @@ plotFile<<" "<<endl;
       }
     }
 
-
-  //Finally we write the data binning in the file "dataFile"
-   mySpectra.writeDataBinning(dataFile);
 
   //We build the legend of the plot
   /* myPlot.addKey("nField",nFieldBirth);
