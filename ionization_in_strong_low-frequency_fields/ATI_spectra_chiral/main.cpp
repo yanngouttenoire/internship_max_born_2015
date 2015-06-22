@@ -27,11 +27,11 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=1, nVYPerpBirth=1, nVZPrimPerpBirth=1;
+int nFieldBirth=10, nVYPerpBirth=1, nVZPrimPerpBirth=10;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
-
-double asymptEnergy[3];
+//Closest approach
+double closestApproach;
 
 //We declare the time variable
 double t;
@@ -66,6 +66,7 @@ bool isWeightTooSmall;
 double binsWidth;
 
 //We open files with a view to writing in them 
+fstream plotFile("plot.dat",ios::out);
 fstream dataFile("data.dat",ios::out);
 
 
@@ -83,12 +84,11 @@ cout<<" "<<endl;
 
 //Contains the electrostatic potential properties
 Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
-//myPotential->setIP(0.5792);
+myPotential->setIP(0.5792);
 //Molecule<state_type> *myPotential=new Molecule<state_type>();
 
 //Contains the electric field properties
 ElectricField myField(0.0);
-
 
 //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
 IC<state_type> myIC(myPotential, myField);
@@ -115,19 +115,11 @@ Plot myPlot;
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
-
       for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
        {
          for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
 	   {
 
-
-
-for(int i=1; i<=6; i++)
-{
-//int j=(2+2*i);
-//desiredErrorMax=pow(10,-j);
-//desiredErrorMin=desiredErrorMax/10.;
 
 	    //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
           myDisplay.moveCursorBackUp();         	
@@ -136,38 +128,20 @@ for(int i=1; i<=6; i++)
  	  stopStepper=false; 
 	  isStepTooSmall=false;
           isWeightTooSmall=false;
+          
+          //We prepare closest approach variable
+          closestApproach=100.;
 
           //We update the step step
           step=0.001; 
 
 	  //INITIAL CONDITIONS
           //We set the ionization time
-if(i==1)
-{
-	  myIC.tBirth=0.;
+	  myIC.setTBirth(iFieldBirth,nFieldBirth);
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.08;
+	  myIC.setVYPerpBirth(iVYPerpBirth,nVYPerpBirth);
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
-}
-
-if(i==2)
-{
-	  myIC.tBirth=0.;
-	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.100;
-	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
-          myIC.setWeightIonization();
-}
-if(i==3)
-{
-	  myIC.tBirth=0.;
-	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.150;
-	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
-          myIC.setWeightIonization();
-}
-
 
           //We check if weightIonization is big enough
           if(myIC.weightIonization < weightThreshold)
@@ -180,40 +154,35 @@ if(i==3)
           myIC.setPolarCoordBirth();
 	  myIC.setIC(x,t);
 
-
-//myField.fieldAmpl=0.;
-
-
 	  //We compute the trajectory
-
 
 	    for(int nTraj=0; !stopStepper ; nTraj++)
 	    { 
 
-	      //We call the function which solve eq of the motion
-	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
+	     //We call the function which solve eq of the motion
+	     mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
-dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField('Z',t)<<endl;	
+             plotFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField('Z',t)<<endl;
+	
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      //if(t>10.*myField.cyclesNbr*myField.opticalCycle)
-if(t>2.*myField.cyclesNbr*myField.opticalCycle)                
-stopStepper=true;
+	     //if(t>10.*myField.cyclesNbr*myField.opticalCycle)
+	     if(t>2.*myField.cyclesNbr*myField.opticalCycle)                
+	     stopStepper=true;
 
-/*if( sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>580 )
-stopStepper=true;*/
+	     if(t>myField.opticalCycle/2. && sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])<closestApproach)
+	     closestApproach=sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
                  
-              //We check if the step is no too small (otherwise the simulation will take too much time)
-	      if(step<stepMin)
+             //We check if the step is no too small (otherwise the simulation will take too much time)
+	     if(step<stepMin)
 		{
 		  stopStepper=true;
 		  isStepTooSmall=true;
 		}
 	    }
 
-asymptEnergy[i-1]=mySpectra.asymptoticEnergy(x,t);
 
 	  //We store the asymptotic velocity in a container of map type with a view to making a data binning
-	  //mySpectra.storeDataBinning(x, t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
+	    mySpectra.storeDataBinning(x, t, myIC.fieldBirth, myIC.vPerpBirth, closestApproach, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 	   
             
 	    if(isStepTooSmall==true)
@@ -250,10 +219,9 @@ asymptEnergy[i-1]=mySpectra.asymptoticEnergy(x,t);
           }
 
 
-dataFile<<" "<<endl;
-dataFile<<" "<<endl;
+plotFile<<" "<<endl;
+plotFile<<" "<<endl;
 
-}
 
 
 	 }         
@@ -262,7 +230,7 @@ dataFile<<" "<<endl;
 
 
   //Finally we write the data binning in the file "dataFile"
-   //mySpectra.writeDataBinning(dataFile);
+   mySpectra.writeDataBinning(dataFile);
 
   //We build the legend of the plot
   /* myPlot.addKey("nField",nFieldBirth);
@@ -289,44 +257,92 @@ dataFile<<" "<<endl;
    myPlot.addKey("waveLenght",myField.waveLenght*1.E9, "nm");
    myPlot.addKey("duration",myDisplay.elapsedTime);
 */
-     
-//Specific to the article eV
-   myPlot.addInstruction("set xlabel 'Z' ");
-   myPlot.addInstruction("set ylabel 'Y'");
+
 //Specific to the article 8
    //myPlot.addInstruction("set xrange [0:8]");
-   myPlot.addInstruction("set xtics offset 0,0.3");
-   myPlot.addInstruction("set key on outside bmargin");
-   myPlot.addInstruction("set multiplot  layout 2, 2");
 
-   myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 0.1 "); //red
-   myPlot.addInstruction("set style line 2 lc rgb '#062be5' pt 6 ps 1 lt 1 lw 2 "); //blue '#0060ad'
+
+   myPlot.addInstruction("set multiplot  layout 3, 2 title 'Searching for soft-recollision trajectory'");
+
+   myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 1 "); //red
+   myPlot.addInstruction("set style line 2 lc rgb '#062be5' pt 6 ps 1 lt 1 lw 1 "); //blue '#0060ad'
  
    //myPlot.setPlotType("plot");
    //myPlot.addPlot("'data.dat' index 0 using 3:2 w l ls 1 title 'Photo-electron trajectories, errorMax=1E-6'");
 
+/*
 std::ostringstream asymptEnergy0;
 asymptEnergy0<<"plot 'data.dat' index 0 using 3:2 w l ls 1 title '(a) tBirth=8.050, vPerpBirth=0.123, asymptEnergy="<<asymptEnergy[0]*37.3<<" (eV)'";
-std::ostringstream asymptEnergy1;
-asymptEnergy1<<"plot 'data.dat' index 1 using 3:2 w l ls 1 title '(b) tBirth=-6.356, vPerpBirth=0.130, asymptEnergy="<<asymptEnergy[1]*37.3<<" (eV)'";
-std::ostringstream asymptEnergy2;
-asymptEnergy2<<"plot 'data.dat' index 2 using 3:2 w l ls 1 title '(c) tBirth=0.871, vPerpBirth=6E-5, asymptEnergy="<<asymptEnergy[2]*37.3<<" (eV)'";
 
+myPlot.addInstruction(asymptEnergy0.str());
+*/
 
-   myPlot.addInstruction(asymptEnergy0.str());
-   myPlot.addInstruction(asymptEnergy1.str());
-   myPlot.addInstruction(asymptEnergy2.str());
-   myPlot.addInstruction("plot 'data.dat' index 0 using 7:8 w l ls 1 title 'laser field'");
-   /*myPlot.addInstruction("plot 'data.dat' index 4 using 3:2 w l ls 1 title 'errorMax=1E-12'");
-   myPlot.addInstruction("plot 'data.dat' index 5 using 3:2 w l ls 1 title 'errorMax=1E-14'");*/
-  
+   myPlot.addInstruction("unset xtics");
+   myPlot.addInstruction("unset ytics");
+   myPlot.addInstruction("set bmargin 1");
+   myPlot.addInstruction("set lmargin 12");
+   myPlot.addInstruction("set rmargin 1");
+
+   myPlot.addInstruction("set ytics");
+   myPlot.addInstruction("set ylabel 'fieldBirth (au)'");
+   myPlot.addInstruction("set ylabel 'velocityBirth (au)'");
+   myPlot.addInstruction("plot 'data.dat' using 1:3 w l ls 1 notitle");
+
+   myPlot.addInstruction("set lmargin 0");
+   myPlot.addInstruction("set rmargin 13");
+   myPlot.addInstruction("unset ytics");
+   myPlot.addInstruction("unset ylabel");
+   myPlot.addInstruction("set y2tics");
+   myPlot.addInstruction("set y2label 'fieldBirth (au)'");
+   myPlot.addInstruction("plot 'data.dat' using 1:2 w l ls 1 notitle");
+
+   myPlot.addInstruction("set tmargin 0");
+   myPlot.addInstruction("set lmargin 12");
+   myPlot.addInstruction("set rmargin 1");
+   myPlot.addInstruction("unset y2tics");
+   myPlot.addInstruction("unset y2label");
+   myPlot.addInstruction("set ytics");
+   myPlot.addInstruction("set ylabel 'closestApproach (au)'");
+   myPlot.addInstruction("set yrange [0:10]");
+   myPlot.addInstruction("plot 'data.dat' using 1:4 w l ls 1 notitle");
+
+   myPlot.addInstruction("set lmargin 0");
+   myPlot.addInstruction("set rmargin 13");
+   myPlot.addInstruction("unset ytics");
+   myPlot.addInstruction("unset ylabel");
+   myPlot.addInstruction("unset yrange");
+   myPlot.addInstruction("set y2tics");
+   myPlot.addInstruction("set y2label 'weightIonization'");
+   myPlot.addInstruction("plot 'data.dat' using 1:5 w l ls 1 notitle");
+
+   myPlot.addInstruction("set bmargin 4");
+   myPlot.addInstruction("set lmargin 12");
+   myPlot.addInstruction("set rmargin 1");
+   myPlot.addInstruction("unset y2tics");
+   myPlot.addInstruction("unset y2label");
+   myPlot.addInstruction("set ytics");
+   myPlot.addInstruction("set ylabel 'asymptoticEnergy (eV)' ");
+   myPlot.addInstruction("set yrange [0:8]");
+   myPlot.addInstruction("set xlabel 'Trajectory ID' ");
+   myPlot.addInstruction("set xtics offset 0,0.3");
+   myPlot.addInstruction("plot 'data.dat' using 1:6 w l ls 1 notitle");
+
+   myPlot.addInstruction("set lmargin 0");
+   myPlot.addInstruction("set rmargin 13");
+   myPlot.addInstruction("unset ytics");
+   myPlot.addInstruction("unset ylabel");
+   //myPlot.addInstruction("set key on outside bmargin");
+  // myPlot.addInstruction("plot 'data.dat' using 1:6 w l ls 1  title 'asymptoticEnergy (eV)',\\");
+  // myPlot.addInstruction("'data.dat' using 1:4 w l ls 2 title 'closestApproach (au)'");
+   myPlot.addInstruction("set xrange [0:10]");
+   myPlot.addInstruction("set xlabel 'closestApproach (au)' ");
+   myPlot.addInstruction("set y2range [0:20]");
+   myPlot.addInstruction("set y2tics");
+   myPlot.addInstruction("set y2label 'asymptEnergy (eV)' ");
+   myPlot.addInstruction("plot 'data.dat' using 4:6 w l ls 1 notitle");
+
    myPlot.addInstruction("unset multiplot");
 
-
-
-   //myPlot.addPlot("'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electron spectrum with vY negative'");
-
-   //myPlot.addInstruction("plot 'data.dat' using 7:8 w l ls 1 title 'field'"); //blue '#0060ad'
 
    myPlot.gnuplot();
 
