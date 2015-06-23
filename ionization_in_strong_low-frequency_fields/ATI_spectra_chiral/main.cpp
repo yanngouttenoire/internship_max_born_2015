@@ -146,9 +146,9 @@ for(int i=1; i<=6; i++)
           //We set the ionization time
 if(i==1)
 {
-	  myIC.tBirth=-0.612889;
+	  myIC.tBirth=-1.83867;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.070;
+	  myIC.vYPerpBirth=0.036;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
@@ -163,9 +163,9 @@ if(i==2)
 }
 if(i==3)
 {
-	  myIC.tBirth=-0.612889;
+	  myIC.tBirth=-1.53222;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.080;
+	  myIC.vYPerpBirth=0.045;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
