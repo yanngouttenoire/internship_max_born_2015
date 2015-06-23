@@ -99,9 +99,8 @@ void IC<state_type>::setTBirth(int iFieldBirth, int nFieldBirth)
 //We want to scan field phase values from -pi/2 to pi/2 (or -T/4 to T/4)
 //tBirth=-2.*M_PI/myField.pulsation/4.+double(iFieldBirth)/double(nFieldBirth)*2.*M_PI/myField.pulsation/2.;
 
-//Specific to the article
-double L=6.*myField.cyclesNbr*myField.opticalCycle;
-tBirth=-L/2.+double(iFieldBirth)/double(nFieldBirth)*L;
+double angle=20.*M_PI/180.;
+tBirth=-angle/myField.pulsation+double(iFieldBirth)/double(nFieldBirth)*2.*angle/myField.pulsation;
 }
 
 
@@ -125,15 +124,10 @@ return 0.0;
 else
 {
   //Width of the velocity distributions after tunneling
-  //double sigma_V=4*sqrt(fieldBirth/sqrt(2.*myPotential->IP));
+  double sigma_V=0.1;
 
   //Perpendicular velocity after tunneling
- // double vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-sigma_V;
-
-//Specific to the article
-  double vPerpBirth=double(iVPerpBirth)/double(nVPerpBirth);
-
-  return vPerpBirth;
+  return double(iVPerpBirth)/double(nVPerpBirth)*sigma_V;
 }
  
 }
