@@ -146,9 +146,9 @@ for(int i=1; i<=6; i++)
           //We set the ionization time
 if(i==1)
 {
-	  myIC.tBirth=-1.83867;
+	  myIC.tBirth=-0.612889;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.036;
+	  myIC.vYPerpBirth=0.070;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
@@ -163,9 +163,9 @@ if(i==2)
 }
 if(i==3)
 {
-	  myIC.tBirth=-1.53222;
+	  myIC.tBirth=-0.612889;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.045;
+	  myIC.vYPerpBirth=0.080;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
@@ -198,7 +198,7 @@ if(i==3)
 dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField('Z',t)<<endl;	
              //If the electron is always bonded to the attractor, we do not consider the event 
 	      //if(t>10.*myField.cyclesNbr*myField.opticalCycle)
-if(t>2.*myField.cyclesNbr*myField.opticalCycle)                
+if(t>100.*myField.cyclesNbr*myField.opticalCycle)                
 stopStepper=true;
 
 /*if( sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>580 )
