@@ -85,7 +85,7 @@ cout<<" "<<endl;
 
 //Contains the electrostatic potential properties
 Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
-//myPotential->setIP(0.5792);
+myPotential->setIP(0.5792);
 //Molecule<state_type> *myPotential=new Molecule<state_type>();
 
 //Contains the electric field properties
@@ -146,26 +146,26 @@ for(int i=1; i<=6; i++)
           //We set the ionization time
 if(i==1)
 {
-	  myIC.tBirth=-0.059994;
+	  myIC.tBirth=-0.612889;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.069;
+	  myIC.vYPerpBirth=0.070;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
 
 if(i==2)
 {
-	  myIC.tBirth=-0.059994;
+	  myIC.tBirth=-0.612889;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.069;
+	  myIC.vYPerpBirth=0.075;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
 if(i==3)
 {
-	  myIC.tBirth=-0.059994;
+	  myIC.tBirth=-0.612889;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.069;
+	  myIC.vYPerpBirth=0.080;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
