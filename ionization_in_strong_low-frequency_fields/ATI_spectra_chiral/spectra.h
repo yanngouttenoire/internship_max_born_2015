@@ -175,7 +175,7 @@ double Spectra<state_type>::asymptoticEnergy(const state_type &x, const double& 
 {
   double Vsq=(x[3]-myField.vectPot('X',t))*(x[3]-myField.vectPot('X',t))+(x[4]-myField.vectPot('Y',t))*(x[4]-myField.vectPot('Y',t))+(x[5]-myField.vectPot('Z',t))*(x[5]-myField.vectPot('Z',t));
 
-   double E=Vsq/2-myPotential->potentialEnergy(x);
+   double E=Vsq/2+myPotential->potentialEnergy(x);
 
   return E;
 
