@@ -20,8 +20,8 @@ double uaTime=24.1888421562712E-18;
 double lightSpeed=2.99792458E8;
 
 //Field parameters
-waveLenght=1.064E-6;
-fieldAmpl=0.06;
+waveLenght=2E-6;
+fieldAmpl=0.0534;
 cyclesNbr=2;
 phase=0.;
 pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
