@@ -125,7 +125,7 @@ Plot myPlot;
 
 
 
-for(int i=1; i<=6; i++)
+for(int i=1; i<=3; i++)
 {
 //int j=(2+2*i);
 //desiredErrorMax=pow(10,-j);
@@ -146,26 +146,26 @@ for(int i=1; i<=6; i++)
           //We set the ionization time
 if(i==1)
 {
-	  myIC.tBirth=-0.612889;
+	  myIC.tBirth=-5.86902;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.070;
+	  myIC.vYPerpBirth=0.14;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
 
 if(i==2)
 {
-	  myIC.tBirth=-0.612889;
+	  myIC.tBirth=-2.2824;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.075;
+	  myIC.vYPerpBirth=0.099;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
 if(i==3)
 {
-	  myIC.tBirth=-0.612889;
+	  myIC.tBirth=-2.77148;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.080;
+	  myIC.vYPerpBirth=0.028;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
@@ -198,7 +198,7 @@ if(i==3)
 dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField('Z',t)<<endl;	
              //If the electron is always bonded to the attractor, we do not consider the event 
 	      //if(t>10.*myField.cyclesNbr*myField.opticalCycle)
-if(t>100.*myField.cyclesNbr*myField.opticalCycle)                
+if(t>2.*myField.cyclesNbr*myField.opticalCycle)                
 stopStepper=true;
 
 /*if( sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>580 )

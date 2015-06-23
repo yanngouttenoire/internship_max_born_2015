@@ -25,7 +25,7 @@ double softParameter;
 ElectrostaticPotential()
 {
 //Parameter for soft coulomb potential
-softParameter=10.;
+softParameter=0.;
 }
 
 virtual void preparePotential(const state_type &x)=0;
