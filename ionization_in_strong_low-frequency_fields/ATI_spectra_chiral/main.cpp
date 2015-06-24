@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=10000;
+int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=5000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 
@@ -164,7 +164,7 @@ Plot myPlot;
 	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if(t>8.*myField.cyclesNbr*myField.opticalCycle)
+	      if(t>6.*myField.cyclesNbr*myField.opticalCycle)
                 stopStepper=true;
                  
               //We check if the step is no too small (otherwise the simulation will take too much time)
