@@ -166,7 +166,7 @@ Plot myPlot;
 	
              //If the electron is always bonded to the attractor, we do not consider the event 
 	     //if(t>10.*myField.cyclesNbr*myField.opticalCycle)
-	     if(t>2.*myField.cyclesNbr*myField.opticalCycle)                
+	     if(t>8.*myField.cyclesNbr*myField.opticalCycle)                
 	     stopStepper=true;
 
 	     if(t>myField.opticalCycle/2. && sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])<closestApproach)
@@ -274,28 +274,32 @@ asymptEnergy0<<"plot 'data.dat' index 0 using 3:2 w l ls 1 title '(a) tBirth=8.0
 myPlot.addInstruction(asymptEnergy0.str());
 */
 
+   //IMPORTANT: in order to align plots in column we have to fix the xrange, the lmargin and rmargin
+   std::ostringstream xrange;
+   xrange<<"set xrange [0:"<<mySpectra.spectraPointsNbr<<"]";
+   myPlot.addInstruction(xrange.str());
+
    myPlot.addInstruction("unset xtics");
    myPlot.addInstruction("unset ytics");
+
    myPlot.addInstruction("set bmargin 1");
    myPlot.addInstruction("set lmargin 12");
-   myPlot.addInstruction("set rmargin 1");
-
+   myPlot.addInstruction("set rmargin 3");
    myPlot.addInstruction("set ytics");
    myPlot.addInstruction("set ylabel 'fieldBirth (au)'");
-   myPlot.addInstruction("set ylabel 'velocityBirth (au)'");
-   myPlot.addInstruction("plot 'data.dat' using 1:3 w l ls 1 notitle");
+   myPlot.addInstruction("plot 'data.dat' using 1:2 w l ls 1 notitle");
 
    myPlot.addInstruction("set lmargin 0");
    myPlot.addInstruction("set rmargin 13");
    myPlot.addInstruction("unset ytics");
    myPlot.addInstruction("unset ylabel");
    myPlot.addInstruction("set y2tics");
-   myPlot.addInstruction("set y2label 'fieldBirth (au)'");
-   myPlot.addInstruction("plot 'data.dat' using 1:2 w l ls 1 notitle");
+   myPlot.addInstruction("set y2label 'velocityBirth (au)'");
+   myPlot.addInstruction("plot 'data.dat' using 1:3 w l ls 1 notitle");
 
    myPlot.addInstruction("set tmargin 0");
    myPlot.addInstruction("set lmargin 12");
-   myPlot.addInstruction("set rmargin 1");
+   myPlot.addInstruction("set rmargin 3");
    myPlot.addInstruction("unset y2tics");
    myPlot.addInstruction("unset y2label");
    myPlot.addInstruction("set ytics");
@@ -314,7 +318,7 @@ myPlot.addInstruction(asymptEnergy0.str());
 
    myPlot.addInstruction("set bmargin 4");
    myPlot.addInstruction("set lmargin 12");
-   myPlot.addInstruction("set rmargin 1");
+   myPlot.addInstruction("set rmargin 3");
    myPlot.addInstruction("unset y2tics");
    myPlot.addInstruction("unset y2label");
    myPlot.addInstruction("set ytics");
