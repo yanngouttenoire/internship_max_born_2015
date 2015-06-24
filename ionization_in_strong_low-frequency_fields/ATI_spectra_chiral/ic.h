@@ -131,7 +131,7 @@ else
  // double vPerpBirth=2.*double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-sigma_V;
 
  //Width of the velocity distributions after tunneling
-  double sigma_V=0.1;
+  double sigma_V=0.3;
   double vPerpBirth=double(iVPerpBirth)/double(nVPerpBirth)*sigma_V;
 
 
