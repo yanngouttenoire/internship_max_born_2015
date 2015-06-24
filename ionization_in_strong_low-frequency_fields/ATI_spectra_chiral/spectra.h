@@ -82,7 +82,7 @@ return;
   spectraPointsNbr++;
   
 //We write data in a file
- dataFile<<spectraPointsNbr<<" "<<fieldBirth<<" "<<vPerpBirth<<" "<<closestApproach<<" "<<weightIonization<<" "<<energy*37.3<<" "<<tBirth<<std::endl;
+ dataFile<<spectraPointsNbr<<" "<<fieldBirth<<" "<<vPerpBirth<<" "<<closestApproach<<" "<<weightIonization<<" "<<energy*27.2<<" "<<tBirth<<std::endl;
 
 }
 
