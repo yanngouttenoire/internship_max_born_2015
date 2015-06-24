@@ -124,7 +124,7 @@ return 0.0;
 else
 {
   //Width of the velocity distributions after tunneling
-  double sigma_V=0.1;
+  double sigma_V=0.2;
 
   //Perpendicular velocity after tunneling
   return double(iVPerpBirth)/double(nVPerpBirth)*sigma_V;

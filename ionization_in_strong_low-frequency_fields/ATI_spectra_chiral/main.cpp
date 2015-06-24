@@ -54,7 +54,7 @@ double desiredErrorMax=1E-14;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThreshold=1E-8;
+double weightThreshold=0.;
 
 //We declare boolean controls
 bool stopStepper;
@@ -101,7 +101,7 @@ Solve<state_type> mySolve;
 Display myDisplay;
 
 //Contains methods for doing a binning procedure and build a spectrum
-Spectra<state_type> mySpectra(myPotential, myField, &myIC, 0.01);
+Spectra<state_type> mySpectra(myPotential, myField, &myIC, 0.02);
 
 //Contains methods for drawing curves
 Plot myPlot;
@@ -159,7 +159,7 @@ Plot myPlot;
 	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if(t>6.*myField.cyclesNbr*myField.opticalCycle)
+	      if(t>8.*myField.cyclesNbr*myField.opticalCycle)
                 stopStepper=true;
                  
               //We check if the step is no too small (otherwise the simulation will take too much time)
@@ -237,7 +237,7 @@ Plot myPlot;
    myPlot.addInstruction("set xlabel 'Asymptotic energy (eV)' offset 0,4");
    myPlot.addInstruction("set ylabel 'Probability (log)'");
 //Specific to the article 8
-   myPlot.addInstruction("set xrange [0:8]");
+   myPlot.addInstruction("set xrange [0:20]");
    myPlot.addInstruction("set xtics offset 0,0.3");
 
    myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 2 "); //red

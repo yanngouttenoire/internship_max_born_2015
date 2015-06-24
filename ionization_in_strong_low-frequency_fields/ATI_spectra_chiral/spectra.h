@@ -88,7 +88,6 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
   int  range=int(asymptoticEnergy(x,t)/binsWidth);
 
   //If the energy of the electron is negative, the electron is not free and we do not consider the event
-  //If the range equals zero we do not consider this neither (esthetic choice)
   if(range<=0 ) 
   {
   trappedElectronNbr++;
@@ -163,7 +162,7 @@ void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double
   for(it=asymptEnergy.begin(); it!=asymptEnergy.end(); it++)
     {
 //Specific to the article *37.3eV
-      dataFile<<(it->first)*binsWidth*37.3<<" "<<log10( (it->second)/sum )<<std::endl;
+      dataFile<<(it->first)*binsWidth*27.2<<" "<<log10( (it->second)/sum )<<std::endl;
     }
 
 }
