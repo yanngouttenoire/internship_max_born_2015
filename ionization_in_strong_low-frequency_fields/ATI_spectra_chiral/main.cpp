@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=100, nVYPerpBirth=1, nVZPrimPerpBirth=100;
+int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 
@@ -50,7 +50,7 @@ int weightTooSmallNbr=0;
 
 //We declare runge kutta error, its max allowed value, and the desired error min and max
 double error;
-double desiredErrorMax=1E-14;
+double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
@@ -101,7 +101,7 @@ Solve<state_type> mySolve;
 Display myDisplay;
 
 //Contains methods for doing a binning procedure and build a spectrum
-Spectra<state_type> mySpectra(myPotential, myField, &myIC, 0.02);
+Spectra<state_type> mySpectra(myPotential, myField, &myIC, 0.01);
 
 //Contains methods for drawing curves
 Plot myPlot;
@@ -159,7 +159,7 @@ Plot myPlot;
 	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
              //If the electron is always bonded to the attractor, we do not consider the event 
-	      if(t>8.*myField.cyclesNbr*myField.opticalCycle)
+	      if(t>6.*myField.cyclesNbr*myField.opticalCycle)
                 stopStepper=true;
                  
               //We check if the step is no too small (otherwise the simulation will take too much time)
