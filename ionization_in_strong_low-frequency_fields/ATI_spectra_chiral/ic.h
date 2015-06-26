@@ -74,6 +74,12 @@ void setVXZPerpBirth(int iVZPrimPerpBirth, int nVZPrimPerpBirth);
 //We compute the ionization rate with a given field and a given transverse velocity
 void setWeightIonization();
 
+//Return the ionization rate with a given field and a given transverse velocity
+double getWeightIonization(double t, double vPerp, int i);
+
+//Compute the maximum ionization rate
+double getMaxWeightIonization(int k=2);
+
 //We set the electron position after tunneling
 void setRhoBirth();
 
@@ -154,17 +160,51 @@ vXPerpBirth=-vZPrimPerpBirth*myField('Z',tBirth)/fieldBirth;
 //Ionization rate with a given field and a given transverse velocity according ADK distribution
 //REF: J. Liu, Classical Trajectory Perspective of Atomic Ionization in Strong Laser Fields
 template<typename state_type>
+double IC<state_type>::getWeightIonization(double t, double vPerp, int i)
+{
+double field=myField.getInstFieldAmpl(t);
+if(i==1)
+return 4./field*exp(-2.*pow(2.*myPotential->IP,3./2.)/3./field)*fabs(vPerp)/field*exp(-pow(2.*myPotential->IP,1./2.)*vPerp*vPerp/field);
+if(i==2)
+return 1./field/field*exp(-2.*pow((2.*myPotential->IP+vPerp*vPerp),3./2.)/3/field)*vPerp/sqrt(1+vPerp*vPerp/2./myPotential->IP);
+}
+
+//Compute the maximum ionization rate
+template<typename state_type>
+double IC<state_type>::getMaxWeightIonization(int k)
+{
+int ni=100;
+int nj=100;
+double vPerpMax=0.3;
+double ti;
+double vPerp;
+double weight;
+double max=0.;
+
+for(int i=0; i<ni; i++)
+{
+for(int j=0; j<nj; j++)
+{
+ ti=-M_PI/myField.pulsation/90.*25+i/double(ni)*2.*M_PI/myField.pulsation/90.*25;
+ vPerp=0.01+j*vPerpMax/nj;
+
+weight=getWeightIonization(ti, vPerp,k);
+if(weight>max)
+max=weight;
+
+}
+}
+return max;
+}
+
+
+//We set the ionization rate
+template<typename state_type>
 void IC<state_type>::setWeightIonization()
 {
   vPerpBirth=pow(vXPerpBirth*vXPerpBirth+vYPerpBirth*vYPerpBirth+vZPerpBirth*vZPerpBirth, 1./2.);
-
- // weightIonization=4./fieldBirth*exp(-2.*pow(2.*myPotential->IP,3./2.)/3./fieldBirth)*fabs(vPerpBirth)/fieldBirth/M_PI*exp(-pow(2.*myPotential->IP,1./2.)*vPerpBirth*vPerpBirth/fieldBirth);
-
-//Specific to the article
- weightIonization=1./fieldBirth/fieldBirth*exp(-2.*pow((2.*myPotential->IP+vPerpBirth*vPerpBirth),3./2.)/3/fieldBirth)*vPerpBirth/sqrt(1+vPerpBirth*vPerpBirth/2./myPotential->IP);
-
+  weightIonization=getWeightIonization(tBirth, vPerpBirth,2);
 }
-
 
 //We set the electron radial position after tunneling
 template<typename state_type>

@@ -54,7 +54,8 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThreshold=0.;
+double weightThresholdRatio=10.;
+double weightThreshold;
 
 //We declare boolean controls
 bool stopStepper;
@@ -106,6 +107,8 @@ Spectra<state_type> mySpectra(myPotential, myField, &myIC, 0.01);
 //Contains methods for drawing curves
 Plot myPlot;
 
+//We set the ionization rate threshold
+weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
 
   //We perform two loops
   //first, for each ionization time (initial field value)
@@ -203,7 +206,7 @@ Plot myPlot;
           myDisplay("trappedElectronNbr", double(mySpectra.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
           myDisplay("stepTooSmallNbr", double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
           myDisplay("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
-          myDisplay("weightThreshold",weightThreshold);
+          myDisplay.variableArg<double>("weightThreshold",2,weightThreshold, weightThresholdRatio);
           myDisplay("binsWidth",mySpectra.binsWidth);
           }
 
@@ -224,7 +227,7 @@ Plot myPlot;
    myPlot.addKey("spectraPointNbr", double(mySpectra.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
    myPlot.addKey("stepTooSmallNbr",int(double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
    myPlot.addKey("weightTooSmallNbr", int(double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
-   myPlot.addKey("weightThreshold",weightThreshold);
+   myPlot.addKey("weightThresholdRatio",weightThresholdRatio);
    myPlot.addKey("binsWidth",mySpectra.binsWidth);
    myPlot.addKey("ErrorMax",desiredErrorMax);
    myPlot.addKey("stepMin",stepMin);
@@ -235,9 +238,9 @@ Plot myPlot;
      
 //Specific to the article eV
    myPlot.addInstruction("set xlabel 'Asymptotic energy (eV)' offset 0,4");
-   myPlot.addInstruction("set ylabel 'Probability (log)'");
+   myPlot.addInstruction("set ylabel 'Probability (linear scale)'");
 //Specific to the article 8
-   myPlot.addInstruction("set xrange [0:20]");
+   myPlot.addInstruction("set xrange [0:8]");
    myPlot.addInstruction("set xtics offset 0,0.3");
 
    myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 2 "); //red
