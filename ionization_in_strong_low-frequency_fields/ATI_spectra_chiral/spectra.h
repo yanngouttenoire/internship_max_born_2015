@@ -88,7 +88,7 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
   int  range=int(asymptoticEnergy(x,t)/binsWidth);
 
   //If the energy of the electron is negative, the electron is not free and we do not consider the event
-  if(range<=0 ) 
+  if(range<0 ) 
   {
   trappedElectronNbr++;
   return;
@@ -97,7 +97,7 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
 //we insert values associated with the new event in the corresponding container according if the electron propagated in y>0 or y<0
 //Specific to the article
 //We consider electron differently depending if they are detected along the polarization of the field or not
-if(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5]))*180./M_PI<=2.5)
+if(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5]))*180./M_PI<=5.)
 {
 if(x[2]*myField('Z',myIC->tBirth)>=0)
  insertInMap(asymptEnergyUp, range, weightIonization);
@@ -156,7 +156,7 @@ void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double
     }
 
   //Remove the following line if you wan a normalized distribution law
-  sum=1.;
+  //sum=1.;
 
   //We write the histogram in a file	
   for(it=asymptEnergy.begin(); it!=asymptEnergy.end(); it++)

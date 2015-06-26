@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=500, nVYPerpBirth=1, nVZPrimPerpBirth=500;
+int nFieldBirth=6000, nVYPerpBirth=1, nVZPrimPerpBirth=6000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 
@@ -54,7 +54,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=10.;
+double weightThresholdRatio=5.;
 double weightThreshold;
 
 //We declare boolean controls

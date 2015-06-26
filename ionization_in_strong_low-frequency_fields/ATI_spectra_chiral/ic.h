@@ -102,11 +102,11 @@ IC<state_type>::IC(ElectrostaticPotential<state_type> *myPotential, ElectricFiel
 template<typename state_type>
 void IC<state_type>::setTBirth(int iFieldBirth, int nFieldBirth)
 { 
-//We want to scan field phase values from -pi/2 to pi/2 (or -T/4 to T/4)
-//tBirth=-2.*M_PI/myField.pulsation/4.+double(iFieldBirth)/double(nFieldBirth)*2.*M_PI/myField.pulsation/2.;
+//We want to scan field phase values from -200° to 20°
 
-double angle=20.*M_PI/180.;
-tBirth=-angle/myField.pulsation+double(iFieldBirth)/double(nFieldBirth)*2.*angle/myField.pulsation;
+double anglei=-200.*M_PI/180.;
+double anglef=20.*M_PI/180.;
+tBirth=anglei/myField.pulsation+double(iFieldBirth)/double(nFieldBirth)*(anglef-anglei)/myField.pulsation;
 }
 
 
@@ -130,7 +130,7 @@ return 0.0;
 else
 {
   //Width of the velocity distributions after tunneling
-  double sigma_V=0.2;
+  double sigma_V=0.3;
 
   //Perpendicular velocity after tunneling
   return double(iVPerpBirth)/double(nVPerpBirth)*sigma_V;
