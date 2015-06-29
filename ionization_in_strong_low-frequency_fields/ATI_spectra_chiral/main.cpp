@@ -5,6 +5,7 @@
 #include<map>
 #include<iomanip>
 #include<vector>
+#include<omp.h>
 
 #include"system.h"
 #include"solve.h"
@@ -26,11 +27,12 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=6000, nVYPerpBirth=1, nVZPrimPerpBirth=6000;
+int nFieldBirth=50, nVYPerpBirth=1, nVZPrimPerpBirth=50;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
-
-
+int threadID;
+int threadsNbr;
+int threadsNbrMax;
 
 //We declare the time variable
 double t;
@@ -54,7 +56,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=5.;
+double weightThresholdRatio=50000.;
 double weightThreshold;
 
 //We declare boolean controls
@@ -69,10 +71,53 @@ double binsWidth;
 fstream dataFile("data.dat",ios::out);
 
 
+void getEnvInfo()
+{
+int nthreads, tid, procs, maxt, inpar, dynamic, nested;
+
+/* Start parallel region */
+#pragma omp parallel for private(nthreads, tid)
+for (int i=1;i<2;i++)
+  {
+
+  /* Obtain thread number */
+  tid = omp_get_thread_num();
+
+  /* Only master thread does this */
+  if (tid == 0) 
+    {
+    printf("Thread %d getting environment info...\n", tid);
+
+    /* Get environment information */
+    procs = omp_get_num_procs();
+    nthreads = omp_get_num_threads();
+    maxt = omp_get_max_threads();
+    inpar = omp_in_parallel();
+    dynamic = omp_get_dynamic();
+    nested = omp_get_nested();
+
+    /* Print environment information */
+    printf("Number of processors = %d\n", procs);
+    printf("Number of threads = %d\n", nthreads);
+    printf("Max threads = %d\n", maxt);
+    printf("In parallel? = %d\n", inpar);
+    printf("Dynamic threads enabled? = %d\n", dynamic);
+    printf("Nested parallelism supported? = %d\n", nested);
+
+    }
+
+  }  /* Done */
+
+}
+
+
 //FUNCTION MAIN
 
 int main()
 {
+
+
+getEnvInfo();
 
 //We leave few lines break
 cout<<" " <<endl;
@@ -114,13 +159,22 @@ weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
   //first, for each ionization time (initial field value)
   //second, for each perpendicular velocity
 
+threadsNbrMax=omp_get_max_threads();
+omp_set_num_threads(threadsNbrMax);
+
+
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
+  for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
+	   {
 
+ #pragma omp parallel private(x,t) num_threads(2)
+ #pragma omp for 
       for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
        {
-         for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
-	   {
+
+      threadsNbr=omp_get_num_threads();
+      threadID=omp_get_thread_num();
 
 	    //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
           myDisplay.moveCursorBackUp();         	
@@ -135,6 +189,8 @@ weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
 
 	  //INITIAL CONDITIONS
           //We set the ionization time
+#pragma omp critical 
+{
 	  myIC.setTBirth(iFieldBirth, nFieldBirth);
 	  myIC.setFieldBirth();
 	  myIC.setVYPerpBirth(iVYPerpBirth, nVYPerpBirth);
@@ -151,9 +207,8 @@ weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
 	  myIC.setRhoBirth();
           myIC.setPolarCoordBirth();
 	  myIC.setIC(x,t);
-
+}
 	  //We compute the trajectory
-
 
 	    for(int nTraj=0; !stopStepper ; nTraj++)
 	    { 
@@ -174,7 +229,8 @@ weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
 	    }
 
 	  //We store the asymptotic velocity in a container of map type with a view to making a data binning
-	  mySpectra.storeDataBinning(x, t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
+#pragma omp critical
+	  //mySpectra.storeDataBinning(x, t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 	   
             
 	    if(isStepTooSmall==true)
@@ -183,7 +239,8 @@ weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
 	      weightTooSmallNbr+=1;
 
 		    //We update the load bar and display some informations
-          if(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth)%1000==0)
+#pragma omp critical
+          if(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth)%10==0)
           {
 	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
           myDisplay("ellipticity", myField.ellipticity);
@@ -208,6 +265,9 @@ weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
           myDisplay("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
           myDisplay.variableArg<double>("weightThreshold",2,weightThreshold, weightThresholdRatio);
           myDisplay("binsWidth",mySpectra.binsWidth);
+          myDisplay("omp_get_thread_num", threadID);
+          myDisplay("omp_get_num_threads", threadsNbr);
+          myDisplay("omp_get_max_threads", threadsNbrMax);
           }
 
 	 }         
