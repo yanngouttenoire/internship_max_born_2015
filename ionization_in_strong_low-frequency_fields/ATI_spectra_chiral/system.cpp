@@ -17,7 +17,8 @@ System<state_type>::System(ElectrostaticPotential<state_type> *myPotential, Elec
 template<typename state_type>
     void System<state_type>::operator() (const state_type &x , state_type &dxdt , const double&  t)
     {      
-
+#pragma omp critical
+{
     myPotential->preparePotential(x);
 
     dxdt[0]=x[3];
@@ -26,6 +27,7 @@ template<typename state_type>
     dxdt[3]=(*myPotential)('X',x)-myField('X',t);
     dxdt[4]=(*myPotential)('Y',x)-myField('Y',t);
     dxdt[5]=(*myPotential)('Z',x)-myField('Z',t);
+}
     }
 
 

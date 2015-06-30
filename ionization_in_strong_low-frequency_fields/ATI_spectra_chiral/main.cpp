@@ -41,6 +41,11 @@ double t;
 typedef double state_type[6];
 state_type x;
 
+double x0[2500][6];
+double t0[2500];
+double weightIonization[2500];
+bool unexpectedStop[2500];
+
 //We declare a variable for the step in controlledRK5, the min allowed value
 double step; 
 double stepMin=1E-20;
@@ -159,58 +164,28 @@ weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
   //first, for each ionization time (initial field value)
   //second, for each perpendicular velocity
 
+
+
 threadsNbrMax=omp_get_max_threads();
 omp_set_num_threads(threadsNbrMax);
 
-
-  for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
+/*
+ #pragma omp parallel for schedule(dynamic)
+for(iFieldBirth=1; iFieldBirth<=100; iFieldBirth++)
     {
-  for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
-	   {
+int iVZPrimPerpBirth=25;
 
- #pragma omp parallel private(x,t) num_threads(2)
- #pragma omp for 
-      for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
-       {
 
-      threadsNbr=omp_get_num_threads();
-      threadID=omp_get_thread_num();
-
-	    //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
-          myDisplay.moveCursorBackUp();         	
-
-          //We initialise the boolean controls	  
- 	  stopStepper=false; 
-	  isStepTooSmall=false;
-          isWeightTooSmall=false;
-
-          //We update the step step
-          step=0.0001; 
-
-	  //INITIAL CONDITIONS
-          //We set the ionization time
-#pragma omp critical 
-{
-	  myIC.setTBirth(iFieldBirth, nFieldBirth);
+          myIC.setTBirth(iFieldBirth, nFieldBirth);
 	  myIC.setFieldBirth();
 	  myIC.setVYPerpBirth(iVYPerpBirth, nVYPerpBirth);
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
-
-          //We check if weightIonization is big enough
-          if(myIC.weightIonization < weightThreshold)
-          { 
-           isWeightTooSmall=true;
-           stopStepper=true;
-          }
-         
 	  myIC.setRhoBirth();
           myIC.setPolarCoordBirth();
 	  myIC.setIC(x,t);
-}
-	  //We compute the trajectory
 
-	    for(int nTraj=0; !stopStepper ; nTraj++)
+  for(int nTraj=0; !stopStepper ; nTraj++)
 	    { 
 
 	      //We call the function which solve eq of the motion
@@ -228,21 +203,139 @@ omp_set_num_threads(threadsNbrMax);
 		}
 	    }
 
-	  //We store the asymptotic velocity in a container of map type with a view to making a data binning
-#pragma omp critical
-	  //mySpectra.storeDataBinning(x, t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
-	   
+if(mySpectra.asymptoticEnergy(x,t)>=0)
+//mySpectra.asymptEnergyUp[int(mySpectra.asymptoticEnergy(x,t))]=myIC.weightIonization;
+mySpectra.storeDataBinning(x, t, myIC.weightIonization, false);
+
+cout<<int(mySpectra.asymptoticEnergy(x,t)*27.2)<<" "<<mySpectra.asymptEnergyUp[int(mySpectra.asymptoticEnergy(x,t))]<<" "<<myIC.weightIonization<<std::endl;
+//mySpectra.storeDataBinning(x, t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
+
+
+    }
+*/
+
+
+ #pragma omp parallel for schedule(dynamic) collapse(3) firstprivate(myIC) 
+
+  for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
+    {
+  for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
+	   {
+
+      for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
+       {
+
+	    //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
+       	
+	  //INITIAL CONDITIONS
+          //We set the ionization time
+	  myIC.setTBirth(iFieldBirth, nFieldBirth);
+	  myIC.setFieldBirth();
+	  myIC.setVYPerpBirth(iVYPerpBirth, nVYPerpBirth);
+	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
+          myIC.setWeightIonization();
+         
+	  myIC.setRhoBirth();
+          myIC.setPolarCoordBirth();
+	  myIC.setIC(x0[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)],t0[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)]);
+weightIonization[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)]=myIC.weightIonization;
+
+}
+}
+}
+
+cout<<"IC set"<<endl;
+
+threadsNbrMax=omp_get_max_threads();
+omp_set_num_threads(threadsNbrMax);
+
+ #pragma omp parallel for schedule(dynamic) collapse(3) private(error,step,stopStepper,isStepTooSmall,isWeightTooSmall) firstprivate(desiredErrorMax,desiredErrorMin) 
+  for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
+    {
+  for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
+	   {
+      for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
+       {
+	  //We compute the trajectory
+
+          //We initialise the boolean controls	  
+ 	  stopStepper=false; 
+	  isStepTooSmall=false;
+          isWeightTooSmall=false;
+
+
+       //We check if weightIonization is big enough
+          if(weightIonization[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)] < weightThreshold)
+          { 
+           isWeightTooSmall=true;
+           stopStepper=true;
+          }
+
+          //We update the step step
+          step=0.0001; 
+
+	    for(int nTraj=0; !stopStepper ; nTraj++)
+	    { 
+
+	      //We call the function which solve eq of the motion
+	      mySolve.controlledRK5(mySystem,x0[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)],t0[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)],step,error,desiredErrorMin,desiredErrorMax);
+
+             //If the electron is always bonded to the attractor, we do not consider the event 
+	      if(t0[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)]>6.*myField.cyclesNbr*myField.opticalCycle)
+                stopStepper=true;
+
+              //We check if the step is no too small (otherwise the simulation will take too much time)
+	      if(step<stepMin)
+		{
+		  stopStepper=true;
+		  isStepTooSmall=true;
+		}
+
+	    }
             
 	    if(isStepTooSmall==true)
 	      stepTooSmallNbr+=1;
             if(isWeightTooSmall==true)
 	      weightTooSmallNbr+=1;
 
-		    //We update the load bar and display some informations
-#pragma omp critical
-          if(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth)%10==0)
+unexpectedStop[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)]=(isStepTooSmall || isWeightTooSmall);
+
+          if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%1000==0)
           {
-	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*((iVZPrimPerpBirth-1)+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
+      threadsNbr=omp_get_num_threads();
+      threadID=omp_get_thread_num();
+	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
+          myDisplay("omp_get_thread_num", threadID);
+          myDisplay("omp_get_num_threads", threadsNbr);
+          myDisplay("omp_get_max_threads", threadsNbrMax);
+          }
+}
+}
+}
+
+cout<<"traj computed"<<endl;
+
+
+  for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
+    {
+  for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
+	   {
+
+      for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
+       {
+
+	  //We store the asymptotic velocity in a container of map type with a view to making a data binning
+	  mySpectra.storeDataBinning(x0[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)],t0[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)], weightIonization[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)], unexpectedStop[iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)]);
+	   
+/*
+
+		    //We update the load bar and display some informations
+#pragma omp critical (outputupdate)
+          myDisplay.moveCursorBackUp();  
+#pragma omp critical (outputupdate)
+          if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%1==0)
+          {
+	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
           myDisplay("ellipticity", myField.ellipticity);
           myDisplay("rhoBirth",myIC.rhoBirth);
           myDisplay("phaseBirth",myField.pulsation*myIC.tBirth*180./M_PI);
@@ -269,10 +362,13 @@ omp_set_num_threads(threadsNbrMax);
           myDisplay("omp_get_num_threads", threadsNbr);
           myDisplay("omp_get_max_threads", threadsNbrMax);
           }
+*/
 
 	 }         
       }
     }
+
+cout<<"data stored"<<endl;
 
 
   //Finally we write the data binning in the file "dataFile"
@@ -294,7 +390,7 @@ omp_set_num_threads(threadsNbrMax);
    myPlot.addKey("ellipticity", myField.ellipticity);
    myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
    myPlot.addKey("waveLenght",myField.waveLenght*1.E6, "micro-m");
-   myPlot.addKey("duration",myDisplay.elapsedTime);
+   myPlot.addKey("duration",myDisplay.elapsedTime());
      
 //Specific to the article eV
    myPlot.addInstruction("set xlabel 'Asymptotic energy (eV)' offset 0,4");

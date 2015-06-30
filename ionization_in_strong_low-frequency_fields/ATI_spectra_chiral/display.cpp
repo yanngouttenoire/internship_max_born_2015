@@ -19,9 +19,6 @@ cout<<"\033[F";
        
 //We implement a load bar with a view to displaying the remaining time
 
-//First top
-time_t start = time (NULL);  //HERE OR IN MAIN FILE?
-
 void Display::loadbar(int i, int np)
 {
 
@@ -32,27 +29,15 @@ void Display::loadbar(int i, int np)
   int s=cout.precision();
 
   cout<<"progression= "<<setprecision(3)<<progress<<"%"<<setprecision(s)<<"                "<<endl;
-  displayCounter++;
- 
-  //second top
-  time_t end = time (NULL);         
+  displayCounter++;        
 
   //2//Elapsed time since the beginning of the simulation
-  double T0=difftime(end,start);
-
-  int T1=(int)(T0/3600);
-  int T2=(int)(T0/60)-T1*60;
-  int T3=(int)(T0)-T1*3600-T2*60;
-
-  //We set the string variable elapsedTime
-  ostringstream ostringElapsedTime;
-  ostringElapsedTime <<T1<<" h "<<T2<<" min "<<T3<<" s ";
-  elapsedTime=ostringElapsedTime.str();
-
-  cout<<"elapsed time= "<<elapsedTime<<"             "<<endl;
+  cout<<"elapsed time= "<<elapsedTime()<<"             "<<endl;
   displayCounter++;
 
   //3//Remaining time since the beginning of the simulation
+  time_t end = time (NULL); 
+  double T0=difftime(end,start);
   double Z0=(100-progress)*T0/progress;
   int Z1=(int)(Z0/3600);
   int Z2=(int)(Z0/60)-Z1*60;
@@ -70,5 +55,21 @@ void Display::loadbar(int i, int np)
 
 
 }
+
+//We return a string variable for the elapsed Time
+std::string Display::elapsedTime()
+{
+  time_t end = time (NULL); 
+  double T0=difftime(end,start);
+
+  int T1=(int)(T0/3600);
+  int T2=(int)(T0/60)-T1*60;
+  int T3=(int)(T0)-T1*3600-T2*60;
+
+  ostringstream ostringElapsedTime;
+  ostringElapsedTime <<T1<<" h "<<T2<<" min "<<T3<<" s ";
+  return ostringElapsedTime.str();
+}
+
 
 

@@ -19,15 +19,20 @@ class Display
 public:
 
 int displayCounter;
-std::string elapsedTime;
+time_t start;
+time_t end;
 
-Display() {displayCounter=0;};
+Display() {displayCounter=0; start=time(NULL);};
 
 //We implement a method which put the cursor back up in a view to displaying a stationnary output
 void moveCursorBackUp();
    
 //We implement a load bar with a view to displaying the remaining time
 void loadbar(int currentPoint, int finalPoint);
+
+//We return the elasped time since the creation of the instance of Display
+std::string elapsedTime();
+
 
 //We implement a method which outputs a data in the terminal
 template<typename T>

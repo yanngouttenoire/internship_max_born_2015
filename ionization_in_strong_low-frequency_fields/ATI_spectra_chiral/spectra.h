@@ -99,7 +99,28 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
 //We consider electron differently depending if they are detected along the polarization of the field or not
 if(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5]))*180./M_PI<=180)
 {
-if(x[2]*myField('Z',myIC->tBirth)>=0)
+//if(x[2]*myField('Z',myIC->tBirth)>=0)
+double waveLenght;
+double fieldAmpl;
+double pulsation;
+double opticalCycle;
+unsigned int cyclesNbr;
+double phase;
+double ellipticity;
+
+double uaIntensity=3.5094451E16;
+double uaTime=24.1888421562712E-18;
+double lightSpeed=2.99792458E8;
+
+//Field parameters
+waveLenght=2E-6;
+fieldAmpl=0.0534;
+cyclesNbr=2;
+phase=0.;
+pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
+opticalCycle=2.*M_PI/pulsation;
+if(x[2]*exp(-2.*log(2.)*pow((myIC->tBirth)/cyclesNbr/opticalCycle,2))*fieldAmpl*cos(pulsation*(myIC->tBirth)+phase)>=0)
+//if(x[2]*myField('Z',myIC->tBirth)>=0)
  insertInMap(asymptEnergyUp, range, weightIonization);
 else
  insertInMap(asymptEnergyDown, range, weightIonization);
