@@ -22,7 +22,7 @@ class System
   //We declare field variables
   ElectricField myField;		
 
-  public:
+ public:
 
   //Contructor 
   System(ElectrostaticPotential<state_type> *myPotential, ElectricField &myField);

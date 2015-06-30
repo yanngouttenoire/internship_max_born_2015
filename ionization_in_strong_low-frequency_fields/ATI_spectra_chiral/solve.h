@@ -18,13 +18,13 @@ template<typename state_type>
 class Solve
 {
 
-public:
+ public:
 
-//We implement a method which solves an ode system using Runge-Kutta of order 5 with adaptive step-size algorithm 
-//The adaptive step-size algorithm uses Runge-Kutta of order 4 embedded in RK5
-//For more details: http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c16-2.pdf
+  //We implement a method which solves an ode system using Runge-Kutta of order 5 with adaptive step-size algorithm 
+  //The adaptive step-size algorithm uses Runge-Kutta of order 4 embedded in RK5
+  //For more details: http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c16-2.pdf
 
-void controlledRK5(System<state_type> &system, state_type &x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax);
+  void controlledRK5(System<state_type> &system, state_type &x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax);
 
 
 };
@@ -76,18 +76,18 @@ void Solve<state_type>::controlledRK5(System<state_type> &system, state_type &x,
   //RK5 solution variable
   double x5[6];
 
-int preventInstableError=0;
+  int preventInstableError=0;
 
- do
+  do
     {
      
-  for(i=0; i<6; i++)
-    {
-      x4[i]=x[i];
-      x5[i]=x[i];
-    }
+      for(i=0; i<6; i++)
+	{
+	  x4[i]=x[i];
+	  x5[i]=x[i];
+	}
 
-       for(i=0; i<6; i++)
+      for(i=0; i<6; i++)
 	{
 	  xm[0][i]=x[i];
 	}
@@ -124,28 +124,28 @@ int preventInstableError=0;
 	    }
 	}
    
-     //We set the "error" as the result of the difference between rk5 solution and rk4 solution
+      //We set the "error" as the result of the difference between rk5 solution and rk4 solution
       error=fabs(pow(x5[0]*x5[0]+x5[1]*x5[1]+x5[2]*x5[2],1./2.)-pow(x4[0]*x4[0]+x4[1]*x4[1]+x4[2]*x4[2],1./2.))/pow(x5[0]*x5[0]+x5[1]*x5[1]+x5[2]*x5[2],1./2.);
    
-    //Since error terms in rk4 and rk5 are respectly of order 5 and 6 according the step dt, the "error" we just computed scales as the step dt to the power of 5
-    //Then, the new step as to be estimated as the following: newStep=oldStep*pow(desiredError/oldError,1/5.)
+      //Since error terms in rk4 and rk5 are respectly of order 5 and 6 according the step dt, the "error" we just computed scales as the step dt to the power of 5
+      //Then, the new step as to be estimated as the following: newStep=oldStep*pow(desiredError/oldError,1/5.)
 
-  if(error>desiredErrorMax)
+      if(error>desiredErrorMax)
 	dt=dt*pow(desiredErrorMax/error,0.2);
     
-  if(error<desiredErrorMin && error!=0.)
+      if(error<desiredErrorMin && error!=0.)
 	dt=dt*pow(desiredErrorMin/error,0.2);
 
-//NOTE: DUE TO THE FACT THAT SOMETIMES ERROR WAS INSTABLE, THE PREVIOUS OPERATIONS MIGHT BE WRONG
-//That's why, we do the following: we consider that the error is correct after 3 passes through the loop
+      //NOTE: DUE TO THE FACT THAT SOMETIMES ERROR WAS INSTABLE, THE PREVIOUS OPERATIONS MIGHT BE WRONG
+      //That's why, we do the following: we consider that the error is correct after 3 passes through the loop
 
-preventInstableError++;
-if(preventInstableError>=500)
-{
-error=desiredErrorMax;
-}
+      preventInstableError++;
+      if(preventInstableError>=500)
+	{
+	  error=desiredErrorMax;
+	}
 
-} 
+    } 
 
 
   //We do not exit from the loop while error is not the one expected

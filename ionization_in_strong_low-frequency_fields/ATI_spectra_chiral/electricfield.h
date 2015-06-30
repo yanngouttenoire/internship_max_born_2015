@@ -13,28 +13,28 @@
 class ElectricField
 {
 
-public:
+ public:
 
-//Field parameters
-double waveLenght;
-double fieldAmpl;
-double pulsation;
-double opticalCycle;
-unsigned int cyclesNbr;
-double phase;
-double ellipticity;
+  //Field parameters
+  double waveLenght;
+  double fieldAmpl;
+  double pulsation;
+  double opticalCycle;
+  unsigned int cyclesNbr;
+  double phase;
+  double ellipticity;
 
-//Constructor
-ElectricField(double ellipticity=0.);
+  //Constructor
+  ElectricField(double ellipticity=0.);
 
-//Methods which return the force induced by the electric field on the electron on each cartesian components 
-double operator()(char component, const double& t);
+  //Methods which return the force induced by the electric field on the electron on each cartesian components 
+  double operator()(char component, const double& t);
 
-//We build a method which returns the instantaneous field amplitude for a given time
-double getInstFieldAmpl(const double& t);
+  //We build a method which returns the instantaneous field amplitude for a given time
+  double getInstFieldAmpl(const double& t);
 
-//Method which returns the vector potential
-double vectPot(char component, const double& t); 
+  //Method which returns the vector potential
+  double vectPot(char component, const double& t); 
 
 
 };

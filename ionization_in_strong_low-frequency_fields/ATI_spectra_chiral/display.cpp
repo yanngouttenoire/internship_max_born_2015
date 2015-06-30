@@ -9,11 +9,11 @@ using namespace std;
 void Display::moveCursorBackUp()
 {
 
-while(displayCounter!=0)
-{
-cout<<"\033[F";
---displayCounter;
-}
+  while(displayCounter!=0)
+    {
+      cout<<"\033[F";
+      --displayCounter;
+    }
 
 }
        

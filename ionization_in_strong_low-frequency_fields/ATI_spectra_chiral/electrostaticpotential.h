@@ -14,27 +14,27 @@
 template<typename state_type> class ElectrostaticPotential
 {
 
-public:
+ public:
 
-//Electrostatic potential parameters
-double IP;
-double softParameter;
+  //Electrostatic potential parameters
+  double IP;
+  double softParameter;
 
 
-//Constructor
-ElectrostaticPotential()
-{
-//Parameter for soft coulomb potential
-softParameter=0.;
-}
+  //Constructor
+  ElectrostaticPotential()
+    {
+      //Parameter for soft coulomb potential
+      softParameter=0.;
+    }
 
-virtual void preparePotential(const state_type &x)=0;
+  virtual void preparePotential(const state_type &x)=0;
 
-//Methods which return the coulomb force on each components 
-virtual double operator()(char component, const state_type &x)=0;
+  //Methods which return the coulomb force on each components 
+  virtual double operator()(char component, const state_type &x)=0;
 
-//Method which returns the electrostatic potential energy
-virtual double potentialEnergy(const state_type &x)=0;
+  //Method which returns the electrostatic potential energy
+  virtual double potentialEnergy(const state_type &x)=0;
 
 };
 
