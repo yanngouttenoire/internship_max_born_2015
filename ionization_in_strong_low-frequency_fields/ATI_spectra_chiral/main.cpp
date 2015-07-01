@@ -104,7 +104,7 @@ int main()
   Display myDisplay;
 
   //Contains methods for doing a binning procedure and build a spectrum
-  Spectra<state_type> mySpectra(myPotential, myField, &myIC, 0.01);
+  Spectra<state_type> mySpectra(myPotential, myField, &myIC, 180., 0.1);
 
   //Contains methods for drawing curves
   Plot myPlot;
@@ -211,6 +211,7 @@ int main()
 		  myDisplay("errorMin", desiredErrorMin);
 
 		  myDisplay("asymptoticEnergy",mySpectra.asymptoticEnergy(x,t));
+		  myDisplay("angleDetection",mySpectra.angleDetection, "degree");
 		  myDisplay("binsWidth",mySpectra.binsWidth);
 
 		  myDisplay("weightIonization",myIC.weightIonization);
@@ -250,9 +251,13 @@ int main()
   myPlot.addKey("angleTooLargeNbr", int(double(mySpectra.angleTooLargeNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
   myPlot.addKey("spectraPointsNbr", double(mySpectra.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
   myPlot.addKey("weightThresholdRatio",weightThresholdRatio);
+  #ifdef _OPENMP
+  myPlot.addKey("threadsNbrMax", threadsNbrMax);
+  #endif
   myPlot.addKey("binsWidth",mySpectra.binsWidth);
   myPlot.addKey("ErrorMax",desiredErrorMax);
   myPlot.addKey("stepMin",stepMin);
+  myPlot.addKey("angleDetection",mySpectra.angleDetection, "deg");
   myPlot.addKey("ellipticity", myField.ellipticity);
   myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
   myPlot.addKey("waveLenght",myField.waveLenght*1.E6, "micro-m");
@@ -270,8 +275,8 @@ int main()
   myPlot.setPlotType("plot");
 
   //We consider electrons differently depending if they are detected along the polarization of the field or not
-  myPlot.addPlot("'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electron detected upward according the initial field (angle<5°) '");
-  myPlot.addPlot("'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electron detected downward according the initial field (angle<5°)'");
+  myPlot.addPlot("'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electron detected upward according the initial field'");
+  myPlot.addPlot("'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electron detected downward according the initial field'");
 
   myPlot.gnuplot();
 

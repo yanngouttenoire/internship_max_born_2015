@@ -28,7 +28,7 @@ class Plot
     void addKey(std::string keyName, const T &key, std::string unit="")
     {
       std::ostringstream ostringKey;
-      ostringKey<<keyName<<" = "<<key<<unit;
+      ostringKey<<keyName<<"="<<key<<unit;
       keys.push_back(ostringKey.str());
     }
 
@@ -36,7 +36,7 @@ class Plot
     void addKeyVariableArg(std::string keyName, int n, ...)
     {
       std::ostringstream ostringKey;
-      ostringKey<<keyName<<" = ";
+      ostringKey<<keyName<<"=";
       va_list ap;
       va_start(ap,n);
       for(int i=0; i<n; i++) ostringKey<<va_arg(ap,T)<<" ";

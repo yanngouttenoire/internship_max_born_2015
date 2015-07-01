@@ -72,13 +72,13 @@ double Hydrogen<state_type>::operator()(char component, const state_type &x)
   switch(component)
     {
     case 'X' :
-      return -x[0]*inverseRadialDistanceCube;
+      return -x[0]*charge/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
 
     case 'Y' :
-      return -x[1]*inverseRadialDistanceCube;
+      return -x[1]*charge/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
 
     case 'Z' :
-      return -x[2]*inverseRadialDistanceCube;
+      return -x[2]*charge/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
     }
 
 

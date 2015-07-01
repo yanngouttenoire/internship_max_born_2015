@@ -29,6 +29,9 @@ class Spectra
 
   //We declare a variable for the bin interval width
   double binsWidth;
+  
+  //We declare the angle between the vector velocity and the laser polarization within which we detect electrons
+  double angleDetection;
 
   //We declare a counter for the number of events stored
   int spectraPointsNbr;
@@ -50,7 +53,7 @@ class Spectra
 
 
   //Constructor
-  Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *myIC, double binsWidth=0.1);
+  Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *myIC, double angleDetection=180., double binsWidth=0.1);
 
   //We compute the asymptotic energy
   double asymptoticEnergy(const state_type& x, const double& t);
@@ -72,7 +75,7 @@ class Spectra
 
 //We set the histogram intervals width
 template<typename state_type>
-Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *a_myIC, double binsWidth) : myPotential(myPotential), myField(myField), myIC(a_myIC), binsWidth(binsWidth) 
+Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *a_myIC, double angleDetection, double binsWidth) : myPotential(myPotential), myField(myField), myIC(a_myIC), angleDetection(angleDetection), binsWidth(binsWidth) 
 {
   spectraPointsNbr=0;
   trappedElectronNbr=0;
@@ -100,7 +103,7 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
   
   //we insert values associated with the new event in the corresponding container according if the electron propagated in y>0 or y<0
   //We consider electron differently depending if they are detected along the polarization of the field or not
-  if(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5]))*180./M_PI<=180)
+  if(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5]))*180./M_PI<=angleDetection)
     {
       if(x[2]*myField('Z',myIC->tBirth)>=0)
 	insertInMap(asymptEnergyUp, range, weightIonization);
@@ -121,7 +124,7 @@ void Spectra<state_type>::insertInMap(std::map<int,double>&  asymptEnergy, const
   std::map<int,double>::iterator findRange=asymptEnergy.find(range);
 
   spectraPointsNbr++;
-    
+ 
   if(findRange==asymptEnergy.end())
     {
       asymptEnergy[range]=weightIonization;
@@ -130,8 +133,8 @@ void Spectra<state_type>::insertInMap(std::map<int,double>&  asymptEnergy, const
     {
       asymptEnergy[range]=asymptEnergy[range]+weightIonization;
     }
+
 }
-  
 
 //Finally we write all the data binning in a file
 template<typename state_type>
