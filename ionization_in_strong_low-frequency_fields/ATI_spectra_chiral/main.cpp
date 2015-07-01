@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=50, nVYPerpBirth=1, nVZPrimPerpBirth=50;
+int nFieldBirth=100, nVYPerpBirth=1, nVZPrimPerpBirth=100;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 int threadID;
@@ -46,7 +46,7 @@ double stepMin=1E-20;
 
 //We declare a counter which counts how many events have not been accepted because step was smaller than stepMin
 int stepTooSmallNbr=0;
-//And a counter which counts how many initial conditions have not been accepted because the probality of ionization was too small
+//a counter which counts how many initial conditions have not been accepted because the probality of ionization was too small
 int weightTooSmallNbr=0;
 
 //We declare runge kutta error, its max allowed value, and the desired error min and max
@@ -55,7 +55,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=50000.;
+double weightThresholdRatio=5.;
 double weightThreshold;
 
 //We declare boolean controls
@@ -89,7 +89,7 @@ int main()
   //Molecule<state_type> *myPotential=new Molecule<state_type>();
 
   //Contains the electric field properties
-  ElectricField myField(0.0);
+  ElectricField myField(0.);
 
   //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
   IC<state_type> myIC(myPotential, myField);
@@ -131,11 +131,6 @@ int main()
 
 	  for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
 	    {
-
-	      //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
-#pragma omp critical (outputupdate)
-	      myDisplay.moveCursorBackUp();  
-
 
 	      /**************************We set the initial conditions********************************/
 	      myIC.setTBirth(iFieldBirth, nFieldBirth);
@@ -191,12 +186,14 @@ int main()
 #pragma omp critical
 	      mySpectra.storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 	   
-	      //We update the load bar and display some informations
-#pragma omp critical (outputupdate)
+#pragma omp critical
 	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500==0)
 		{
-		  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
-
+		  //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
+	     	  myDisplay.moveCursorBackUp();  
+	     	  
+	          //We update the load bar and display some informations
+	    	  myDisplay.loadbar(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth),nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
 		  myDisplay("rhoBirth",myIC.rhoBirth);
 		  myDisplay("phaseBirth",myField.pulsation*myIC.tBirth*180./M_PI);
 		  myDisplay("vPerpBirth", myIC.vPerpBirth);
@@ -247,9 +244,11 @@ int main()
   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
   // myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
   // myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
-  myPlot.addKey("spectraPointNbr", double(mySpectra.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
-  myPlot.addKey("stepTooSmallNbr",int(double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
   myPlot.addKey("weightTooSmallNbr", int(double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+  myPlot.addKey("stepTooSmallNbr",int(double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+  myPlot.addKey("trappedElectronNbr", int(double(mySpectra.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+  myPlot.addKey("angleTooLargeNbr", int(double(mySpectra.angleTooLargeNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+  myPlot.addKey("spectraPointsNbr", double(mySpectra.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
   myPlot.addKey("weightThresholdRatio",weightThresholdRatio);
   myPlot.addKey("binsWidth",mySpectra.binsWidth);
   myPlot.addKey("ErrorMax",desiredErrorMax);

@@ -36,6 +36,9 @@ class Spectra
   //We declare a counter for the number of events not stored because the electron always trapped by the atom after the pulse
   int trappedElectronNbr;
 
+  //We declare a counter which counts how many events have not been accepted because the angle between the velocity vector and the laser polarization was too large
+  int angleTooLargeNbr;
+
   //We declare an object of type ElectrostaticPotential
   ElectrostaticPotential<state_type> *myPotential;
 
@@ -73,6 +76,7 @@ Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, El
 {
   spectraPointsNbr=0;
   trappedElectronNbr=0;
+  angleTooLargeNbr=0;
 }
 
 
@@ -103,6 +107,9 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
       else
 	insertInMap(asymptEnergyDown, range, weightIonization);
     }
+   else 
+   angleTooLargeNbr++;
+    
 }
 
 //The following method is called by storeDataBinning and insert element <range,weightIonization> in map asympEnergy
