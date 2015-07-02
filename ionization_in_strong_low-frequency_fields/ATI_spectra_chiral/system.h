@@ -12,14 +12,15 @@
 #include"electricfield.h"
 #include"electrostaticpotential.h"
 #include"hydrogen.h"
+#include"molecule.h"
 
 //Ordinary differential equations of the dynamic of an electron in coulomb potential 
-template<typename state_type>
+template<typename state_type, typename potential_type>
 class System
 {
   //We declare an object of type ElectrostaticPotential for electrostatic potential properties
   //ElectrostaticPotential<state_type> *myPotential;	
-  Hydrogen<state_type> myPotential;
+  potential_type myPotential;
 
   //We declare field variables
   ElectricField myField;		
@@ -28,7 +29,7 @@ class System
 
   //Contructor 
   //System(ElectrostaticPotential<state_type> myPotential, ElectricField &myField);
-  System(Hydrogen<state_type> myPotential, ElectricField &myField);
+  System(potential_type &myPotential, ElectricField &myField);
   
   //Copy constructor (in order to use System as firstprivate in OPEN MP)
  // System(const System & source);

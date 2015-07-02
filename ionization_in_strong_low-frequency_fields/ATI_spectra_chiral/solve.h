@@ -11,10 +11,10 @@
 #include"system.h"
 
 //Forward declaration
-template<typename state_type>
+template<typename state_type, typename potential_type>
 class System;
 
-template<typename state_type>
+template<typename state_type, typename potential_type>
 class Solve
 {
 
@@ -24,7 +24,7 @@ class Solve
   //The adaptive step-size algorithm uses Runge-Kutta of order 4 embedded in RK5
   //For more details: http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c16-2.pdf
 
-  void controlledRK5(System<state_type> &system, state_type &x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax);
+  void controlledRK5(System<state_type,potential_type> &system, state_type &x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax);
 
 
 };
@@ -35,8 +35,8 @@ class Solve
 //We also implement a rk4 iteration embedded in the rk5 one. Then, we can compute the error and adapt the step size
 //For more details: http://www.it.uom.gr/teaching/linearalgebra/NumericalRecipiesInC/c16-2.pdf
 
-template<typename state_type>
-void Solve<state_type>::controlledRK5(System<state_type> &system, state_type &x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax)
+template<typename state_type, typename potential_type>
+void Solve<state_type,potential_type> ::controlledRK5(System<state_type,potential_type> &system, state_type &x, double &t, double &dt, double &error, double desiredErrorMin, double desiredErrorMax)
 {
 
   //The iteration of yn is

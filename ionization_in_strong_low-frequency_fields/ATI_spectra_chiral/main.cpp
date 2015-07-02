@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=150, nVYPerpBirth=1, nVZPrimPerpBirth=150;
+int nFieldBirth=100, nVYPerpBirth=500, nVZPrimPerpBirth=100;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -40,6 +40,18 @@ double t;
 //We declare the array in which we will store the orbit
 typedef double state_type[6];
 state_type x;
+
+//We declare the electrostatic potential that we want to use
+#define MOLECULE
+//#define HYDROGEN
+
+#ifdef HYDROGEN
+typedef Hydrogen<state_type> potential_type;
+#endif
+
+#ifdef MOLECULE
+typedef Molecule<state_type> potential_type;
+#endif
 
 //We declare a variable for the step in controlledRK5, the min allowed value
 double step; 
@@ -88,25 +100,25 @@ int main()
   /********Each object will execute a specific task********************************************/
 
   //Contains the electrostatic potential properties
-  Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
-  myPotential->setIP(0.5792);
-  
-  Hydrogen<state_type> _myPotential_;
+  potential_type *myPotential=new potential_type;
+  potential_type _myPotential_;
+   
+#ifdef HYDROGEN
+   myPotential->setIP(0.5792);
   _myPotential_.setIP(0.5792);
-  //Molecule<state_type> *myPotential=new Molecule<state_type>();
-
+#endif
+  
   //Contains the electric field properties
-  ElectricField myField(0.0);
+  ElectricField myField(0.1);
 
   //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
   IC<state_type> myIC(myPotential, myField);
 
   //Contains the ordinary differential system of equations of motion of the electron in the electrostatic potential and the electric field
-  System<state_type> mySystem(_myPotential_, myField);	
-  //System<state_type> mySystem(mySystem_);
+  System<state_type,potential_type > mySystem(_myPotential_, myField);	
 
   //Contains the method which solves ODE: runge kutta 5 with controlled step-size algorithm
-  Solve<state_type> mySolve;
+  Solve<state_type,potential_type > mySolve;
 
   //Contains methods for outputting data in terminal
   Display myDisplay;
@@ -221,9 +233,10 @@ int main()
 		  myDisplay("vYPerpBirth", myIC.vYPerpBirth);
 		  myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
 		  myDisplay("ellipticity", myField.ellipticity);
-
-		  // myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
-		  //myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+#ifdef MOLECULE
+		  myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
+		  myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+#endif		  
 
 		  myDisplay("step", step);
 		  myDisplay("stepMin", stepMin);
@@ -235,7 +248,7 @@ int main()
 		  myDisplay("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 
 #ifndef _OPENMP
-	  myDisplay("asymptoticEnergy",mySpectrum.asymptoticEnergy(x,t));
+	          myDisplay("asymptoticEnergy",mySpectrum.asymptoticEnergy(x,t));
 		  myDisplay("angleDetection",mySpectrum.angleDetection, "degree");
 		  myDisplay("binsWidth",mySpectrum.binsWidth);
 		  myDisplay("trappedElectronNbr", double(mySpectrum.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
@@ -280,8 +293,12 @@ int main()
   myPlot.addKey("nField",nFieldBirth);
   myPlot.addKey("nVYPerp",nVYPerpBirth);
   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
-  // myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
-  // myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+  
+#ifdef MOLECULE
+  myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
+  myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+#endif
+  
   myPlot.addKey("weightTooSmallNbr", int(double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
   myPlot.addKey("stepTooSmallNbr",int(double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
   
@@ -292,6 +309,7 @@ int main()
   myPlot.addKey("angleDetection",mySpectrum.angleDetection, "deg");
   
   myPlot.addKey("weightThresholdRatio",weightThresholdRatio);
+  
   #ifdef _OPENMP
   myPlot.addKey("threadsNbrMax", threadsNbrMax);
   #endif
