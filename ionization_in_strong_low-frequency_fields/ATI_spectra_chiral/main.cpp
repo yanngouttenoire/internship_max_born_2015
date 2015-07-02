@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=50, nVYPerpBirth=1, nVZPrimPerpBirth=50;
+int nFieldBirth=150, nVYPerpBirth=1, nVZPrimPerpBirth=150;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -65,7 +65,7 @@ bool isStepTooSmall;
 bool isWeightTooSmall;
 
 //Bins width
-double binsWidth=0.3;
+double binsWidth=0.1;
 
 //Angle between velocity vector and field polarization within which we detect electrons
 double angleDetection=180.;
@@ -96,7 +96,7 @@ int main()
   //Molecule<state_type> *myPotential=new Molecule<state_type>();
 
   //Contains the electric field properties
-  ElectricField myField(0.5);
+  ElectricField myField(0.0);
 
   //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
   IC<state_type> myIC(myPotential, myField);
@@ -136,7 +136,7 @@ int main()
   vector<Spectra<state_type> > mySpectra(threadsNbrMax,Spectra<state_type>(myPotential, myField, &myIC, angleDetection, binsWidth));
 #endif
 
-#pragma omp parallel for schedule(dynamic) collapse(3) private(x,t,error,step,stopStepper,isStepTooSmall,isWeightTooSmall,myDisplay) firstprivate(myIC,desiredErrorMax,desiredErrorMin, mySystem) 
+#pragma omp parallel for schedule(dynamic) collapse(3) private(x,t,error,step,stopStepper,isStepTooSmall,isWeightTooSmall) firstprivate(myIC,desiredErrorMax,desiredErrorMin, mySystem) 
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
@@ -269,6 +269,7 @@ int main()
 
 #ifdef _OPENMP
     Spectra<state_type> mySpectrum(myPotential, myField, &myIC, angleDetection, binsWidth);
+    //We merge all the data binning computed by each thread
     mySpectrum.mergeSpectra(mySpectra);
 #endif
 

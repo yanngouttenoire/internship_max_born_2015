@@ -36,6 +36,9 @@ class Spectra
   //We declare a variable for the bin interval width
   double binsWidth;
   
+    //We declare the conversion ratio from au to the desired unit
+   int energyUnit;
+  
   //We declare the angle between the vector velocity and the laser polarization within which we detect electrons
   double angleDetection;
 
@@ -48,7 +51,6 @@ class Spectra
   //We declare a counter which counts how many events have not been accepted because the angle between the velocity vector and the laser polarization was too large
   int angleTooLargeNbr;
   
-   int energyUnit;
 
   //We declare an object of type ElectrostaticPotential
   ElectrostaticPotential<state_type> *myPotential;
@@ -131,7 +133,8 @@ bool Spectra<state_type>::hasTrajectoryGoodProfile(const state_type& x, const do
 template<typename state_type>
 detectionType Spectra<state_type>::whichProfile(const state_type& x, const double& t)
 {
- if(x[2]*myField('Z',myIC->tBirth)>=0)
+ //if(x[2]*myField('Z',myIC->tBirth)>=0)
+ if(x[1]>=0)
  return UPWARD;
  else
  return DOWNWARD;
@@ -180,6 +183,7 @@ template<typename state_type>
 void Spectra<state_type>::mergeSpectra(std::vector<Spectra<state_type> > &mySpectra)
 {
 
+/******************************We merge the data binning******************************/
   int range;
   double weightIonization;
   std::map<int,double>::iterator itmap;
@@ -201,7 +205,15 @@ void Spectra<state_type>::mergeSpectra(std::vector<Spectra<state_type> > &mySpec
        weightIonization=itmap->second;    
        insertInMap(asymptEnergyDown, range, weightIonization);
      }  
-   }  
+   }
+   
+/******************************We merge the counters******************************/
+
+   for(itSpectra=mySpectra.begin(); itSpectra!=mySpectra.end(); itSpectra++)  
+    {
+     trappedElectronNbr+=itSpectra->trappedElectronNbr;
+     angleTooLargeNbr+=itSpectra->angleTooLargeNbr;
+    }
 
 }
 
