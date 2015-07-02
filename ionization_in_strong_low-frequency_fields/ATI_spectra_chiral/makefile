@@ -1,5 +1,6 @@
 CC=g++ 
-CFLAGS=-W -Wall -ansi -pedantic -std=c++11 -fopenmp 
+CFLAGS=-ansi -pedantic -std=c++11 -fopenmp 
+WFLAGS=-W -Wall 
 LDFLAGS=-fopenmp
 EXEC=exec.out
 SOURCE= $(wildcard *.cpp)

@@ -18,7 +18,7 @@ template<typename state_type>
 void System<state_type>::operator() (const state_type &x , state_type &dxdt , const double&  t)
 {      
   {
-   // myPotential->preparePotential(x);
+    //myPotential->preparePotential(x);
 
     dxdt[0]=x[3];
     dxdt[1]=x[4];

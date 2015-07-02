@@ -57,9 +57,18 @@ class Spectra
 
   //We compute the asymptotic energy
   double asymptoticEnergy(const state_type& x, const double& t);
+  
+  //We return a bool which tell us if a trajectory has a good profile
+  bool hasTrajectoryGoodProfile(const state_type& x, const double& t, const bool& unexpectedStop);
+  
+  //We return a int (0 or 1) which tell us which is the profile of the trajectory
+  int whichProfile(const state_type& x, const double& t);
 
-  //We store asymptotic velocities in containers of map type
-  void storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const bool& inexpectedStop);
+  //We store asymptotic velocities and weight ionization in containers of map type
+  void storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const bool& unexpectedStop);
+  
+  //We move asymptotic velocities and weight ionization from array to containers of map type
+  void storeDataBinning(double** dataBinning, int sizeX);
 
   //The following method is called by storeDataBinning and insert element <range,weightIonization> in map asymptEnergy
   void insertInMap(std::map<int,double>& asymptEnergy, const int& range, const double& weightIonization);
@@ -82,37 +91,79 @@ Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, El
   angleTooLargeNbr=0;
 }
 
-
-//We store asymptotic energies in containers of map type with a view to make a data binning
+  //We return a bool which tell us if a trajectory has a good profile
 template<typename state_type>
-void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const bool& unexpectedStop)
+bool Spectra<state_type>::hasTrajectoryGoodProfile(const state_type& x, const double& t, const bool& unexpectedStop)
 {
-
   //If the computation of the trajectory has been stopped unexpectedly, we do not consider the event
-  if(unexpectedStop) return;
-  
-  //We compute the x value of the new point in the histogram
-  int  range=int(asymptoticEnergy(x,t)/binsWidth);
+  if(unexpectedStop) return false;
 
   //If the energy of the electron is negative, the electron is not free and we do not consider the event
-  if(range<0 ) 
+  if(asymptoticEnergy(x,t)<0 ) 
     {
       trappedElectronNbr++;
-      return;
+      return false;
     }
   
   //we insert values associated with the new event in the corresponding container according if the electron propagated in y>0 or y<0
   //We consider electron differently depending if they are detected along the polarization of the field or not
   if(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5]))*180./M_PI<=angleDetection)
     {
-      if(x[2]*myField('Z',myIC->tBirth)>=0)
-	insertInMap(asymptEnergyUp, range, weightIonization);
-      else
-	insertInMap(asymptEnergyDown, range, weightIonization);
+    return true;
     }
    else 
+   {
+    return false;
    angleTooLargeNbr++;
-    
+   }
+}
+
+  //We return a int (0 or 1) which tell us which is the profile of the trajectory
+template<typename state_type>
+int Spectra<state_type>::whichProfile(const state_type& x, const double& t)
+{
+ if(x[2]*myField('Z',myIC->tBirth)>=0)
+ return 1;
+ else
+ return 0;
+}
+
+//We store asymptotic energies in containers of map type with a view to make a data binning
+template<typename state_type>
+void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const bool& unexpectedStop)
+{
+	int range=int(asymptoticEnergy(x,t)/binsWidth);
+
+	if(hasTrajectoryGoodProfile(x, t, unexpectedStop)==true)
+	 {
+  
+     	 if(whichProfile(x,t)==1)
+		insertInMap(asymptEnergyUp, range, weightIonization);
+      	 else
+		insertInMap(asymptEnergyDown, range, weightIonization);
+	 }
+   
+}
+  
+  //We move asymptotic velocities and weight ionization from array to containers of map type
+template<typename state_type>
+void Spectra<state_type>::storeDataBinning(double** dataBinning, int sizeX)
+{
+	int range, weightIonization;
+	
+	for(int i=0; i<sizeX; i++)
+	{
+	if(dataBinning[i][2]==true)
+	 {
+		range=int(dataBinning[i][0]/binsWidth); 
+		weightIonization=dataBinning[i][1]; 			
+  
+     		 if(dataBinning[i][4]==1)
+			insertInMap(asymptEnergyUp, range, weightIonization);
+      		 else
+			insertInMap(asymptEnergyDown, range, weightIonization);
+	  }
+	 }
 }
 
 //The following method is called by storeDataBinning and insert element <range,weightIonization> in map asympEnergy
@@ -135,6 +186,7 @@ void Spectra<state_type>::insertInMap(std::map<int,double>&  asymptEnergy, const
     }
 
 }
+
 
 //Finally we write all the data binning in a file
 template<typename state_type>
@@ -175,7 +227,13 @@ void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double
     }
 
 }
+/*
+  //The following method extracts asymptotic energy and weightIonization from an array and write it in a file
+  void getFromArray(std::fstream& dataFile, double** dataBinning)
+  {
 
+  }
+*/
 
 //We compute asymptotic energy
 template<typename state_type>

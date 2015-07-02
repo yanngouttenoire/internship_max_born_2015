@@ -29,6 +29,7 @@ using namespace std;
 int nFieldBirth=100, nVYPerpBirth=1, nVZPrimPerpBirth=100;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
+//We declare some variables for OPENMP information
 int threadID;
 int threadsNbr;
 int threadsNbrMax;
@@ -89,7 +90,7 @@ int main()
   //Molecule<state_type> *myPotential=new Molecule<state_type>();
 
   //Contains the electric field properties
-  ElectricField myField(0.);
+  ElectricField myField(0.5);
 
   //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
   IC<state_type> myIC(myPotential, myField);
@@ -104,13 +105,22 @@ int main()
   Display myDisplay;
 
   //Contains methods for doing a binning procedure and build a spectrum
-  Spectra<state_type> mySpectra(myPotential, myField, &myIC, 180., 0.1);
+  Spectra<state_type> mySpectra(myPotential, myField, &myIC, 180., 0.01);
 
   //Contains methods for drawing curves
   Plot myPlot;
 
   //We set the ionization rate threshold
   weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
+  
+  //We declare a 2-dimensional array in which we will store the data
+  //The first dimension accounts for the number of the trajectory
+  //The second dimension accounts for the asymptotic energy (index=0), the tunneling ionization probability (index=1), a bool which tell if the trajectory is correct (index=2) and the profile of the trajectory (index=3), for instance we can distinguish electrons detected upward than those detected downward according the laser field polarization
+double **dataBinning = new double*[nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth];
+for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i) 
+{
+    dataBinning[i] = new double[4];
+}
 
 
   /************************************We perform 3 loops**********************************/
@@ -122,7 +132,7 @@ int main()
   omp_set_num_threads(threadsNbrMax);
 #endif
 
-#pragma omp parallel for schedule(dynamic) collapse(3) private(x,t,error,step,stopStepper,isStepTooSmall,isWeightTooSmall) firstprivate(myIC,desiredErrorMax,desiredErrorMin) 
+#pragma omp parallel for schedule(dynamic) collapse(3) private(x,t,error,step,stopStepper,isStepTooSmall,isWeightTooSmall,myDisplay) firstprivate(myIC,desiredErrorMax,desiredErrorMin) 
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
@@ -182,13 +192,21 @@ int main()
 	      if(isWeightTooSmall==true)
 		weightTooSmallNbr+=1;
 
-	      //We store the asymptotic velocity in a container of map type with a view to making a data binning
-#pragma omp critical
-	      mySpectra.storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
+	      //We store the asymptotic energy, the tunneling rate and bool which tell us if the trajectory has a good profile and which profile
+	      int index=iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth);
+	      dataBinning[index][0]=mySpectra.asymptoticEnergy(x,t);
+	      dataBinning[index][1]=myIC.weightIonization;
+	      dataBinning[index][2]=mySpectra.hasTrajectoryGoodProfile(x,t,isStepTooSmall || isWeightTooSmall);
+	      dataBinning[index][3]=mySpectra.whichProfile(x,t);
+	      	      	      
+/*#pragma omp critical
+	      mySpectra.storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);*/
 	   
-#pragma omp critical
+
 	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500==0)
 		{
+		#pragma omp critical
+		 {
 		  //We move the cursor back up with a view to rewriting on previous script and displaying a stable output
 	     	  myDisplay.moveCursorBackUp();  
 	     	  
@@ -230,12 +248,14 @@ int main()
 		  myDisplay("omp_get_dynamic", omp_get_dynamic());
 		  myDisplay("omp_get_nested", omp_get_nested());
 #endif
+		 }
 		}
 	    }         
 	}
     }
 
-
+  //We perform the data binning process
+  mySpectra.storeDataBinning(dataBinning,nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth); 
   //Finally we write the data binning in the file "dataFile"
   mySpectra.writeDataBinning(dataFile);
 
@@ -266,7 +286,7 @@ int main()
   myPlot.addInstruction("set xlabel 'Asymptotic energy (eV)' offset 0,4");
   myPlot.addInstruction("set ylabel 'Probability (linear scale)'");
 
-  myPlot.addInstruction("set xrange [0:8]");
+  //myPlot.addInstruction("set xrange [0:8]");
   myPlot.addInstruction("set xtics offset 0,0.3");
 
   myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 2 "); //red
