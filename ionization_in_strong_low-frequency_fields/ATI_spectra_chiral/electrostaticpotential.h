@@ -27,7 +27,10 @@ template<typename state_type> class ElectrostaticPotential
       //Parameter for soft coulomb potential
       softParameter=0.;
     }
-
+    
+   //Necessary method for copy procedure when using polymophism (abstract parent class)
+  virtual ElectrostaticPotential* Clone()=0;
+  
   virtual void preparePotential(const state_type &x)=0;
 
   //Methods which return the coulomb force on each components 

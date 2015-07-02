@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=100, nVYPerpBirth=1, nVZPrimPerpBirth=100;
+int nFieldBirth=50, nVYPerpBirth=1, nVZPrimPerpBirth=50;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -65,7 +65,7 @@ bool isStepTooSmall;
 bool isWeightTooSmall;
 
 //Bins width
-double binsWidth=0.01;
+double binsWidth=0.3;
 
 //Angle between velocity vector and field polarization within which we detect electrons
 double angleDetection=180.;
@@ -90,6 +90,9 @@ int main()
   //Contains the electrostatic potential properties
   Hydrogen<state_type> *myPotential=new Hydrogen<state_type>;
   myPotential->setIP(0.5792);
+  
+  Hydrogen<state_type> _myPotential_;
+  _myPotential_.setIP(0.5792);
   //Molecule<state_type> *myPotential=new Molecule<state_type>();
 
   //Contains the electric field properties
@@ -99,7 +102,8 @@ int main()
   IC<state_type> myIC(myPotential, myField);
 
   //Contains the ordinary differential system of equations of motion of the electron in the electrostatic potential and the electric field
-  System<state_type> mySystem(myPotential, myField);	
+  System<state_type> mySystem(_myPotential_, myField);	
+  //System<state_type> mySystem(mySystem_);
 
   //Contains the method which solves ODE: runge kutta 5 with controlled step-size algorithm
   Solve<state_type> mySolve;
@@ -113,15 +117,6 @@ int main()
   //We set the ionization rate threshold
   weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
   
-  //We declare a 2-dimensional array in which we will store the data
-  //The first dimension accounts for the number of the trajectory
-  //The second dimension accounts for the asymptotic energy (index=0), the tunneling ionization probability (index=1), a bool which tell if the trajectory is correct (index=2) and the profile of the trajectory (index=3), for instance we can distinguish electrons detected upward than those detected downward according the laser field polarization
-double **dataBinning = new double*[nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth];
-for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i) 
-{
-    dataBinning[i] = new double[4];
-}
-
 
   /************************************We perform 3 loops**********************************/
   /***************First, for each ionization time (initial field value)********************/
@@ -132,8 +127,6 @@ for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i)
   omp_set_num_threads(threadsNbrMax);
 #endif
 
-
-
 #ifndef _OPENMP
   //Contains methods for doing a binning procedure and build a spectrum
   Spectra<state_type> mySpectrum(myPotential, myField, &myIC, angleDetection, binsWidth);
@@ -143,7 +136,7 @@ for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i)
   vector<Spectra<state_type> > mySpectra(threadsNbrMax,Spectra<state_type>(myPotential, myField, &myIC, angleDetection, binsWidth));
 #endif
 
-#pragma omp parallel for schedule(dynamic) collapse(3) private(x,t,error,step,stopStepper,isStepTooSmall,isWeightTooSmall,myDisplay) firstprivate(myIC,desiredErrorMax,desiredErrorMin) 
+#pragma omp parallel for schedule(dynamic) collapse(3) private(x,t,error,step,stopStepper,isStepTooSmall,isWeightTooSmall,myDisplay) firstprivate(myIC,desiredErrorMax,desiredErrorMin, mySystem) 
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
@@ -212,8 +205,6 @@ for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i)
    mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 #endif
 	     
-	   
-
 	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500==0)
 		{
 		#pragma omp critical
@@ -277,8 +268,8 @@ for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i)
 
 
 #ifdef _OPENMP
-   Spectra<state_type> mySpectrum=mySpectra[0];
-   mySpectrum.mergeSpectra(mySpectra, threadsNbrMax);
+    Spectra<state_type> mySpectrum(myPotential, myField, &myIC, angleDetection, binsWidth);
+    mySpectrum.mergeSpectra(mySpectra);
 #endif
 
   //Finally we write the data binning in the file "dataFile"

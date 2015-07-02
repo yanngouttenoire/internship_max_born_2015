@@ -27,6 +27,12 @@ template<typename state_type> class Molecule : public ElectrostaticPotential<sta
 
   //Constructor
   Molecule();
+  
+  //Necessary method for copy procedure when using polymophism (abstract parent class)
+  Molecule* Clone()
+  {
+  return new Molecule(*this);
+  }
 
   //Method which compute some quantities in advance
   void preparePotential(const state_type &x);

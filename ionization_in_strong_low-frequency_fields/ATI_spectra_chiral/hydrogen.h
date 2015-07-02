@@ -22,7 +22,13 @@ template<typename state_type> class Hydrogen : public ElectrostaticPotential<sta
 
   //Constructor
   Hydrogen();
-
+  
+  //Necessary method for copy procedure when using polymophism (abstract parent class)
+  Hydrogen* Clone()
+  {
+  return new Hydrogen(*this);
+  }
+  
   //We set the ionization potential
   void setIP(double a_IP);
 
@@ -72,13 +78,13 @@ double Hydrogen<state_type>::operator()(char component, const state_type &x)
   switch(component)
     {
     case 'X' :
-      return -x[0]*charge/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
+      return -x[0]*inverseRadialDistanceCube ;
 
     case 'Y' :
-      return -x[1]*charge/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
+      return -x[1]*inverseRadialDistanceCube ;
 
     case 'Z' :
-      return -x[2]*charge/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
+      return -x[2]*inverseRadialDistanceCube ;
     }
 
 
