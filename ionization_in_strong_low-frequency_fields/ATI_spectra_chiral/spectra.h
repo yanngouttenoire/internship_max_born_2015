@@ -7,6 +7,7 @@
 #include<map>
 #include<iomanip>
 #include<vector>
+#include<algorithm>
 
 #include"electricfield.h"
 #include"electrostaticpotential.h"
@@ -41,6 +42,8 @@ class Spectra
 
   //We declare a counter which counts how many events have not been accepted because the angle between the velocity vector and the laser polarization was too large
   int angleTooLargeNbr;
+  
+   int energyUnit;
 
   //We declare an object of type ElectrostaticPotential
   ElectrostaticPotential<state_type> *myPotential;
@@ -73,6 +76,9 @@ class Spectra
   //The following method is called by storeDataBinning and insert element <range,weightIonization> in map asymptEnergy
   void insertInMap(std::map<int,double>& asymptEnergy, const int& range, const double& weightIonization);
 
+  //The following method gather together all the data binning in one
+  void mergeSpectra(std::vector<Spectra<state_type> >& mySpectra, int threadsNbrMax);
+
   //Finally we write all the data binning in a file
   void writeDataBinning(std::fstream& dataFile);
 
@@ -89,6 +95,7 @@ Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, El
   spectraPointsNbr=0;
   trappedElectronNbr=0;
   angleTooLargeNbr=0;
+  energyUnit=27.2;
 }
 
   //We return a bool which tell us if a trajectory has a good profile
@@ -132,7 +139,7 @@ int Spectra<state_type>::whichProfile(const state_type& x, const double& t)
 template<typename state_type>
 void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const bool& unexpectedStop)
 {
-	int range=int(asymptoticEnergy(x,t)/binsWidth);
+	int range=int(asymptoticEnergy(x,t)*energyUnit/binsWidth);
 
 	if(hasTrajectoryGoodProfile(x, t, unexpectedStop)==true)
 	 {
@@ -155,7 +162,7 @@ void Spectra<state_type>::storeDataBinning(double** dataBinning, int sizeX)
 	{
 	if(dataBinning[i][2]==true)
 	 {
-		range=int(dataBinning[i][0]/binsWidth); 
+		range=int(dataBinning[i][0]*energyUnit/binsWidth); 
 		weightIonization=dataBinning[i][1]; 			
   
      		 if(dataBinning[i][4]==1)
@@ -184,6 +191,45 @@ void Spectra<state_type>::insertInMap(std::map<int,double>&  asymptEnergy, const
     {
       asymptEnergy[range]=asymptEnergy[range]+weightIonization;
     }
+
+}
+
+ bool maxMap(std::pair<int,double> A, std::pair<int,double> B) {return A.first<B.first;}
+
+  //The following method gather together all the data binning in one
+template<typename state_type>
+void Spectra<state_type>::mergeSpectra(std::vector<Spectra<state_type> >& mySpectra, int threadsNbrMax)
+{
+int maxUpTemp, maxUp=0.;
+int maxDownTemp, maxDown=0.;
+std::map<int,double>::iterator findRange;
+
+ for(int i=0; i<threadsNbrMax; i++)
+ {
+ maxUpTemp=(*std::max_element(mySpectra[i].asymptEnergyUp.begin(), mySpectra[i].asymptEnergyUp.end(), maxMap)).first;
+ maxDownTemp=(*std::max_element(mySpectra[i].asymptEnergyDown.begin(), mySpectra[i].asymptEnergyDown.end(), maxMap)).first;
+ 
+ if(maxUpTemp>maxUp) maxUp=maxUpTemp;
+ if(maxDownTemp>maxDown) maxDown=maxDownTemp;
+ }
+
+ for(int u=0; u<maxUp; u++)
+ {
+ for(int i=0; i<threadsNbrMax; i++)
+ {
+ if(mySpectra[i].asymptEnergyUp.find(u)!=mySpectra[i].asymptEnergyUp.end())
+ asymptEnergyUp[u]+=(mySpectra[i].asymptEnergyUp.find(u))->second;
+ } 
+ }
+
+ for(int u=0; u<maxDown; u++)
+ {
+ for(int i=0; i<threadsNbrMax; i++)
+ {
+ if(mySpectra[i].asymptEnergyDown.find(u)!=mySpectra[i].asymptEnergyDown.end())
+ asymptEnergyDown[u]+=(mySpectra[i].asymptEnergyDown.find(u))->second;
+ } 
+ }
 
 }
 
@@ -227,13 +273,7 @@ void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double
     }
 
 }
-/*
-  //The following method extracts asymptotic energy and weightIonization from an array and write it in a file
-  void getFromArray(std::fstream& dataFile, double** dataBinning)
-  {
 
-  }
-*/
 
 //We compute asymptotic energy
 template<typename state_type>

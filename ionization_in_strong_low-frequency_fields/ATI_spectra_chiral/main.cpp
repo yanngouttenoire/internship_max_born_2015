@@ -65,7 +65,10 @@ bool isStepTooSmall;
 bool isWeightTooSmall;
 
 //Bins width
-double binsWidth;
+double binsWidth=0.01;
+
+//Angle between velocity vector and field polarization within which we detect electrons
+double angleDetection=180.;
 
 //We open files with a view to writing in them 
 fstream dataFile("data.dat",ios::out);
@@ -104,9 +107,6 @@ int main()
   //Contains methods for outputting data in terminal
   Display myDisplay;
 
-  //Contains methods for doing a binning procedure and build a spectrum
-  Spectra<state_type> mySpectra(myPotential, myField, &myIC, 180., 0.01);
-
   //Contains methods for drawing curves
   Plot myPlot;
 
@@ -130,6 +130,17 @@ for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i)
 #ifdef _OPENMP
   threadsNbrMax=omp_get_max_threads();
   omp_set_num_threads(threadsNbrMax);
+#endif
+
+
+
+#ifndef _OPENMP
+  //Contains methods for doing a binning procedure and build a spectrum
+  Spectra<state_type> mySpectrum(myPotential, myField, &myIC, angleDetection, binsWidth);
+#endif
+
+#ifdef _OPENMP
+  vector<Spectra<state_type> > mySpectra(threadsNbrMax,Spectra<state_type>(myPotential, myField, &myIC, angleDetection, binsWidth));
 #endif
 
 #pragma omp parallel for schedule(dynamic) collapse(3) private(x,t,error,step,stopStepper,isStepTooSmall,isWeightTooSmall,myDisplay) firstprivate(myIC,desiredErrorMax,desiredErrorMin) 
@@ -192,15 +203,15 @@ for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i)
 	      if(isWeightTooSmall==true)
 		weightTooSmallNbr+=1;
 
-	      //We store the asymptotic energy, the tunneling rate and bool which tell us if the trajectory has a good profile and which profile
-	      int index=iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth);
-	      dataBinning[index][0]=mySpectra.asymptoticEnergy(x,t);
-	      dataBinning[index][1]=myIC.weightIonization;
-	      dataBinning[index][2]=mySpectra.hasTrajectoryGoodProfile(x,t,isStepTooSmall || isWeightTooSmall);
-	      dataBinning[index][3]=mySpectra.whichProfile(x,t);
-	      	      	      
-/*#pragma omp critical
-	      mySpectra.storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);*/
+ 		 //We perform the data binning process and store data in map container
+#ifndef _OPENMP
+   mySpectrum.storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
+#endif
+
+#ifdef _OPENMP
+   mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
+#endif
+	     
 	   
 
 	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500==0)
@@ -228,19 +239,29 @@ for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i)
 		  myDisplay("error", error);
 		  myDisplay("errorMin", desiredErrorMin);
 
-		  myDisplay("asymptoticEnergy",mySpectra.asymptoticEnergy(x,t));
-		  myDisplay("angleDetection",mySpectra.angleDetection, "degree");
-		  myDisplay("binsWidth",mySpectra.binsWidth);
-
 		  myDisplay("weightIonization",myIC.weightIonization);
 		  myDisplay.variableArg<double>("weightThreshold",2,weightThreshold, weightThresholdRatio);
 		  myDisplay("weightTooSmallNbr", double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 
-		  myDisplay("trappedElectronNbr", double(mySpectra.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+#ifndef _OPENMP
+	  myDisplay("asymptoticEnergy",mySpectrum.asymptoticEnergy(x,t));
+		  myDisplay("angleDetection",mySpectrum.angleDetection, "degree");
+		  myDisplay("binsWidth",mySpectrum.binsWidth);
+		  myDisplay("trappedElectronNbr", double(mySpectrum.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 		  myDisplay("stepTooSmallNbr", double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
-		  myDisplay("spectraPointNbr", double(mySpectra.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+		  myDisplay("spectraPointNbr", double(mySpectrum.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 		  myDisplay("ptsNumber", nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
+#endif
+		  
 #ifdef _OPENMP
+		  myDisplay("asymptoticEnergy", mySpectra[omp_get_thread_num()].asymptoticEnergy(x,t));
+		  myDisplay("angleDetection", mySpectra[omp_get_thread_num()].angleDetection, "degree");
+		  myDisplay("binsWidth", mySpectra[omp_get_thread_num()].binsWidth);
+		  myDisplay("trappedElectronNbr", double( mySpectra[omp_get_thread_num()].trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+		  myDisplay("stepTooSmallNbr", double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+		  myDisplay("spectraPointNbr", double( mySpectra[omp_get_thread_num()].spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+		  myDisplay("ptsNumber", nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
+
 		  myDisplay("omp_get_thread_num", omp_get_thread_num());
 		  myDisplay("omp_get_num_threads", omp_get_num_threads());
 		  myDisplay("omp_get_max_threads", threadsNbrMax);
@@ -254,10 +275,14 @@ for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i)
 	}
     }
 
-  //We perform the data binning process
-  mySpectra.storeDataBinning(dataBinning,nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth); 
+
+#ifdef _OPENMP
+   Spectra<state_type> mySpectrum=mySpectra[0];
+   mySpectrum.mergeSpectra(mySpectra, threadsNbrMax);
+#endif
+
   //Finally we write the data binning in the file "dataFile"
-  mySpectra.writeDataBinning(dataFile);
+  mySpectrum.writeDataBinning(dataFile);
 
   //We build the legend of the plot
   myPlot.addKey("nField",nFieldBirth);
@@ -267,17 +292,21 @@ for(int i = 0; i < nFieldBirth*nVYPerpBirth*nVZPrimPerpBirth; ++i)
   // myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
   myPlot.addKey("weightTooSmallNbr", int(double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
   myPlot.addKey("stepTooSmallNbr",int(double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
-  myPlot.addKey("trappedElectronNbr", int(double(mySpectra.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
-  myPlot.addKey("angleTooLargeNbr", int(double(mySpectra.angleTooLargeNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
-  myPlot.addKey("spectraPointsNbr", double(mySpectra.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+  
+    myPlot.addKey("trappedElectronNbr", int(double(mySpectrum.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+  myPlot.addKey("angleTooLargeNbr", int(double(mySpectrum.angleTooLargeNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+  myPlot.addKey("spectraPointsNbr", double(mySpectrum.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+    myPlot.addKey("binsWidth",mySpectrum.binsWidth);
+  myPlot.addKey("angleDetection",mySpectrum.angleDetection, "deg");
+  
   myPlot.addKey("weightThresholdRatio",weightThresholdRatio);
   #ifdef _OPENMP
   myPlot.addKey("threadsNbrMax", threadsNbrMax);
   #endif
-  myPlot.addKey("binsWidth",mySpectra.binsWidth);
+
   myPlot.addKey("ErrorMax",desiredErrorMax);
   myPlot.addKey("stepMin",stepMin);
-  myPlot.addKey("angleDetection",mySpectra.angleDetection, "deg");
+  
   myPlot.addKey("ellipticity", myField.ellipticity);
   myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
   myPlot.addKey("waveLenght",myField.waveLenght*1.E6, "micro-m");
