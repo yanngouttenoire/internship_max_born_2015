@@ -57,25 +57,25 @@ class IC
   IC(ElectrostaticPotential<state_type> *myPotential, ElectricField myField);
  
   //we set the initial ionization time
-  void setTBirth(int iFieldBirth, int nFieldBirth);
+  void setTBirth(const int& iFieldBirth, const int& nFieldBirth);
 
   //We set the initial field value
   void setFieldBirth();
 
   //The following method gives a values to the initial perpendicular velocity
-  double getVPerpBirth(int iVPerpBirth, int nVPerpBirth);
+  double getVPerpBirth(const int& iVPerpBirth, const int& nVPerpBirth);
 
   //We set the initial perpendicular velocity along Y
-  void setVYPerpBirth(int iVYPerpBirth, int nVYPerpBirth);
+  void setVYPerpBirth(const int& iVYPerpBirth, const int& nVYPerpBirth);
 
   //We set the initial perpendicular velocity along X and Z
-  void setVXZPerpBirth(int iVZPrimPerpBirth, int nVZPrimPerpBirth);
+  void setVXZPerpBirth(const int& iVZPrimPerpBirth, const int& nVZPrimPerpBirth);
 
   //We compute the ionization rate with a given field and a given transverse velocity
   void setWeightIonization();
 
   //Return the ionization rate with a given field and a given transverse velocity
-  double getWeightIonization(double t, double vPerp, int i);
+  double getWeightIonization(const double& t, const double& vPerp, const int& i);
 
   //Compute the maximum ionization rate
   double getMaxWeightIonization(int k=2);
@@ -100,12 +100,12 @@ IC<state_type>::IC(ElectrostaticPotential<state_type> *myPotential, ElectricFiel
 
 //we set the initial ionization time tBirth
 template<typename state_type>
-void IC<state_type>::setTBirth(int iFieldBirth, int nFieldBirth)
+void IC<state_type>::setTBirth(const int& iFieldBirth, const int& nFieldBirth)
 { 
-  //We want to scan field phase values from -200° to 20°
+  //We want to scan field phase values from -200° to 30°
 
   double anglei=-200.*M_PI/180.;
-  double anglef=20.*M_PI/180.;
+  double anglef=30.*M_PI/180.;
   tBirth=anglei/myField.pulsation+double(iFieldBirth)/double(nFieldBirth)*(anglef-anglei)/myField.pulsation;
 }
 
@@ -121,7 +121,7 @@ void IC<state_type>::setFieldBirth()
 
 //The following method gives a values to the initial perpendicular velocity
 template<typename state_type>
-double IC<state_type>::getVPerpBirth(int iVPerpBirth, int nVPerpBirth)
+double IC<state_type>::getVPerpBirth(const int& iVPerpBirth, const int& nVPerpBirth)
 {
   //if nVPerpBirth equals to 1, we set VPerpBirth equals to 0
   //Thus, we can choose to put VYPerpBirth or VZPrimPerpBirth equals to 0 for all the simulation
@@ -141,14 +141,14 @@ double IC<state_type>::getVPerpBirth(int iVPerpBirth, int nVPerpBirth)
 
 //We set the initial perpendicular velocity along Y
 template<typename state_type>
-void IC<state_type>::setVYPerpBirth(int iVYPerpBirth, int nVYPerpBirth)
+void IC<state_type>::setVYPerpBirth(const int& iVYPerpBirth, const int& nVYPerpBirth)
 {
   vYPerpBirth=getVPerpBirth(iVYPerpBirth, nVYPerpBirth);
 }
 
 //We set the initial perpendicular velocity along X and Z
 template<typename state_type>
-void IC<state_type>::setVXZPerpBirth(int iVZPrimPerpBirth, int nVZPrimPerpBirth)
+void IC<state_type>::setVXZPerpBirth(const int& iVZPrimPerpBirth, const int& nVZPrimPerpBirth)
 {
   vZPrimPerpBirth=getVPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
 
@@ -158,14 +158,15 @@ void IC<state_type>::setVXZPerpBirth(int iVZPrimPerpBirth, int nVZPrimPerpBirth)
 }
 
 //Ionization rate with a given field and a given transverse velocity according ADK distribution
-//REF: J. Liu, Classical Trajectory Perspective of Atomic Ionization in Strong Laser Fields
 template<typename state_type>
-double IC<state_type>::getWeightIonization(double t, double vPerp, int i)
+double IC<state_type>::getWeightIonization(const double& t, const double& vPerp, const int& i)
 {
   double field=myField.getInstFieldAmpl(t);
   if(i==1)
+  //REF: Kastner, Saalmann, Rost, Energy bunching in soft recollisions revealed with long-wavelength few-cycle pulses
     return 4./field*exp(-2.*pow(2.*myPotential->IP,3./2.)/3./field)*fabs(vPerp)/field*exp(-pow(2.*myPotential->IP,1./2.)*vPerp*vPerp/field);
   if(i==2)
+  //REF: J. Liu, Classical Trajectory Perspective of Atomic Ionization in Strong Laser Fields
     return 1./field/field*exp(-2.*pow((2.*myPotential->IP+vPerp*vPerp),3./2.)/3/field)*vPerp/sqrt(1+vPerp*vPerp/2./myPotential->IP);
 }
 

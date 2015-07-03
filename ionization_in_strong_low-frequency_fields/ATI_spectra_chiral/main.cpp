@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=10, nVYPerpBirth=50, nVZPrimPerpBirth=10;
+int nFieldBirth=500, nVYPerpBirth=1000, nVZPrimPerpBirth=500;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -52,7 +52,7 @@ double IP=0.5792;
 
 #ifdef MOLECULE
 typedef Molecule<state_type> potential_type;
-moleculeOrientation myOrientation(X1);
+moleculeOrientation myOrientation(X3);
 #endif
 
 //We declare a variable for the step in controlledRK5, the min allowed value
@@ -82,20 +82,16 @@ bool isWeightTooSmall;
 double binsWidth=0.1;
 
 //Ellipticity
-double ellipticity=0.1;
+double ellipticity=-0.1;
 
 //Angle between velocity vector and field polarization within which we detect electrons
 double angleDetection=180.;
-
-//We open files with a view to writing in them 
-fstream dataFile("data.dat",ios::out);
 
 
 //FUNCTION MAIN
 
 int main()
 {
-
 
   //We leave few lines break
   cout<<" " <<endl;
@@ -159,10 +155,10 @@ int main()
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
-      for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
+      for(iVYPerpBirth=0; iVYPerpBirth<=nVYPerpBirth; iVYPerpBirth++)
 	{
 
-	  for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
+	  for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<=nVZPrimPerpBirth; iVZPrimPerpBirth++)
 	    {
 
 	      /**************************We set the initial conditions********************************/
@@ -243,7 +239,7 @@ int main()
 #ifdef MOLECULE
                   myDisplay("Molecule orientation", myPotential->myOrientation.myString);
 		  myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
-		  myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3],  myPotential->bondLength[3]);
+		  myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif		  
 
 		  myDisplay("step", step);
@@ -295,8 +291,11 @@ int main()
     mySpectrum.mergeSpectra(mySpectra);
 #endif
 
-  //Finally we write the data binning in the file "dataFile"
-  mySpectrum.writeDataBinning(dataFile);
+   //We open a file with a view to writing in it
+   fstream dataFile("data.dat",ios::out);
+
+   //We write the data binning in the file "dataFile"
+   mySpectrum.writeDataBinning(dataFile);
 
 /****************************************We build the legend of the plot******************************************/
   myPlot.addKey("nField",nFieldBirth);
@@ -306,7 +305,7 @@ int main()
 #ifdef MOLECULE
   myPlot.addKey("Molecule orientation",myPotential->myOrientation.myString);
   myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
-  myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3],  myPotential->bondLength[3]);
+  myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif
 
 #ifdef HYDROGEN
