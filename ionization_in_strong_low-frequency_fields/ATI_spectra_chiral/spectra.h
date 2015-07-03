@@ -13,7 +13,8 @@
 #include"electrostaticpotential.h"
 #include"ic.h"
 
-enum detectionType {UPWARD, DOWNWARD};
+//We introduce to different way of detection for the electron: UP and DOWN
+enum detectionType {UP, DOWN};
 
 //We implement a class for computing the photo-electron spectrum as an histogram of asymptotic Energy according probability of ionization (weightIonization)
 template<typename state_type>
@@ -25,10 +26,10 @@ class Spectra
   //We declare two containers of map type, they can contain pairs which are couple of objects: first the range, second the ionization probability value
 
   //We declare one for electrons which velocity vector is oriented along positive values of y
-  std::map<int,double> asymptEnergyUp;
+  std::map<int,double> asymptEnergyUP;
 
   //And one for electrons which velocity vector is oriented along negative values of y
-  std::map<int,double> asymptEnergyDown;
+  std::map<int,double> asymptEnergyDOWN;
 
   //We declare the horizontal variable in the histogram
   int range;
@@ -43,7 +44,13 @@ class Spectra
   double angleDetection;
 
   //We declare a counter for the number of events stored
-  int spectraPointsNbr;
+  int electronsDetectedNbr;
+  
+  //We declare a counter for the number of electrons detected UP
+  int electronsDetectedUPNbr;
+  
+  //We declare a counter for the number of electrons detected DOWN
+  int electronsDetectedDOWNNbr;
 
   //We declare a counter for the number of events not stored because the electron always trapped by the atom after the pulse
   int trappedElectronNbr;
@@ -96,7 +103,9 @@ class Spectra
 template<typename state_type>
 Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *a_myIC, double angleDetection, double binsWidth) : myPotential(myPotential), myField(myField), myIC(a_myIC), angleDetection(angleDetection), binsWidth(binsWidth) 
 {
-  spectraPointsNbr=0;
+  electronsDetectedNbr=0;
+  electronsDetectedUPNbr=0;
+  electronsDetectedDOWNNbr=0;    
   trappedElectronNbr=0;
   angleTooLargeNbr=0;
   energyUnit=27.2;
@@ -135,9 +144,9 @@ detectionType Spectra<state_type>::whichProfile(const state_type& x, const doubl
 {
  //if(x[2]*myField('Z',myIC->tBirth)>=0)
  if(x[1]>=0)
- return UPWARD;
+ return UP;
  else
- return DOWNWARD;
+ return DOWN;
 }
 
 //We store asymptotic energies in containers of map type with a view to make a data binning
@@ -148,11 +157,17 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
 
 	if(hasTrajectoryGoodProfile(x, t, unexpectedStop, range)==true)
 	 {
-  
-     	 if(whichProfile(x,t)==UPWARD)
-		insertInMap(asymptEnergyUp, range, weightIonization);
+         electronsDetectedNbr++; 
+     	 if(whichProfile(x,t)==UP)
+     	        {
+		insertInMap(asymptEnergyUP, range, weightIonization);
+      	        electronsDetectedUPNbr++;
+      	        }
       	 else
-		insertInMap(asymptEnergyDown, range, weightIonization);
+     	        {
+		insertInMap(asymptEnergyDOWN, range, weightIonization);
+      	        electronsDetectedDOWNNbr++;		      	        
+      	        }
 	 }
    
 }
@@ -165,8 +180,6 @@ void Spectra<state_type>::insertInMap(std::map<int,double>&  asymptEnergy, const
   //we declare iterators which can iterate through differents elements of a container of type map
   std::map<int,double>::iterator findRange=asymptEnergy.find(range);
 
-  spectraPointsNbr++;
- 
   if(findRange==asymptEnergy.end())
     {
       asymptEnergy[range]=weightIonization;
@@ -192,18 +205,18 @@ void Spectra<state_type>::mergeSpectra(std::vector<Spectra<state_type> > &mySpec
 //We start from 1 and not from 0 because the current object is the one owned by the master thread
    for(itSpectra=mySpectra.begin(); itSpectra!=mySpectra.end(); itSpectra++)  
     {
-     for(itmap=(itSpectra->asymptEnergyUp).begin(); itmap!=(itSpectra->asymptEnergyUp).end(); itmap++)
+     for(itmap=(itSpectra->asymptEnergyUP).begin(); itmap!=(itSpectra->asymptEnergyUP).end(); itmap++)
      {
        range=itmap->first;
        weightIonization=itmap->second;    
-       insertInMap(asymptEnergyUp, range, weightIonization);
+       insertInMap(asymptEnergyUP, range, weightIonization);
      }  
    
-      for(itmap=(itSpectra->asymptEnergyDown).begin(); itmap!=(itSpectra->asymptEnergyDown).end(); itmap++)
+      for(itmap=(itSpectra->asymptEnergyDOWN).begin(); itmap!=(itSpectra->asymptEnergyDOWN).end(); itmap++)
      {
        range=itmap->first;
        weightIonization=itmap->second;    
-       insertInMap(asymptEnergyDown, range, weightIonization);
+       insertInMap(asymptEnergyDOWN, range, weightIonization);
      }  
    }
    
@@ -211,6 +224,9 @@ void Spectra<state_type>::mergeSpectra(std::vector<Spectra<state_type> > &mySpec
 
    for(itSpectra=mySpectra.begin(); itSpectra!=mySpectra.end(); itSpectra++)  
     {
+     electronsDetectedNbr+=itSpectra->electronsDetectedNbr;
+     electronsDetectedUPNbr+=itSpectra->electronsDetectedUPNbr;
+     electronsDetectedDOWNNbr+=itSpectra->electronsDetectedDOWNNbr; 
      trappedElectronNbr+=itSpectra->trappedElectronNbr;
      angleTooLargeNbr+=itSpectra->angleTooLargeNbr;
     }
@@ -223,13 +239,13 @@ template<typename state_type>
 void Spectra<state_type>::writeDataBinning(std::fstream& dataFile)
 {
   
-  //we write values contained in asymptEnergyUp in file "dataFile"
-  getFromMap(dataFile, asymptEnergyUp);
+  //we write values contained in asymptEnergyUP in file "dataFile"
+  getFromMap(dataFile, asymptEnergyUP);
   //we leave two lines break
   dataFile<<" "<<std::endl;
   dataFile<<" "<<std::endl;
-  //we write values contained in asymptEnergyDown in file "dataFile"
-  getFromMap(dataFile, asymptEnergyDown);
+  //we write values contained in asymptEnergyDOWN in file "dataFile"
+  getFromMap(dataFile, asymptEnergyDOWN);
  
 }
 
@@ -247,7 +263,7 @@ void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double
     }
 
   //Remove the following line if you wan a normalized distribution law
-  //sum=1.;
+  sum=1.;
 
   //We write the histogram in a file	
   for(it=asymptEnergy.begin(); it!=asymptEnergy.end(); it++)

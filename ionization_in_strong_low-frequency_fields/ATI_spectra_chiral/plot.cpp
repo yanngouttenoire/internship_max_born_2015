@@ -44,6 +44,9 @@ void Plot::gnuplot()
   it=keys.begin();
   for(int k=1; it!=keys.end(); it++, k++)
     {
+    if(it==--keys.end())
+      gnuFile<<*it;
+    else  
       gnuFile<<*it<<", ";
       if(k%5==0) 
 	gnuFile<<"\\n ";

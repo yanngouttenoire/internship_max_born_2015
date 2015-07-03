@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=100, nVYPerpBirth=500, nVZPrimPerpBirth=100;
+int nFieldBirth=10, nVYPerpBirth=50, nVZPrimPerpBirth=10;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -41,7 +41,7 @@ double t;
 typedef double state_type[6];
 state_type x;
 
-//We declare the electrostatic potential that we want to use
+//We select which electrostatic potential we want to use
 #define MOLECULE
 //#define HYDROGEN
 
@@ -79,6 +79,9 @@ bool isWeightTooSmall;
 //Bins width
 double binsWidth=0.1;
 
+//Ellipticity
+double ellipticity=0.1;
+
 //Angle between velocity vector and field polarization within which we detect electrons
 double angleDetection=180.;
 
@@ -109,7 +112,7 @@ int main()
 #endif
   
   //Contains the electric field properties
-  ElectricField myField(0.1);
+  ElectricField myField(ellipticity);
 
   //Sets the initial condition for the ionization probability, perpendicular velocity, field at birth, electron position at birth
   IC<state_type> myIC(myPotential, myField);
@@ -253,7 +256,7 @@ int main()
 		  myDisplay("binsWidth",mySpectrum.binsWidth);
 		  myDisplay("trappedElectronNbr", double(mySpectrum.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 		  myDisplay("stepTooSmallNbr", double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
-		  myDisplay("spectraPointNbr", double(mySpectrum.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+		  myDisplay("spectraPointNbr", double(mySpectrum.electronsDetectedNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 		  myDisplay("ptsNumber", nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
 #endif
 		  
@@ -263,7 +266,7 @@ int main()
 		  myDisplay("binsWidth", mySpectra[omp_get_thread_num()].binsWidth);
 		  myDisplay("trappedElectronNbr", double( mySpectra[omp_get_thread_num()].trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 		  myDisplay("stepTooSmallNbr", double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
-		  myDisplay("spectraPointNbr", double( mySpectra[omp_get_thread_num()].spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+		  myDisplay("spectraPointNbr", double( mySpectra[omp_get_thread_num()].electronsDetectedNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 		  myDisplay("ptsNumber", nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth);
 
 		  myDisplay("omp_get_thread_num", omp_get_thread_num());
@@ -279,6 +282,7 @@ int main()
 	}
     }
 
+/*******We merge all the data binning computed by each thread and write it in a file***********************************/
 
 #ifdef _OPENMP
     Spectra<state_type> mySpectrum(myPotential, myField, &myIC, angleDetection, binsWidth);
@@ -289,23 +293,33 @@ int main()
   //Finally we write the data binning in the file "dataFile"
   mySpectrum.writeDataBinning(dataFile);
 
-  //We build the legend of the plot
+/****************************************We build the legend of the plot******************************************/
   myPlot.addKey("nField",nFieldBirth);
   myPlot.addKey("nVYPerp",nVYPerpBirth);
   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
   
 #ifdef MOLECULE
+  myPlot.addKey("chiral potential");
   myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
   myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+#endif
+
+#ifdef HYDROGEN
+  myPlot.addKey("hydrogen potential");
+  myPlot.addKey("IP", myPotential->IP);
 #endif
   
   myPlot.addKey("weightTooSmallNbr", int(double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
   myPlot.addKey("stepTooSmallNbr",int(double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
   
     myPlot.addKey("trappedElectronNbr", int(double(mySpectrum.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
-  myPlot.addKey("angleTooLargeNbr", int(double(mySpectrum.angleTooLargeNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
-  myPlot.addKey("spectraPointsNbr", double(mySpectrum.spectraPointsNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
-    myPlot.addKey("binsWidth",mySpectrum.binsWidth);
+    
+  if(mySpectrum.angleDetection<180)
+    myPlot.addKey("angleTooLargeNbr", int(double(mySpectrum.angleTooLargeNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+    myPlot.addKey("electronsDetectedNbr", double(mySpectrum.electronsDetectedNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+    myPlot.addKey("binsWidth",mySpectrum.binsWidth,"eV");
+    
+  if(mySpectrum.angleDetection<180)
   myPlot.addKey("angleDetection",mySpectrum.angleDetection, "deg");
   
   myPlot.addKey("weightThresholdRatio",weightThresholdRatio);
@@ -321,21 +335,31 @@ int main()
   myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
   myPlot.addKey("waveLenght",myField.waveLenght*1.E6, "micro-m");
   myPlot.addKey("duration",myDisplay.elapsedTime());
-     
-  myPlot.addInstruction("set xlabel 'Asymptotic energy (eV)' offset 0,4");
+  if(myField.ellipticity>0)
+  myPlot.addKey("laser polarization rotates clockwise when we look along y");  
+  if(myField.ellipticity<0)
+  myPlot.addKey("laser polarization rotates counterclockwise when we look along y"); 
+  
+  myPlot.addInstruction("unset xtics");
+  myPlot.addInstruction("unset xlabel");
+  myPlot.addInstruction("set xrange [0:20]");
+  myPlot.addInstruction("set x2tics");
+  myPlot.addInstruction("set x2label 'Asymptotic energy (eV)' ");
   myPlot.addInstruction("set ylabel 'Probability (linear scale)'");
-
-  //myPlot.addInstruction("set xrange [0:8]");
-  myPlot.addInstruction("set xtics offset 0,0.3");
 
   myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 2 "); //red
   myPlot.addInstruction("set style line 2 lc rgb '#062be5' pt 6 ps 1 lt 1 lw 2 "); //blue '#0060ad'
  
   myPlot.setPlotType("plot");
+  
+  //We consider electrons differently depending if they are detected in y>0 or y<0
+  std::ostringstream plot1;
+  plot1<<"'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
+  std::ostringstream plot2;
+  plot2<<"'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
 
-  //We consider electrons differently depending if they are detected along the polarization of the field or not
-  myPlot.addPlot("'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electron detected upward according the initial field'");
-  myPlot.addPlot("'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electron detected downward according the initial field'");
+  myPlot.addPlot(plot1.str());
+  myPlot.addPlot(plot2.str());
 
   myPlot.gnuplot();
 
