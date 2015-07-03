@@ -47,10 +47,12 @@ state_type x;
 
 #ifdef HYDROGEN
 typedef Hydrogen<state_type> potential_type;
+double IP=0.5792;
 #endif
 
 #ifdef MOLECULE
 typedef Molecule<state_type> potential_type;
+moleculeOrientation myOrientation(X1);
 #endif
 
 //We declare a variable for the step in controlledRK5, the min allowed value
@@ -99,16 +101,18 @@ int main()
   cout<<" " <<endl;
   cout<<" "<<endl;
 
-  /********We instantiate the differente object implemented in the others .cpp files***********/
-  /********Each object will execute a specific task********************************************/
+  /********We instantiate the differente object implemented in the others .cpp files****************/
+  /********Each object will execute a specific task*************************************************/
 
   //Contains the electrostatic potential properties
   potential_type *myPotential=new potential_type;
-  potential_type _myPotential_;
-   
+  
 #ifdef HYDROGEN
-   myPotential->setIP(0.5792);
-  _myPotential_.setIP(0.5792);
+   myPotential->setIP(IP);
+#endif
+
+#ifdef MOLECULE
+    myPotential->setMoleculeOrientation(myOrientation);
 #endif
   
   //Contains the electric field properties
@@ -118,7 +122,7 @@ int main()
   IC<state_type> myIC(myPotential, myField);
 
   //Contains the ordinary differential system of equations of motion of the electron in the electrostatic potential and the electric field
-  System<state_type,potential_type > mySystem(_myPotential_, myField);	
+  System<state_type,potential_type > mySystem(*myPotential, myField);	
 
   //Contains the method which solves ODE: runge kutta 5 with controlled step-size algorithm
   Solve<state_type,potential_type > mySolve;
@@ -237,8 +241,9 @@ int main()
 		  myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
 		  myDisplay("ellipticity", myField.ellipticity);
 #ifdef MOLECULE
+                  myDisplay("Molecule orientation", myPotential->myOrientation.myString);
 		  myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
-		  myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+		  myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3],  myPotential->bondLength[3]);
 #endif		  
 
 		  myDisplay("step", step);
@@ -297,11 +302,11 @@ int main()
   myPlot.addKey("nField",nFieldBirth);
   myPlot.addKey("nVYPerp",nVYPerpBirth);
   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
-  
+                
 #ifdef MOLECULE
-  myPlot.addKey("chiral potential");
+  myPlot.addKey("Molecule orientation",myPotential->myOrientation.myString);
   myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
-  myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[0],  myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+  myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3],  myPotential->bondLength[3]);
 #endif
 
 #ifdef HYDROGEN

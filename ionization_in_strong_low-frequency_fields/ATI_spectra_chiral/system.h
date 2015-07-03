@@ -19,7 +19,9 @@ template<typename state_type, typename potential_type>
 class System
 {
   //We declare an object of type ElectrostaticPotential for electrostatic potential properties
-  //ElectrostaticPotential<state_type> *myPotential;	
+  //Normally, we use polymorphism and declare myPotential as "ElectrostaticPotential<state_type> *myPotential;"
+  //But seemingly, polymorphism and open mp are not good friends: if we want to declare an object as "firstprivate", we have to check the latter does not contains any pointer 	
+  //But templated implementation replaces polymorphism quite well
   potential_type myPotential;
 
   //We declare field variables
