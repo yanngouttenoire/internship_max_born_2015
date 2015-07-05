@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=500, nVYPerpBirth=1000, nVZPrimPerpBirth=500;
+int nFieldBirth=10, nVYPerpBirth=10, nVZPrimPerpBirth=10;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -220,7 +220,7 @@ int main()
    mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 #endif
 	     
-	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500==0)
+	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%50000==0)
 		{
 		#pragma omp critical
 		 {
@@ -344,15 +344,19 @@ int main()
   if(myField.ellipticity<0)
   myPlot.addKey("laser polarization rotates counterclockwise when we look along y"); 
   
-  myPlot.addInstruction("unset xtics");
-  myPlot.addInstruction("unset xlabel");
-  myPlot.addInstruction("set xrange [0:20]");
-  myPlot.addInstruction("set x2tics");
-  myPlot.addInstruction("set x2label 'Asymptotic energy (eV)' ");
-  myPlot.addInstruction("set ylabel 'Probability (linear scale)'");
+  //Remove border on bottom and right, these borders are useless and make it harder to see plotted lines near the border
+  //Also, put it in grey, no need for so much emphasis on a border 
+  myPlot.addInstruction("set border 6 back linestyle 100");
+  myPlot.addInstruction("set grid linestyle 101");
+  //We also put the key box in grey
+  myPlot.addInstruction("set key box ls 100");
 
-  myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 2 "); //red
-  myPlot.addInstruction("set style line 2 lc rgb '#062be5' pt 6 ps 1 lt 1 lw 2 "); //blue '#0060ad'
+  myPlot.addInstruction("set xtics scale 0");
+  myPlot.addInstruction("set format x '' ");
+  myPlot.addInstruction("set xrange [0:20]");
+  myPlot.addInstruction("set x2tics 1");
+  myPlot.addInstruction("set x2label 'Asymptotic energy (eV)'");
+  myPlot.addInstruction("set ylabel 'Probability (linear scale)'");
  
   myPlot.setPlotType("plot");
   

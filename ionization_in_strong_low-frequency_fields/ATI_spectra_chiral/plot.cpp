@@ -27,10 +27,34 @@ void Plot::gnuplot()
 
   fstream gnuFile("data.gnu", ios::out);
 
-  gnuFile<<"set terminal postscript eps enhanced color font 'Helvetica,10'"<<endl;
+  gnuFile<<"set terminal epscairo font 'Gill Sans,9' rounded fontscale 0.4"<<endl;
   gnuFile<<"set output 'spectrum.eps'"<<endl;
   gnuFile<<"set multiplot  layout 1, 1"<<endl;
   gnuFile<<"set key width -15"<<endl;
+
+
+
+//Line style for axes, grey color
+  gnuFile<<"set style line 100 linecolor rgb '#808080'"<<endl;
+
+//Line style for grid, dashed, grey color
+  gnuFile<<"set style line 101 linecolor rgb '#808080' linetype 0 "<<endl;
+
+//Line styles for curves
+//RED
+  gnuFile<<"set style line 1 lc rgb '#A00000' pt 6 ps 1 lt 1 lw 2"<<endl;
+//GREEN-BLUE (cyan) (Complementary Color)
+  gnuFile<<"set style line 2 lc rgb '#00A0A0' pt 6 ps 1 lt 1 lw 2"<<endl;
+
+//GREEN
+  gnuFile<<"set style line 3 lc rgb '#00A000' pt 6 ps 1 lt 1 lw 2"<<endl;
+//RED-BLUE (purple) (Complementary Color)
+  gnuFile<<"set style line 6 lc rgb '#A000A0' pt 6 ps 1 lt 1 lw 2"<<endl;
+
+//BLUE
+  gnuFile<<"set style line 4 lc rgb '#0000A0' pt 6 ps 1 lt 1 lw 2"<<endl; 
+//RED-GREEN (gold) (Complementary Color)
+  gnuFile<<"set style line 5 lc rgb '#A0A000' pt 6 ps 1 lt 1 lw 2"<<endl;
 
 
   vector<string>::iterator it=instructions.begin();
@@ -42,15 +66,22 @@ void Plot::gnuplot()
 
   gnuFile<<"set key on outside center bmargin Left reverse box title sprintf(\"";
   it=keys.begin();
+  int size=0;
   for(int k=1; it!=keys.end(); it++, k++)
     {
-    if(it==--keys.end())
-      gnuFile<<*it;
-    else  
+    size+=it->size();
+      if(k==6 || size>120) 
+        {
+	 gnuFile<<"\\n ";
+	 k=1;
+	 size=0;
+	} 
+      if(it==--keys.end())
+        gnuFile<<*it;
+      else
       gnuFile<<*it<<", ";
-      if(k%5==0) 
-	gnuFile<<"\\n ";
     }
+
   gnuFile<<"\")"<<endl;
 
 
@@ -66,14 +97,10 @@ void Plot::gnuplot()
 
 
   gnuFile<<"unset multiplot"<<endl;
-
-  gnuFile<<"pause -1"<<endl;
-  gnuFile<<"set terminal postscript eps enhanced color font 'Helvetica,10'"<<endl;
-  gnuFile<<"set output 'courbe.eps'"<<endl;
   gnuFile<<"replot"<<endl;
 
     
   gnuFile.close();
-  system("gnuplot data.gnu");
+  system("gnuplot data.gnu && evince spectrum.eps &");
 
 }
