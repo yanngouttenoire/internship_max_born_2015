@@ -20,10 +20,16 @@ class Plot
 
  public:
   std::vector<std::string> keys;
-  std::vector<std::string> plot;
   std::vector<std::string> instructions;
-  std::string plotType;
+  bool isKeysOn;
+  
+  Plot(){isKeysOn=false;}
 
+    void setKeysOn()
+    {
+    isKeysOn=true;
+    }
+  
   template<typename T>
     void addKey(std::string keyName, const T &key, std::string unit="")
     {
@@ -50,14 +56,8 @@ class Plot
     keys.push_back(key);
   }
   
-  //We choose the type of plot
-  void setPlotType(std::string plotType);
-
   //We add a plot instruction
   void addInstruction(std::string instruction);
-
-  //We add a plot 
-  void addPlot(std::string instruction);
 
   //We display the spectra with gnuplot
   void gnuplot();

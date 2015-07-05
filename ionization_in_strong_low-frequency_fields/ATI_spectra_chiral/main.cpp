@@ -297,7 +297,8 @@ int main()
    //We write the data binning in the file "dataFile"
    mySpectrum.writeDataBinning(dataFile);
 
-/****************************************We build the legend of the plot******************************************/
+/*****************************************************PLOT*****************************************************/
+/****************************************We build the key of the plot******************************************/
   myPlot.addKey("nField",nFieldBirth);
   myPlot.addKey("nVYPerp",nVYPerpBirth);
   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
@@ -344,6 +345,13 @@ int main()
   if(myField.ellipticity<0)
   myPlot.addKey("laser polarization rotates counterclockwise when we look along y"); 
   
+  //We put the keys on
+  myPlot.setKeysOn();
+    
+  /****************************************We build the build the different parts of plot******************************************/
+  
+  myPlot.addInstruction("set terminal epscairo font 'Gill Sans,9' rounded fontscale 0.4");
+  myPlot.addInstruction("set multiplot layout 1, 1");
   //Remove border on bottom and right, these borders are useless and make it harder to see plotted lines near the border
   //Also, put it in grey, no need for so much emphasis on a border 
   myPlot.addInstruction("set border 6 back linestyle 100");
@@ -357,17 +365,20 @@ int main()
   myPlot.addInstruction("set x2tics 1");
   myPlot.addInstruction("set x2label 'Asymptotic energy (eV)'");
   myPlot.addInstruction("set ylabel 'Probability (linear scale)'");
- 
-  myPlot.setPlotType("plot");
+   
+  /**************************************We indicate which curves we want to plot************************************/   
+   
   
   //We consider electrons differently depending if they are detected in y>0 or y<0
   std::ostringstream plot1;
-  plot1<<"'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
+  plot1<<"plot 'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %', \\";
   std::ostringstream plot2;
   plot2<<"'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
 
-  myPlot.addPlot(plot1.str());
-  myPlot.addPlot(plot2.str());
+  myPlot.addInstruction(plot1.str());
+  myPlot.addInstruction(plot2.str());
+  
+  myPlot.addInstruction("unset multiplot");
 
   myPlot.gnuplot();
 
