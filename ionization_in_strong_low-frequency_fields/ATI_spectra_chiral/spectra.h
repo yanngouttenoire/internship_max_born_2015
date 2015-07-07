@@ -88,7 +88,7 @@ class Spectra
 
 
   //Constructor
-  Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *myIC, double angleDetection=180., double binsWidthEnergy=0.1, double binsWidthAngle=8.);
+  Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *myIC, double angleDetection=180., double binsWidthEnergy=0.1, double binsWidthAngle=5.);
 
   //We compute the asymptotic energy
   double asymptoticEnergy(const state_type& x, const double& t);
@@ -118,7 +118,7 @@ class Spectra
   void writeDataBinning(std::fstream& PESFile,std::fstream& ARPESFile);
 
   //The following method is called by writeDataBinning and write all the elements rangeEnergy and weightIonization of map asympEnergy in a file
-  void getFromMap(std::fstream& DataFile, std::map<int,double>& asympEnergy);
+  void getFromMap(std::fstream& DataFile, std::map<int,double>& asympEnergy,const double& binsWidth);
 
 };
 
@@ -213,7 +213,8 @@ template<typename state_type>
 void Spectra<state_type>::storeARPES(const state_type& x, const double& t, const double& weightIonization)
 {
   double energy=asympEnergy/myField.ponderomotiveEnergy;
-  int rangeAngle=int(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5]))*180./M_PI/binsWidthAngle);
+  //Angle between the velocity vector of the electron and the electric vector force
+  int rangeAngle=int(acos(sqrt(x[3]*x[3]+x[4]*x[4])/x[5])*180./M_PI/binsWidthAngle)*(-myField('Z',myIC->tBirth))/fabs(myField('Z',myIC->tBirth));
   
 if(energy<2)
   insertInMap(ARPESLowEnergy, rangeAngle, weightIonization);
@@ -221,7 +222,7 @@ if(energy<2)
 if(energy>2 && energy<8)
   insertInMap(ARPESPlateau, rangeAngle, weightIonization);
   
-if(energy>3 && energy<5)
+if(energy>3.8 && energy<4.2)
   insertInMap(ARPES4Up, rangeAngle, weightIonization);
   
 if(energy>8)
@@ -323,33 +324,33 @@ void Spectra<state_type>::writeDataBinning(std::fstream& PESFile,std::fstream& A
 {
   
   //we write values contained in asympEnergyUP in file "PESFile"
-  getFromMap(PESFile, asympEnergyUP);
+  getFromMap(PESFile, asympEnergyUP,binsWidthEnergy);
   //we leave two lines break
   PESFile<<" "<<std::endl;
   PESFile<<" "<<std::endl;
   //we write values contained in asympEnergyDOWN in file "PESFile"
-  getFromMap(PESFile, asympEnergyDOWN);
+  getFromMap(PESFile, asympEnergyDOWN,binsWidthEnergy);
   
   //we write values contained in asympEnergyUP in file "PESFile"
-  getFromMap(ARPESFile, ARPESLowEnergy);
+  getFromMap(ARPESFile, ARPESLowEnergy,binsWidthAngle);
   ARPESFile<<" "<<std::endl;
   ARPESFile<<" "<<std::endl;
   //we write values contained in asympEnergyDOWN in file "PESFile"
-  getFromMap(ARPESFile, ARPESPlateau);
+  getFromMap(ARPESFile, ARPESPlateau,binsWidthAngle);
   ARPESFile<<" "<<std::endl;
   ARPESFile<<" "<<std::endl;
   //we write values contained in asympEnergyDOWN in file "PESFile"
-  getFromMap(ARPESFile, ARPESHighEnergy);
+  getFromMap(ARPESFile, ARPESHighEnergy,binsWidthAngle);
   ARPESFile<<" "<<std::endl;
   ARPESFile<<" "<<std::endl;
   //we write values contained in asympEnergyDOWN in file "PESFile"
-  getFromMap(ARPESFile, ARPES4Up);
+  getFromMap(ARPESFile, ARPES4Up,binsWidthAngle);
  
 }
 
 //The following method is called by writeDataBinning and write all the elements rangeEnergy and weightIonization of map asympEnergy in a file
 template<typename state_type>
-void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double>& asympEnergy)
+void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double>& asympEnergy, const double& binsWidth)
 {
   std::map<int,double>::iterator it= asympEnergy.begin();
 
@@ -366,7 +367,7 @@ void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double
   //We write the histogram in a file	
   for(it=asympEnergy.begin(); it!=asympEnergy.end(); it++)
     {
-      dataFile<<(it->first)*binsWidthEnergy<<" "<<(it->second)/sum<<std::endl;
+      dataFile<<(it->first)*binsWidth<<" "<<(it->second)/sum<<std::endl;
     }
 
 }

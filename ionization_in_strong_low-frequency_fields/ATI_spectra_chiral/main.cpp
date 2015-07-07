@@ -26,8 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
-int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
+int nFieldBirth=150, nVYPerpBirth=1, nVZPrimPerpBirth=150;
 
 //We declare some variables for OPENMP information
 int threadID;
@@ -70,7 +69,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=100000.;
+double weightThresholdRatio=1000.;
 double weightThreshold;
 
 //We declare boolean controls
@@ -150,12 +149,12 @@ int main()
 
 #pragma omp parallel for schedule(dynamic) collapse(3) private(x,t,error,step,stopStepper,isStepTooSmall,isWeightTooSmall) firstprivate(myIC,desiredErrorMax,desiredErrorMin, mySystem) 
 
-  for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
+  for(int iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
-      for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
+      for(int iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
 	{
 
-	  for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
+	  for(int iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
 	    {
 
 	      /**************************We set the initial conditions********************************/
@@ -193,7 +192,7 @@ int main()
 
 		  //We wait long enough for the end of the pulse
 		 // if(t>4.*myField.cyclesNbr*myField.opticalCycle)
-		 if(t>8*myField.opticalCycle)
+		 if((t-myIC.tBirth)>8*myField.opticalCycle)
 		    stopStepper=true;
 
 		  //We check if the step is no too small (otherwise the simulation will take too much time)
@@ -218,7 +217,7 @@ int main()
    mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 #endif
 	     
-	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%1000==0)
+	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500==0)
 		{
 		#pragma omp critical
 		 {
@@ -396,25 +395,31 @@ int main()
 
   myARPESPlot.addInstruction("set_key(x,text) = sprintf(\"set label %f '%s' at graph 0.5,-0.1 center\", x,text)");
 
+  //Pay attention that no space caractere follows \\ in instruction
+
   myARPESPlot.addInstruction("eval set_key(1,'(a) PAD for region [0, 2Up]')");
   myARPESPlot.addInstruction("@TMARGIN; @LMARGIN");
-  myARPESPlot.addInstruction("plot 'arpes.dat' index 0 using 1:2 w l ls 3 notitle");
+  myARPESPlot.addInstruction("plot 'arpes.dat' index 0 using 1:2 w l ls 3 notitle, \\"); 
+  myARPESPlot.addInstruction("'arpes.dat' index 0 using (-$1):2 w l ls 3 notitle");
   myARPESPlot.addInstruction("unset label 1");
 
   myARPESPlot.addInstruction("eval set_key(2,'(b) PAD for region [2Up, 8Up]')");
   myARPESPlot.addInstruction("@TMARGIN; @RMARGIN");
-  myARPESPlot.addInstruction("plot 'arpes.dat' index 1 using 1:2 w l ls 3  notitle");
+  myARPESPlot.addInstruction("plot 'arpes.dat' index 1 using 1:2 w l ls 3  notitle, \\");
+  myARPESPlot.addInstruction("'arpes.dat' index 1 using (-$1):2 w l ls 3  notitle");
   myARPESPlot.addInstruction("unset label 2");
 
   myARPESPlot.addInstruction("eval set_key(3,'(c) PAD for region [8Up, 10Up]')");
   myARPESPlot.addInstruction("@BMARGIN; @LMARGIN");
-  myARPESPlot.addInstruction("plot 'arpes.dat' index 2 using 1:2 w l ls 3  notitle");
+  myARPESPlot.addInstruction("plot 'arpes.dat' index 2 using 1:2 w l ls 3  notitle, \\");
+  myARPESPlot.addInstruction("'arpes.dat' index 2 using (-$1):2 w l ls 3  notitle");
   myARPESPlot.addInstruction("unset label 3");
   
   myARPESPlot.addInstruction("eval set_key(4,'(b) PAD near 4Up')");
   myARPESPlot.addInstruction("@BMARGIN; @RMARGIN");
-  myARPESPlot.addInstruction("plot 'arpes.dat' index 3 using 1:2 w l ls 3  notitle");
-  
+  myARPESPlot.addInstruction("plot 'arpes.dat' index 3 using 1:2 w l ls 3  notitle, \\");
+  myARPESPlot.addInstruction("'arpes.dat' index 3 using (-$1):2 w l ls 3  notitle");
+   
   myARPESPlot.addInstruction("unset multiplot");
 
   myARPESPlot.gnuplot("arpes.gnu","arpes.eps");
