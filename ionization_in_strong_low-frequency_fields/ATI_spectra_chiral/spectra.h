@@ -23,24 +23,42 @@ class Spectra
 
  public:
 
-  //We declare two containers of map type, they can contain pairs which are couple of objects: first the range, second the ionization probability value
+  //We declare two containers of map type, they can contain pairs which are couple of objects: first the rangeEnergy, second the ionization probability value
 
   //We declare one for electrons which velocity vector is oriented along positive values of y
-  std::map<int,double> asymptEnergyUP;
+  std::map<int,double> asympEnergyUP;
 
   //And one for electrons which velocity vector is oriented along negative values of y
-  std::map<int,double> asymptEnergyDOWN;
+  std::map<int,double> asympEnergyDOWN;
 
+  //And one for electrons which velocity vector is oriented along negative values of y
+  std::map<int,double> ARPESLowEnergy;
+  
+  //And one for electrons which velocity vector is oriented along negative values of y
+  std::map<int,double> ARPESPlateau;
+  
+  //And one for electrons which velocity vector is oriented along negative values of y
+  std::map<int,double> ARPES4Up;
+  
+  //And one for electrons which velocity vector is oriented along negative values of y
+  std::map<int,double> ARPESHighEnergy;
+  
   //We declare the horizontal variable in the histogram
-  int range;
+  int rangeEnergy;
+  
+  //We declare the asymptotic energy
+  double asympEnergy;
 
   //We declare a variable for the bin interval width
-  double binsWidth;
+  double binsWidthEnergy;
   
-    //We declare the conversion ratio from au to the desired unit
-   int energyUnit;
+  //We declare a variable for the bin interval width
+  double binsWidthAngle;
   
-  //We declare the angle between the vector velocity and the laser polarization within which we detect electrons
+  //We declare the conversion ratio from au to the desired unit
+  int energyUnit;
+  
+  //We declare the rangeAngle between the vector velocity and the laser polarization within which we detect electrons
   double angleDetection;
 
   //We declare a counter for the number of events stored
@@ -55,7 +73,7 @@ class Spectra
   //We declare a counter for the number of events not stored because the electron always trapped by the atom after the pulse
   int trappedElectronNbr;
 
-  //We declare a counter which counts how many events have not been accepted because the angle between the velocity vector and the laser polarization was too large
+  //We declare a counter which counts how many events have not been accepted because the rangeAngle between the velocity vector and the laser polarization was too large
   int angleTooLargeNbr;
   
 
@@ -70,13 +88,13 @@ class Spectra
 
 
   //Constructor
-  Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *myIC, double angleDetection=180., double binsWidth=0.1);
+  Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *myIC, double angleDetection=180., double binsWidthEnergy=0.1, double binsWidthAngle=8.);
 
   //We compute the asymptotic energy
   double asymptoticEnergy(const state_type& x, const double& t);
   
   //We return a bool which tell us if a trajectory has a good profile
-  bool hasTrajectoryGoodProfile(const state_type& x, const double& t, const bool& unexpectedStop, const int& range);
+  bool hasTrajectoryGoodProfile(const state_type& x, const double& t, const bool& unexpectedStop);
   
   //We return a int (0 or 1) which tell us which is the profile of the trajectory
   detectionType whichProfile(const state_type& x, const double& t);
@@ -84,24 +102,30 @@ class Spectra
   //We store asymptotic velocities and weight ionization in containers of map type
   void storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const bool& unexpectedStop);
   
-  //The following method is called by storeDataBinning and insert element <range,weightIonization> in map asymptEnergy
-  void insertInMap(std::map<int,double>& asymptEnergy, const int& range, const double& weightIonization);
+  //We store PES
+  void storePES(const state_type& x, const double& t, const double& weightIonization);
+  
+  //We store ARPES for each region of the spectrum
+  void storeARPES(const state_type& x, const double& t, const double& weightIonization);
+  
+  //The following method is called by storeDataBinning and insert element <rangeEnergy,weightIonization> in map asympEnergy
+  void insertInMap(std::map<int,double>& asympEnergy, const int& rangeEnergy, const double& weightIonization);
 
   //The following method gather together all the data binning in one
   void mergeSpectra(std::vector<Spectra<state_type> >& mySpectra);
 
   //Finally we write all the data binning in a file
-  void writeDataBinning(std::fstream& dataFile);
+  void writeDataBinning(std::fstream& PESFile,std::fstream& ARPESFile);
 
-  //The following method is called by writeDataBinning and write all the elements range and weightIonization of map asymptEnergy in a file
-  void getFromMap(std::fstream& dataFile, std::map<int,double>& asymptEnergy);
+  //The following method is called by writeDataBinning and write all the elements rangeEnergy and weightIonization of map asympEnergy in a file
+  void getFromMap(std::fstream& DataFile, std::map<int,double>& asympEnergy);
 
 };
 
 
 //We set the histogram intervals width
 template<typename state_type>
-Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *a_myIC, double angleDetection, double binsWidth) : myPotential(myPotential), myField(myField), myIC(a_myIC), angleDetection(angleDetection), binsWidth(binsWidth) 
+Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, ElectricField myField, IC<state_type> *a_myIC, double angleDetection, double binsWidthEnergy, double binsWidthAngle) : myPotential(myPotential), myField(myField), myIC(a_myIC), angleDetection(angleDetection), binsWidthEnergy(binsWidthEnergy) , binsWidthAngle(binsWidthAngle) 
 {
   electronsDetectedNbr=0;
   electronsDetectedUPNbr=0;
@@ -113,13 +137,13 @@ Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, El
 
   //We return a bool which tell us if a trajectory has a good profile
 template<typename state_type>
-bool Spectra<state_type>::hasTrajectoryGoodProfile(const state_type& x, const double& t, const bool& unexpectedStop, const int& range)
+bool Spectra<state_type>::hasTrajectoryGoodProfile(const state_type& x, const double& t, const bool& unexpectedStop)
 {
   //If the computation of the trajectory has been stopped unexpectedly, we do not consider the event
   if(unexpectedStop) return false;
 
   //If the energy of the electron is negative, the electron is not free and we do not consider the event
-  if(range<0) 
+  if(asympEnergy<0) 
     {
       trappedElectronNbr++;
       return false;
@@ -143,7 +167,7 @@ template<typename state_type>
 detectionType Spectra<state_type>::whichProfile(const state_type& x, const double& t)
 {
  //if(x[2]*myField('Z',myIC->tBirth)>=0)
- if(x[1]>=0)
+ if(1)
  return UP;
  else
  return DOWN;
@@ -153,40 +177,73 @@ detectionType Spectra<state_type>::whichProfile(const state_type& x, const doubl
 template<typename state_type>
 void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const bool& unexpectedStop)
 {
-	range=int(asymptoticEnergy(x,t)*energyUnit/binsWidth);
+	asymptoticEnergy(x,t);
 
-	if(hasTrajectoryGoodProfile(x, t, unexpectedStop, range)==true)
+	if(hasTrajectoryGoodProfile(x, t, unexpectedStop)==true)
 	 {
          electronsDetectedNbr++; 
-     	 if(whichProfile(x,t)==UP)
+        storePES(x,t,weightIonization);
+      	storeARPES(x,t,weightIonization);
+      	        
+	 }
+   
+}
+
+  //We store PES
+template<typename state_type>
+void Spectra<state_type>::storePES(const state_type& x, const double& t, const double& weightIonization)
+{
+	rangeEnergy=int(asympEnergy*energyUnit/binsWidthEnergy);
+	
+	 if(whichProfile(x,t)==UP)
      	        {
-		insertInMap(asymptEnergyUP, range, weightIonization);
+		insertInMap(asympEnergyUP, rangeEnergy, weightIonization);
       	        electronsDetectedUPNbr++;
       	        }
       	 else
      	        {
-		insertInMap(asymptEnergyDOWN, range, weightIonization);
+		insertInMap(asympEnergyDOWN, rangeEnergy, weightIonization);
       	        electronsDetectedDOWNNbr++;		      	        
       	        }
-	 }
-   
+
+}
+
+  //We store ARPES for each region of the spectrum
+template<typename state_type>
+void Spectra<state_type>::storeARPES(const state_type& x, const double& t, const double& weightIonization)
+{
+  double energy=asympEnergy/myField.ponderomotiveEnergy;
+  int rangeAngle=int(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5]))*180./M_PI/binsWidthAngle);
+  
+if(energy<2)
+  insertInMap(ARPESLowEnergy, rangeAngle, weightIonization);
+  
+if(energy>2 && energy<8)
+  insertInMap(ARPESPlateau, rangeAngle, weightIonization);
+  
+if(energy>3 && energy<5)
+  insertInMap(ARPES4Up, rangeAngle, weightIonization);
+  
+if(energy>8)
+  insertInMap(ARPESHighEnergy, rangeAngle, weightIonization);
+  
 }
   
-//The following method is called by storeDataBinning and insert element <range,weightIonization> in map asympEnergy
+//The following method is called by storeDataBinning and insert element <rangeEnergy,weightIonization> in map asympEnergy
 template<typename state_type>
-void Spectra<state_type>::insertInMap(std::map<int,double>&  asymptEnergy, const int& range, const double& weightIonization)
+void Spectra<state_type>::insertInMap(std::map<int,double>&  Map, const int& rangeEnergy, const double& weightIonization)
 {
 
   //we declare iterators which can iterate through differents elements of a container of type map
-  std::map<int,double>::iterator findRange=asymptEnergy.find(range);
+  std::map<int,double>::iterator findrangeEnergy=Map.find(rangeEnergy);
 
-  if(findRange==asymptEnergy.end())
+  if(findrangeEnergy==Map.end())
     {
-      asymptEnergy[range]=weightIonization;
+      Map[rangeEnergy]=weightIonization;
     }
   else
     {
-      asymptEnergy[range]=asymptEnergy[range]+weightIonization;
+      Map[rangeEnergy]=Map[rangeEnergy]+weightIonization;
     }
 
 }
@@ -197,7 +254,7 @@ void Spectra<state_type>::mergeSpectra(std::vector<Spectra<state_type> > &mySpec
 {
 
 /******************************We merge the data binning******************************/
-  int range;
+  int rangeEnergy, rangeAngle;
   double weightIonization;
   std::map<int,double>::iterator itmap;
   typename std::vector<Spectra<state_type> >::iterator itSpectra;
@@ -205,19 +262,45 @@ void Spectra<state_type>::mergeSpectra(std::vector<Spectra<state_type> > &mySpec
 //We start from 1 and not from 0 because the current object is the one owned by the master thread
    for(itSpectra=mySpectra.begin(); itSpectra!=mySpectra.end(); itSpectra++)  
     {
-     for(itmap=(itSpectra->asymptEnergyUP).begin(); itmap!=(itSpectra->asymptEnergyUP).end(); itmap++)
+     for(itmap=(itSpectra->asympEnergyUP).begin(); itmap!=(itSpectra->asympEnergyUP).end(); itmap++)
      {
-       range=itmap->first;
+       rangeEnergy=itmap->first;
        weightIonization=itmap->second;    
-       insertInMap(asymptEnergyUP, range, weightIonization);
+       insertInMap(asympEnergyUP, rangeEnergy, weightIonization);
      }  
    
-      for(itmap=(itSpectra->asymptEnergyDOWN).begin(); itmap!=(itSpectra->asymptEnergyDOWN).end(); itmap++)
+      for(itmap=(itSpectra->asympEnergyDOWN).begin(); itmap!=(itSpectra->asympEnergyDOWN).end(); itmap++)
      {
-       range=itmap->first;
+       rangeEnergy=itmap->first;
        weightIonization=itmap->second;    
-       insertInMap(asymptEnergyDOWN, range, weightIonization);
+       insertInMap(asympEnergyDOWN, rangeEnergy, weightIonization);
      }  
+     
+     for(itmap=(itSpectra->ARPESLowEnergy).begin(); itmap!=(itSpectra->ARPESLowEnergy).end(); itmap++)
+     {
+       rangeAngle=itmap->first;
+       weightIonization=itmap->second;    
+       insertInMap(ARPESLowEnergy, rangeAngle, weightIonization);
+     }  
+      for(itmap=(itSpectra->ARPESPlateau).begin(); itmap!=(itSpectra->ARPESPlateau).end(); itmap++)
+     {
+       rangeAngle=itmap->first;
+       weightIonization=itmap->second;    
+       insertInMap(ARPESPlateau, rangeAngle, weightIonization);
+     }  
+      for(itmap=(itSpectra->ARPES4Up).begin(); itmap!=(itSpectra->ARPES4Up).end(); itmap++)
+     {
+       rangeAngle=itmap->first;
+       weightIonization=itmap->second;    
+       insertInMap(ARPES4Up, rangeAngle, weightIonization);
+     }  
+      for(itmap=(itSpectra->ARPESHighEnergy).begin(); itmap!=(itSpectra->ARPESHighEnergy).end(); itmap++)
+     {
+       rangeAngle=itmap->first;
+       weightIonization=itmap->second;    
+       insertInMap(ARPESHighEnergy, rangeAngle, weightIonization);
+     }    
+     
    }
    
 /******************************We merge the counters******************************/
@@ -236,28 +319,43 @@ void Spectra<state_type>::mergeSpectra(std::vector<Spectra<state_type> > &mySpec
 
 //Finally we write all the data binning in a file
 template<typename state_type>
-void Spectra<state_type>::writeDataBinning(std::fstream& dataFile)
+void Spectra<state_type>::writeDataBinning(std::fstream& PESFile,std::fstream& ARPESFile)
 {
   
-  //we write values contained in asymptEnergyUP in file "dataFile"
-  getFromMap(dataFile, asymptEnergyUP);
+  //we write values contained in asympEnergyUP in file "PESFile"
+  getFromMap(PESFile, asympEnergyUP);
   //we leave two lines break
-  dataFile<<" "<<std::endl;
-  dataFile<<" "<<std::endl;
-  //we write values contained in asymptEnergyDOWN in file "dataFile"
-  getFromMap(dataFile, asymptEnergyDOWN);
+  PESFile<<" "<<std::endl;
+  PESFile<<" "<<std::endl;
+  //we write values contained in asympEnergyDOWN in file "PESFile"
+  getFromMap(PESFile, asympEnergyDOWN);
+  
+  //we write values contained in asympEnergyUP in file "PESFile"
+  getFromMap(ARPESFile, ARPESLowEnergy);
+  ARPESFile<<" "<<std::endl;
+  ARPESFile<<" "<<std::endl;
+  //we write values contained in asympEnergyDOWN in file "PESFile"
+  getFromMap(ARPESFile, ARPESPlateau);
+  ARPESFile<<" "<<std::endl;
+  ARPESFile<<" "<<std::endl;
+  //we write values contained in asympEnergyDOWN in file "PESFile"
+  getFromMap(ARPESFile, ARPESHighEnergy);
+  ARPESFile<<" "<<std::endl;
+  ARPESFile<<" "<<std::endl;
+  //we write values contained in asympEnergyDOWN in file "PESFile"
+  getFromMap(ARPESFile, ARPES4Up);
  
 }
 
-//The following method is called by writeDataBinning and write all the elements range and weightIonization of map asymptEnergy in a file
+//The following method is called by writeDataBinning and write all the elements rangeEnergy and weightIonization of map asympEnergy in a file
 template<typename state_type>
-void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double>& asymptEnergy)
+void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double>& asympEnergy)
 {
-  std::map<int,double>::iterator it= asymptEnergy.begin();
+  std::map<int,double>::iterator it= asympEnergy.begin();
 
   //We normalize the distribution law
   double sum=0.;
-  for(1; it!=asymptEnergy.end(); it++)
+  for(1; it!=asympEnergy.end(); it++)
     {
       sum=sum+it->second;
     }
@@ -266,9 +364,9 @@ void Spectra<state_type>::getFromMap(std::fstream& dataFile, std::map<int,double
   sum=1.;
 
   //We write the histogram in a file	
-  for(it=asymptEnergy.begin(); it!=asymptEnergy.end(); it++)
+  for(it=asympEnergy.begin(); it!=asympEnergy.end(); it++)
     {
-      dataFile<<(it->first)*binsWidth<<" "<<(it->second)/sum<<std::endl;
+      dataFile<<(it->first)*binsWidthEnergy<<" "<<(it->second)/sum<<std::endl;
     }
 
 }
@@ -280,9 +378,9 @@ double Spectra<state_type>::asymptoticEnergy(const state_type &x, const double& 
 {
   double Vsq=(x[3]-myField.vectPot('X',t))*(x[3]-myField.vectPot('X',t))+(x[4]-myField.vectPot('Y',t))*(x[4]-myField.vectPot('Y',t))+(x[5]-myField.vectPot('Z',t))*(x[5]-myField.vectPot('Z',t));
 
-  double E=Vsq/2+myPotential->potentialEnergy(x);
+  asympEnergy=Vsq/2+myPotential->potentialEnergy(x);
 
-  return E;
+  return asympEnergy;
 
 }
 

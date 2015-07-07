@@ -20,12 +20,13 @@ ElectricField::ElectricField(double ellipticity)
   double lightSpeed=2.99792458E8;
 
   //Field parameters
-  waveLenght=2E-6;
-  fieldAmpl=0.0534;
-  cyclesNbr=3;
+  waveLenght=1.064E-6; //2E-6;
+  fieldAmpl=0.06;  //0.0534;
+  cyclesNbr=10000;
   phase=0.;
   pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
   opticalCycle=2.*M_PI/pulsation;
+  ponderomotiveEnergy=pow(fieldAmpl/pulsation,2)/4.;
 }
 
 //The electric field is a pulse whose full duration at half maximum contains 2 optical cycles

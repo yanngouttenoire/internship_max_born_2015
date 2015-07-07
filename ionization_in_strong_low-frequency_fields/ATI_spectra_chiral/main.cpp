@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=10, nVYPerpBirth=10, nVZPrimPerpBirth=10;
+int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -42,12 +42,12 @@ typedef double state_type[6];
 state_type x;
 
 //We select which electrostatic potential we want to use
-#define MOLECULE
-//#define HYDROGEN
+//#define MOLECULE
+#define HYDROGEN
 
 #ifdef HYDROGEN
 typedef Hydrogen<state_type> potential_type;
-double IP=0.5792;
+double IP=0.5; //0.5792;
 #endif
 
 #ifdef MOLECULE
@@ -70,7 +70,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=5.;
+double weightThresholdRatio=100000.;
 double weightThreshold;
 
 //We declare boolean controls
@@ -79,10 +79,10 @@ bool isStepTooSmall;
 bool isWeightTooSmall;
 
 //Bins width
-double binsWidth=0.1;
+double binsWidth=2.;
 
 //Ellipticity
-double ellipticity=-0.1;
+double ellipticity=0.;
 
 //Angle between velocity vector and field polarization within which we detect electrons
 double angleDetection=180.;
@@ -126,9 +126,6 @@ int main()
   //Contains methods for outputting data in terminal
   Display myDisplay;
 
-  //Contains methods for drawing curves
-  Plot myPlot;
-
   //We set the ionization rate threshold
   weightThreshold=myIC.getMaxWeightIonization(2)/weightThresholdRatio;
   
@@ -155,10 +152,10 @@ int main()
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
-      for(iVYPerpBirth=0; iVYPerpBirth<=nVYPerpBirth; iVYPerpBirth++)
+      for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
 	{
 
-	  for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<=nVZPrimPerpBirth; iVZPrimPerpBirth++)
+	  for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<nVZPrimPerpBirth; iVZPrimPerpBirth++)
 	    {
 
 	      /**************************We set the initial conditions********************************/
@@ -195,7 +192,8 @@ int main()
 		  mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
 		  //We wait long enough for the end of the pulse
-		  if(t>4.*myField.cyclesNbr*myField.opticalCycle)
+		 // if(t>4.*myField.cyclesNbr*myField.opticalCycle)
+		 if(t>8*myField.opticalCycle)
 		    stopStepper=true;
 
 		  //We check if the step is no too small (otherwise the simulation will take too much time)
@@ -220,7 +218,7 @@ int main()
    mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 #endif
 	     
-	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%50000==0)
+	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%1000==0)
 		{
 		#pragma omp critical
 		 {
@@ -254,7 +252,8 @@ int main()
 #ifndef _OPENMP
 	          myDisplay("asymptoticEnergy",mySpectrum.asymptoticEnergy(x,t));
 		  myDisplay("angleDetection",mySpectrum.angleDetection, "degree");
-		  myDisplay("binsWidth",mySpectrum.binsWidth);
+		  myDisplay("binsWidthEnergy",mySpectrum.binsWidthEnergy);
+		  myDisplay("binsWidthAngle",mySpectrum.binsWidthAngle);
 		  myDisplay("trappedElectronNbr", double(mySpectrum.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 		  myDisplay("stepTooSmallNbr", double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 		  myDisplay("spectraPointNbr", double(mySpectrum.electronsDetectedNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
@@ -264,7 +263,8 @@ int main()
 #ifdef _OPENMP
 		  myDisplay("asymptoticEnergy", mySpectra[omp_get_thread_num()].asymptoticEnergy(x,t));
 		  myDisplay("angleDetection", mySpectra[omp_get_thread_num()].angleDetection, "degree");
-		  myDisplay("binsWidth", mySpectra[omp_get_thread_num()].binsWidth);
+		  myDisplay("binsWidthEnergy", mySpectra[omp_get_thread_num()].binsWidthEnergy);
+		  myDisplay("binsWidthAngle", mySpectra[omp_get_thread_num()].binsWidthAngle);
 		  myDisplay("trappedElectronNbr", double( mySpectra[omp_get_thread_num()].trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 		  myDisplay("stepTooSmallNbr", double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
 		  myDisplay("spectraPointNbr", double( mySpectra[omp_get_thread_num()].electronsDetectedNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
@@ -292,96 +292,133 @@ int main()
 #endif
 
    //We open a file with a view to writing in it
-   fstream dataFile("data.dat",ios::out);
-
-   //We write the data binning in the file "dataFile"
-   mySpectrum.writeDataBinning(dataFile);
+   fstream PESFile("pes.dat",ios::out);
+   fstream ARPESFile("arpes.dat",ios::out);
+   
+   //We write the data binning in the file "PESFile"
+   mySpectrum.writeDataBinning(PESFile,ARPESFile);
 
 /*****************************************************PLOT*****************************************************/
+
+  //Contains methods for drawing curves
+  Plot myPESPlot;
+  Plot myARPESPlot;
+
 /****************************************We build the key of the plot******************************************/
-  myPlot.addKey("nField",nFieldBirth);
-  myPlot.addKey("nVYPerp",nVYPerpBirth);
-  myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
+  myPESPlot.addKey("nField",nFieldBirth);
+  myPESPlot.addKey("nVYPerp",nVYPerpBirth);
+  myPESPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
                 
 #ifdef MOLECULE
-  myPlot.addKey("Molecule orientation",myPotential->myOrientation.myString);
-  myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
-  myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
+  myPESPlot.addKey("Molecule orientation",myPotential->myOrientation.myString);
+  myPESPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
+  myPESPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif
 
 #ifdef HYDROGEN
-  myPlot.addKey("hydrogen potential");
-  myPlot.addKey("IP", myPotential->IP);
+  myPESPlot.addKey("hydrogen potential");
+  myPESPlot.addKey("IP", myPotential->IP);
 #endif
   
-  myPlot.addKey("weightTooSmallNbr", int(double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
-  myPlot.addKey("stepTooSmallNbr",int(double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+  myPESPlot.addKey("weightTooSmallNbr", int(double(weightTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+  myPESPlot.addKey("stepTooSmallNbr",int(double(stepTooSmallNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
   
-    myPlot.addKey("trappedElectronNbr", int(double(mySpectrum.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+    myPESPlot.addKey("trappedElectronNbr", int(double(mySpectrum.trappedElectronNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
     
   if(mySpectrum.angleDetection<180)
-    myPlot.addKey("angleTooLargeNbr", int(double(mySpectrum.angleTooLargeNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
-    myPlot.addKey("electronsDetectedNbr", double(mySpectrum.electronsDetectedNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
-    myPlot.addKey("binsWidth",mySpectrum.binsWidth,"eV");
+    myPESPlot.addKey("angleTooLargeNbr", int(double(mySpectrum.angleTooLargeNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*1000.)/10., "%");
+    myPESPlot.addKey("electronsDetectedNbr", double(mySpectrum.electronsDetectedNbr)/(nFieldBirth*nVZPrimPerpBirth*nVYPerpBirth)*100., "%");
+    myPESPlot.addKey("binsWidthEnergy",mySpectrum.binsWidthEnergy,"eV");
+    myPESPlot.addKey("binsWidthAngle",mySpectrum.binsWidthAngle,"°");
     
   if(mySpectrum.angleDetection<180)
-  myPlot.addKey("angleDetection",mySpectrum.angleDetection, "deg");
+  myPESPlot.addKey("angleDetection",mySpectrum.angleDetection, "deg");
   
-  myPlot.addKey("weightThresholdRatio",weightThresholdRatio);
+  myPESPlot.addKey("weightThresholdRatio",weightThresholdRatio);
   
   #ifdef _OPENMP
-  myPlot.addKey("threadsNbrMax", threadsNbrMax);
+  myPESPlot.addKey("threadsNbrMax", threadsNbrMax);
   #endif
 
-  myPlot.addKey("ErrorMax",desiredErrorMax);
-  myPlot.addKey("stepMin",stepMin);
+  myPESPlot.addKey("ErrorMax",desiredErrorMax);
+  myPESPlot.addKey("stepMin",stepMin);
   
-  myPlot.addKey("ellipticity", myField.ellipticity);
-  myPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
-  myPlot.addKey("waveLenght",myField.waveLenght*1.E6, "micro-m");
-  myPlot.addKey("duration",myDisplay.elapsedTime());
+  myPESPlot.addKey("ellipticity", myField.ellipticity);
+  myPESPlot.addKey("fieldAmplMax",myField.fieldAmpl, "au");
+  myPESPlot.addKey("waveLenght",myField.waveLenght*1.E6, "micro-m");
+  myPESPlot.addKey("duration",myDisplay.elapsedTime());
   if(myField.ellipticity>0)
-  myPlot.addKey("laser polarization rotates clockwise when we look along y");  
+  myPESPlot.addKey("laser polarization rotates clockwise when we look along y");  
   if(myField.ellipticity<0)
-  myPlot.addKey("laser polarization rotates counterclockwise when we look along y"); 
+  myPESPlot.addKey("laser polarization rotates counterclockwise when we look along y"); 
   
   //We put the keys on
-  myPlot.setKeysOn();
-    
-  /****************************************We build the build the different parts of plot******************************************/
+  myPESPlot.setKeysOn();
+   
+  /***********************We add some instructions and indicate which curves we want to plot*******************************/   
+   
+  /***************************************for the PES*****************************************/ 
   
-  myPlot.addInstruction("set terminal epscairo font 'Gill Sans,9' rounded fontscale 0.4");
-  myPlot.addInstruction("set multiplot layout 1, 1");
-  //Remove border on bottom and right, these borders are useless and make it harder to see plotted lines near the border
-  //Also, put it in grey, no need for so much emphasis on a border 
-  myPlot.addInstruction("set border 6 back linestyle 100");
-  myPlot.addInstruction("set grid linestyle 101");
-  //We also put the key box in grey
-  myPlot.addInstruction("set key box ls 100");
-
-  myPlot.addInstruction("set xtics scale 0");
-  myPlot.addInstruction("set format x '' ");
-  myPlot.addInstruction("set xrange [0:20]");
-  myPlot.addInstruction("set x2tics 1");
-  myPlot.addInstruction("set x2label 'Asymptotic energy (eV)'");
-  myPlot.addInstruction("set ylabel 'Probability (linear scale)'");
-   
-  /**************************************We indicate which curves we want to plot************************************/   
-   
+      
+  //We load a file with gnuplot instructions already written
+  myPESPlot.setLoadFile("epscairo2d.gnu");
+  
+  myPESPlot.addInstruction("set multiplot layout 1, 1");
+  //myPESPlot.addInstruction("set xrange [0:20]");
   
   //We consider electrons differently depending if they are detected in y>0 or y<0
   std::ostringstream plot1;
-  plot1<<"plot 'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %', \\";
+  plot1<<"plot 'pes.dat' index 0 using 1:(log($2)) w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %', \\";
   std::ostringstream plot2;
-  plot2<<"'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
+  plot2<<"'pes.dat' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
 
-  myPlot.addInstruction(plot1.str());
-  myPlot.addInstruction(plot2.str());
+  myPESPlot.addInstruction(plot1.str());
+  myPESPlot.addInstruction(plot2.str());
   
-  myPlot.addInstruction("unset multiplot");
+  myPESPlot.addInstruction("unset multiplot");
 
-  myPlot.gnuplot();
+  myPESPlot.gnuplot("pes.gnu","pes.eps");
+  
+   /***************************************for the ARPES*****************************************/ 
+    
+    //We load a file with gnuplot instructions already written
+    myARPESPlot.setLoadFile("epscairopolar.gnu");
+    
+    myARPESPlot.addInstruction("set multiplot layout 2, 2");
+  
+//Margins for each row resp. column
+  myARPESPlot.addInstruction("TMARGIN = 'set tmargin at screen 0.90; set bmargin at screen 0.55'");
+  myARPESPlot.addInstruction("BMARGIN = 'set tmargin at screen 0.45; set bmargin at screen 0.10'");
+  myARPESPlot.addInstruction("LMARGIN = 'set lmargin at screen 0.25; set rmargin at screen 0.65'");
+  myARPESPlot.addInstruction("RMARGIN = 'set lmargin at screen 0.55; set rmargin at screen 0.95'");
 
+  myARPESPlot.addInstruction("set multiplot layout 2,2");
+
+  myARPESPlot.addInstruction("set_key(x,text) = sprintf(\"set label %f '%s' at graph 0.5,-0.1 center\", x,text)");
+
+  myARPESPlot.addInstruction("eval set_key(1,'(a) PAD for region [0, 2Up]')");
+  myARPESPlot.addInstruction("@TMARGIN; @LMARGIN");
+  myARPESPlot.addInstruction("plot 'arpes.dat' index 0 using 1:2 w l ls 3 notitle");
+  myARPESPlot.addInstruction("unset label 1");
+
+  myARPESPlot.addInstruction("eval set_key(2,'(b) PAD for region [2Up, 8Up]')");
+  myARPESPlot.addInstruction("@TMARGIN; @RMARGIN");
+  myARPESPlot.addInstruction("plot 'arpes.dat' index 1 using 1:2 w l ls 3  notitle");
+  myARPESPlot.addInstruction("unset label 2");
+
+  myARPESPlot.addInstruction("eval set_key(3,'(c) PAD for region [8Up, 10Up]')");
+  myARPESPlot.addInstruction("@BMARGIN; @LMARGIN");
+  myARPESPlot.addInstruction("plot 'arpes.dat' index 2 using 1:2 w l ls 3  notitle");
+  myARPESPlot.addInstruction("unset label 3");
+  
+  myARPESPlot.addInstruction("eval set_key(4,'(b) PAD near 4Up')");
+  myARPESPlot.addInstruction("@BMARGIN; @RMARGIN");
+  myARPESPlot.addInstruction("plot 'arpes.dat' index 3 using 1:2 w l ls 3  notitle");
+  
+  myARPESPlot.addInstruction("unset multiplot");
+
+  myARPESPlot.gnuplot("arpes.gnu","arpes.eps");
+  
   return 0;
 }
 
