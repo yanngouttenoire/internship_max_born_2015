@@ -213,16 +213,19 @@ template<typename state_type>
 void Spectra<state_type>::storeARPES(const state_type& x, const double& t, const double& weightIonization)
 {
   double energy=asympEnergy/myField.ponderomotiveEnergy;
-  //Angle between the velocity vector of the electron and the electric vector force
-  int rangeAngle=int(acos(sqrt(x[3]*x[3]+x[4]*x[4])/x[5])*180./M_PI/binsWidthAngle)*(-myField('Z',myIC->tBirth))/fabs(myField('Z',myIC->tBirth));
   
-if(energy<2)
+  //Angle between the velocity vector of the electron and the electric vector force
+  int rangeAngle=int(fabs(atan(sqrt(x[3]*x[3]+x[4]*x[4])/x[5])*180./M_PI/binsWidthAngle));
+  if(x[5]*myField('Z',myIC->tBirth)<0)
+  rangeAngle=180.-rangeAngle;
+  
+if(energy<1)
   insertInMap(ARPESLowEnergy, rangeAngle, weightIonization);
   
-if(energy>2 && energy<8)
+if(energy>1 && energy<8)
   insertInMap(ARPESPlateau, rangeAngle, weightIonization);
   
-if(energy>3.8 && energy<4.2)
+if(energy>4 && energy<5)
   insertInMap(ARPES4Up, rangeAngle, weightIonization);
   
 if(energy>8)

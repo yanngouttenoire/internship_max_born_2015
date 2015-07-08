@@ -104,8 +104,8 @@ void IC<state_type>::setTBirth(const int& iFieldBirth, const int& nFieldBirth)
 { 
   //We want to scan field phase values from -200° to 30°
 
-  double anglei=-30.*M_PI/180.;
-  double anglef=30.*M_PI/180.;
+  double anglei=-40.*M_PI/180.;
+  double anglef=40.*M_PI/180.;
   tBirth=anglei/myField.pulsation+double(iFieldBirth)/double(nFieldBirth)*(anglef-anglei)/myField.pulsation;
 }
 
@@ -130,10 +130,10 @@ double IC<state_type>::getVPerpBirth(const int& iVPerpBirth, const int& nVPerpBi
   else
     {
       //Width of the velocity distributions after tunneling
-      double sigma_V=0.3;
+      double sigma_V=1;
 
       //Perpendicular velocity after tunneling
-      return -sigma_V+double(iVPerpBirth)/double(nVPerpBirth)*2.*sigma_V;
+      return double(iVPerpBirth)/double(nVPerpBirth)*sigma_V-0.1;
     }
  
 }

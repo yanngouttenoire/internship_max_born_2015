@@ -13,7 +13,7 @@ void Plot::addInstruction(std::string instruction)
 void Plot::gnuplot(string gnuFileName, string output)
 {
 
-  fstream gnuFile(gnuFileName, ios::out);
+  fstream gnuFile(gnuFileName.c_str(), ios::out);
 
   gnuFile<<"set output '"<<output<<"'"<<endl;
   //We load a file with some gnuplot intructions already written

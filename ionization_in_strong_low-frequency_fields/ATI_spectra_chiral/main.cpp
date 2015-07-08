@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=150, nVYPerpBirth=1, nVZPrimPerpBirth=150;
+int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
 
 //We declare some variables for OPENMP information
 int threadID;
@@ -192,7 +192,7 @@ int main()
 
 		  //We wait long enough for the end of the pulse
 		 // if(t>4.*myField.cyclesNbr*myField.opticalCycle)
-		 if((t-myIC.tBirth)>8*myField.opticalCycle)
+		 if((t-myIC.tBirth)>2*myField.opticalCycle*myField.cyclesNbr)
 		    stopStepper=true;
 
 		  //We check if the step is no too small (otherwise the simulation will take too much time)
@@ -367,9 +367,9 @@ int main()
   
   //We consider electrons differently depending if they are detected in y>0 or y<0
   std::ostringstream plot1;
-  plot1<<"plot 'pes.dat' index 0 using 1:(log($2)) w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %', \\";
+  plot1<<"plot 'pes.dat' index 0 using ($1/13.5):(log($2)) w l ls 3 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %', \\";
   std::ostringstream plot2;
-  plot2<<"'pes.dat' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
+  plot2<<"'pes.dat' index 1 using ($1/13.5):2 w l ls 4 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
 
   myPESPlot.addInstruction(plot1.str());
   myPESPlot.addInstruction(plot2.str());
