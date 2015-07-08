@@ -219,13 +219,13 @@ void Spectra<state_type>::storeARPES(const state_type& x, const double& t, const
   if(x[5]*myField('Z',myIC->tBirth)<0)
   rangeAngle=180.-rangeAngle;
   
-if(energy<1)
+if(energy<2)
   insertInMap(ARPESLowEnergy, rangeAngle, weightIonization);
   
-if(energy>1 && energy<8)
+if(energy>2 && energy<8)
   insertInMap(ARPESPlateau, rangeAngle, weightIonization);
   
-if(energy>4 && energy<5)
+if(energy>3.8 && energy<4.2)
   insertInMap(ARPES4Up, rangeAngle, weightIonization);
   
 if(energy>8)
