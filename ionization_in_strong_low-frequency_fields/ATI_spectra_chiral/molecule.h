@@ -11,7 +11,7 @@
 
 #include"electrostaticpotential.h"
 
-enum enumOrientations{W,X1,X2,X3,Y1,Y2,Y3,Z1,Z2,Z3};
+enum enumOrientations{W,X1,X2,X3,Y1,Y2,Y3,Z1,Z2,Z3,X3Z2};
 
 //Structure which can both represente a molecule orientation as both an enum type (myEnum) and a string type (myString)
 struct moleculeOrientation
@@ -225,6 +225,15 @@ switch(myOrientation.myEnum)
   bondLength[1]=l[2];
   bondLength[2]=-l[1];
   bondLength[3]=l[3];
+  break;
+  case X3Z2 :
+  charge[0]=c[0];
+  charge[1]=c[1];
+  charge[2]=c[3];
+  charge[3]=c[2];
+  bondLength[1]=-l[1];
+  bondLength[2]=l[3];
+  bondLength[3]=l[2];
   break;
  }  
 }

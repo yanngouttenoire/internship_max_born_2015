@@ -1,5 +1,5 @@
 CC=g++ 
-CFLAGS=-ansi -pedantic -std=c++11 -fopenmp 
+CFLAGS=-ansi -pedantic -fopenmp 
 WFLAGS=-W -Wall 
 LDFLAGS=-fopenmp
 EXEC=exec.out
