@@ -142,8 +142,7 @@ bool Spectra<state_type>::hasTrajectoryGoodProfile(const state_type& x, const do
 template<typename state_type>
 detectionType Spectra<state_type>::whichProfile(const state_type& x, const double& t)
 {
- //if(x[2]*myField('Z',myIC->tBirth)>=0)
- if(x[1]>=0)
+ if(x[2]*myField('Z',myIC->tBirth)>=0)
  return UP;
  else
  return DOWN;

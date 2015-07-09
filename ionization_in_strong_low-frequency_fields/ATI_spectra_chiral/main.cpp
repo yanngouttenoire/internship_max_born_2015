@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=500, nVYPerpBirth=1000, nVZPrimPerpBirth=500;
+int nFieldBirth=100000, nVYPerpBirth=1, nVZPrimPerpBirth=10000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -42,8 +42,8 @@ typedef double state_type[6];
 state_type x;
 
 //We select which electrostatic potential we want to use
-#define MOLECULE
-//#define HYDROGEN
+//#define MOLECULE
+#define HYDROGEN
 
 #ifdef HYDROGEN
 typedef Hydrogen<state_type> potential_type;
@@ -70,7 +70,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=5.;
+double weightThresholdRatio=10000.;
 double weightThreshold;
 
 //We declare boolean controls
@@ -82,10 +82,10 @@ bool isWeightTooSmall;
 double binsWidth=0.1;
 
 //Ellipticity
-double ellipticity=-0.1;
+double ellipticity=0.;
 
 //Angle between velocity vector and field polarization within which we detect electrons
-double angleDetection=180.;
+double angleDetection=5.;
 
 
 //FUNCTION MAIN
@@ -155,7 +155,7 @@ int main()
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
     {
-      for(iVYPerpBirth=0; iVYPerpBirth<=nVYPerpBirth; iVYPerpBirth++)
+      for(iVYPerpBirth=0; iVYPerpBirth<nVYPerpBirth; iVYPerpBirth++)
 	{
 
 	  for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<=nVZPrimPerpBirth; iVZPrimPerpBirth++)
@@ -195,7 +195,7 @@ int main()
 		  mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
 		  //We wait long enough for the end of the pulse
-		  if(t>4.*myField.cyclesNbr*myField.opticalCycle)
+		  if(t>3.*myField.cyclesNbr*myField.opticalCycle)
 		    stopStepper=true;
 
 		  //We check if the step is no too small (otherwise the simulation will take too much time)
@@ -361,7 +361,7 @@ int main()
 
   myPlot.addInstruction("set xtics scale 0");
   myPlot.addInstruction("set format x '' ");
-  myPlot.addInstruction("set xrange [0:20]");
+  myPlot.addInstruction("set xrange [0:8]");
   myPlot.addInstruction("set x2tics 1");
   myPlot.addInstruction("set x2label 'Asymptotic energy (eV)'");
   myPlot.addInstruction("set ylabel 'Probability (linear scale)'");
@@ -371,9 +371,9 @@ int main()
   
   //We consider electrons differently depending if they are detected in y>0 or y<0
   std::ostringstream plot1;
-  plot1<<"plot 'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %', \\";
+  plot1<<"plot 'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electrons detected along the field, upward', \\";
   std::ostringstream plot2;
-  plot2<<"'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
+  plot2<<"'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected along the field, downward'";
 
   myPlot.addInstruction(plot1.str());
   myPlot.addInstruction(plot2.str());
