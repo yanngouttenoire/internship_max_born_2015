@@ -137,10 +137,10 @@ void Solve<state_type,potential_type> ::controlledRK5(System<state_type,potentia
 	dt=dt*pow(desiredErrorMin/error,0.2);
 
       //NOTE: DUE TO THE FACT THAT SOMETIMES ERROR WAS INSTABLE, THE PREVIOUS OPERATIONS MIGHT BE WRONG
-      //That's why, we do the following: we consider that the error is correct after 3 passes through the loop
+      //That's why, we do the following: we consider that the error is correct after a lot of passes through the loop
 
       preventInstableError++;
-      if(preventInstableError>=500)
+      if(preventInstableError>=5000)
 	{
 	  error=desiredErrorMax;
 	}
