@@ -33,6 +33,9 @@ class Spectra
 
   //We declare the horizontal variable in the histogram
   int range;
+  
+  //We declare a variable for the asymptotic energy
+  double energy;
 
   //We declare a variable for the bin interval width
   double binsWidth;
@@ -119,7 +122,7 @@ bool Spectra<state_type>::hasTrajectoryGoodProfile(const state_type& x, const do
   if(unexpectedStop) return false;
 
   //If the energy of the electron is negative, the electron is not free and we do not consider the event
-  if(range<0) 
+  if(energy<=0) 
     {
       trappedElectronNbr++;
       return false;
@@ -279,9 +282,9 @@ double Spectra<state_type>::asymptoticEnergy(const state_type &x, const double& 
 {
   double Vsq=(x[3]-myField.vectPot('X',t))*(x[3]-myField.vectPot('X',t))+(x[4]-myField.vectPot('Y',t))*(x[4]-myField.vectPot('Y',t))+(x[5]-myField.vectPot('Z',t))*(x[5]-myField.vectPot('Z',t));
 
-  double E=Vsq/2+myPotential->potentialEnergy(x);
+  energy=Vsq/2+myPotential->potentialEnergy(x);
 
-  return E;
+  return energy;
 
 }
 

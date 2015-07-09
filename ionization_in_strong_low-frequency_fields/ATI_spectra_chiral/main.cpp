@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=100000, nVYPerpBirth=1, nVZPrimPerpBirth=10000;
+int nFieldBirth=100000, nVYPerpBirth=1, nVZPrimPerpBirth=100000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -70,7 +70,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=10000.;
+double weightThresholdRatio=100.;
 double weightThreshold;
 
 //We declare boolean controls
@@ -79,7 +79,7 @@ bool isStepTooSmall;
 bool isWeightTooSmall;
 
 //Bins width
-double binsWidth=0.1;
+double binsWidth=0.05;
 
 //Ellipticity
 double ellipticity=0.;
