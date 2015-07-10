@@ -70,7 +70,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=100.;
+double weightThresholdRatio=5.;
 double weightThreshold;
 
 //We declare boolean controls
