@@ -52,7 +52,7 @@ double IP=0.5792;
 
 #ifdef MOLECULE
 typedef Molecule<state_type> potential_type;
-moleculeOrientation myOrientation(X3);
+moleculeOrientation myOrientation(X3Z3);
 #endif
 
 //We declare a variable for the step in controlledRK5, the min allowed value
