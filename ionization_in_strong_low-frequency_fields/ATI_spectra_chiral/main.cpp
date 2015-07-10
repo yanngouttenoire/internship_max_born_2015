@@ -192,7 +192,8 @@ int main()
 
 		  //We wait long enough for the end of the pulse
 		 // if(t>4.*myField.cyclesNbr*myField.opticalCycle)
-		 if((t-myIC.tBirth)>2*myField.opticalCycle*myField.cyclesNbr)
+		 //if((t-myIC.tBirth)>2*myField.opticalCycle*myField.cyclesNbr)
+		  if((t-myIC.tBirth)>8*myField.opticalCycle)
 		    stopStepper=true;
 
 		  //We check if the step is no too small (otherwise the simulation will take too much time)
