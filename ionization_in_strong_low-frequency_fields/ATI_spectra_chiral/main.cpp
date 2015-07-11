@@ -70,7 +70,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=3.;
+double weightThresholdRatio=2.;
 double weightThreshold;
 
 //We declare boolean controls
@@ -220,7 +220,7 @@ int main()
    mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 #endif
 	     
-	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%50000==0)
+	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500000==0)
 		{
 		#pragma omp critical
 		 {
