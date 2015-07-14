@@ -96,13 +96,13 @@ class Spectra
   detectionType whichProfile(const state_type& x, const double& t);
 
   //We store asymptotic velocities and weight ionization in containers of map type
-  void storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const bool& unexpectedStop);
+  void storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const double& phase, const double& vXZPerp, const double& vYPerp, const bool& unexpectedStop);
     
   //We store PES
   void storePES(const state_type& x, const double& t, const double& weightIonization);
   
     //We store initial conditions
-  void storeIC(const state_type& x, const double& t, const double& weightIonization);
+  void storeIC(const state_type& x, const double& t, const double& weightIonization, const double& phase, const double& vXZPerp, const double& vYPerp);
   
   //The following method is called by storeDataBinning and insert element <range,weightIonization> in map asympEnergy
   void insertInMap(std::map<int,double>& asympEnergy, const int& range, const double& weightIonization);
@@ -173,7 +173,7 @@ detectionType Spectra<state_type>::whichProfile(const state_type& x, const doubl
 
 //We store asymptotic energies in containers of map type with a view to make a data binning
 template<typename state_type>
-void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const bool& unexpectedStop)
+void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t, const double& weightIonization, const double& phase, const double& vXZPerp, const double& vYPerp, const bool& unexpectedStop)
 {
 	asymptoticEnergy(x,t);
 
@@ -181,8 +181,7 @@ void Spectra<state_type>::storeDataBinning(const state_type& x, const double& t,
 	 {
          electronsDetectedNbr++; 
         storePES(x,t,weightIonization);
-      	storeIC(x,t,weightIonization);
-      	        
+ 	storeIC(x,t,weightIonization,phase, vXZPerp, vYPerp);      	        
 	 }
    
 }
@@ -208,15 +207,15 @@ void Spectra<state_type>::storePES(const state_type& x, const double& t, const d
 
 //We store initial conditions
 template<typename state_type>
-void Spectra<state_type>::storeIC(const state_type& x, const double& t, const double& weightIonization)
+void Spectra<state_type>::storeIC(const state_type& x, const double& t, const double& weightIonization, const double& phase, const double& vXZPerp, const double& vYPerp)
 {
     double energy=asympEnergy*27.2;
   //Angle between the velocity vector of the electron and the electric vector force
-  int rangePhase=int((myField.pulsation)*(myIC->tBirth)*180./M_PI/binsWidthPhase);
-  int rangeVXZ=int(myIC->vZPrimPerpBirth/binsWidthVelocity);
-  int rangeVY=int(myIC->vYPerpBirth/binsWidthVelocity);
+  int rangePhase=int(phase/binsWidthPhase);
+  int rangeVXZ=int(vXZPerp/binsWidthVelocity);
+  int rangeVY=int(vYPerp/binsWidthVelocity);
     
-if(energy>0.15 && energy<0.80)
+//if(energy>0.15 && energy<0.80)
   insertInMap(initialPhase, rangePhase, weightIonization);
   insertInMap(initialVXZ, rangeVXZ, weightIonization);
   insertInMap(initialVY, rangeVY, weightIonization);

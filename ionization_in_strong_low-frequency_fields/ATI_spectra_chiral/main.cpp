@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=1000, nVYPerpBirth=1, nVZPrimPerpBirth=1000;
+int nFieldBirth=50, nVYPerpBirth=1, nVZPrimPerpBirth=50;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -213,14 +213,14 @@ int main()
 
  		 //We perform the data binning process and store data in map container
 #ifndef _OPENMP
-   mySpectrum.storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
+   mySpectrum.storeDataBinning(x,t, myIC.weightIonization, (myField.pulsation)*(myIC.tBirth)*180./M_PI, myIC.vZPrimPerpBirth, myIC.vYPerpBirth, isStepTooSmall || isWeightTooSmall);
 #endif
 
 #ifdef _OPENMP
-   mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
+   mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, (myField.pulsation)*(myIC.tBirth)*180./M_PI, myIC.vZPrimPerpBirth, myIC.vYPerpBirth, isStepTooSmall || isWeightTooSmall);
 #endif
 	     
-	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%50000==0)
+	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500==0)
 		{
 		#pragma omp critical
 		 {
@@ -392,7 +392,7 @@ int main()
 
   myPESPlot.gnuplot("pes.gnu","pes.eps");
   
-   /***************************************for the ARPES*****************************************/ 
+   /***************************************for the IC*****************************************/ 
     
     //We load a file with gnuplot instructions already written
     myICPlot.setLoadFile("epscairo2d.gnu");
@@ -402,8 +402,8 @@ int main()
 //Margins for each row resp. column
   myICPlot.addInstruction("TMARGIN = 'set tmargin at screen 0.90; set bmargin at screen 0.55'");
   myICPlot.addInstruction("BMARGIN = 'set tmargin at screen 0.45; set bmargin at screen 0.10'");
-  myICPlot.addInstruction("LMARGIN = 'set lmargin at screen 0.05; set rmargin at screen 0.50'");
-  myICPlot.addInstruction("RMARGIN = 'set lmargin at screen 0.5; set rmargin at screen 0.95; set ytics scale 0; set format y ""'");
+  myICPlot.addInstruction("LMARGIN = 'set lmargin at screen 0.06; set rmargin at screen 0.47'");
+  myICPlot.addInstruction("RMARGIN = 'set lmargin at screen 0.53; set rmargin at screen 0.95; set ytics scale 0; set format y ""'");
 
   myICPlot.addInstruction("set multiplot layout 2,2 columnsfirst");
 
@@ -413,20 +413,17 @@ int main()
 
   myICPlot.addInstruction("eval set_key(1,'(a) Initial phases responsible for energy bunching')");
   myICPlot.addInstruction("@TMARGIN; @LMARGIN");
-  myICPlot.addInstruction("plot 'icbunch.dat' index 0 using 1:2 w l ls 3 notitle, \\"); 
-  myICPlot.addInstruction("'icbunch.dat' index 0 using (-$1):2 w l ls 3 notitle");
+  myICPlot.addInstruction("plot 'icbunch.dat' index 0 using 1:2 w l ls 3 notitle"); 
   myICPlot.addInstruction("unset label 1");
 
   myICPlot.addInstruction("eval set_key(2,'(b) Initial velocities XZ responsible for energy bunching')");
   myICPlot.addInstruction("@BMARGIN; @LMARGIN");
-  myICPlot.addInstruction("plot 'icbunch.dat' index 1 using 1:2 w l ls 3  notitle, \\");
-  myICPlot.addInstruction("'icbunch.dat' index 1 using (-$1):2 w l ls 3  notitle");
+  myICPlot.addInstruction("plot 'icbunch.dat' index 1 using 1:2 w l ls 3  notitle");
   myICPlot.addInstruction("unset label 2");
 
   myICPlot.addInstruction("eval set_key(3,'(c) Initial velocities Y responsible for energy bunching')");
   myICPlot.addInstruction("@TMARGIN; @RMARGIN"); 
-  myICPlot.addInstruction("plot 'icbunch.dat' index 2 using 1:2 w l ls 3  notitle, \\");
-  myICPlot.addInstruction("'icbunch.dat' index 2 using (-$1):2 w l ls 3  notitle");
+  myICPlot.addInstruction("plot 'icbunch.dat' index 2 using 1:2 w l ls 3  notitle");
   myICPlot.addInstruction("unset label 3");
 
   myICPlot.addInstruction("unset multiplot");
