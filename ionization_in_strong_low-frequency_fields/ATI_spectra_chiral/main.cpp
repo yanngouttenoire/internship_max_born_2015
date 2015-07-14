@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=50, nVYPerpBirth=1, nVZPrimPerpBirth=50;
+int nFieldBirth=500, nVYPerpBirth=1000, nVZPrimPerpBirth=500;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -42,8 +42,8 @@ typedef double state_type[6];
 state_type x;
 
 //We select which electrostatic potential we want to use
-//#define MOLECULE
-#define HYDROGEN
+#define MOLECULE
+//#define HYDROGEN
 
 #ifdef HYDROGEN
 typedef Hydrogen<state_type> potential_type;
