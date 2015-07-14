@@ -23,6 +23,8 @@ class ElectricField
   unsigned int cyclesNbr;
   double phase;
   double ellipticity;
+  //Ponderomotive energy
+  double ponderomotiveEnergy;
 
   //Constructor
   ElectricField(double ellipticity=0.);

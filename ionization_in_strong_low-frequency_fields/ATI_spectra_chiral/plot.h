@@ -22,6 +22,7 @@ class Plot
   std::vector<std::string> keys;
   std::vector<std::string> instructions;
   bool isKeysOn;
+  std::string loadFile;
   
   Plot(){isKeysOn=false;}
 
@@ -51,6 +52,12 @@ class Plot
       keys.push_back(ostringKey.str());
     }
 
+
+  void setLoadFile(std::string _loadFile_)
+  {
+    loadFile=_loadFile_;
+  }
+
   void addKey(std::string key)
   {
     keys.push_back(key);
@@ -60,7 +67,7 @@ class Plot
   void addInstruction(std::string instruction);
 
   //We display the spectra with gnuplot
-  void gnuplot();
+  void gnuplot(std::string gnuFileName, std::string output);
 
 
 };

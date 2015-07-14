@@ -26,6 +26,7 @@ ElectricField::ElectricField(double ellipticity)
   phase=0.;
   pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
   opticalCycle=2.*M_PI/pulsation;
+  ponderomotiveEnergy=pow(fieldAmpl/pulsation,2)/4.;
 }
 
 //The electric field is a pulse whose full duration at half maximum contains 2 optical cycles

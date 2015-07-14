@@ -10,34 +10,15 @@ void Plot::addInstruction(std::string instruction)
 
 
 //We display the spectra with gnuplot
-void Plot::gnuplot()
+void Plot::gnuplot(string gnuFileName, string output)
 {
 
-  fstream gnuFile("data.gnu", ios::out);
+  fstream gnuFile(gnuFileName.c_str(), ios::out);
 
-  gnuFile<<"set output 'spectrum.eps'"<<endl;
-
-//Line style for axes, grey color
-  gnuFile<<"set style line 100 linecolor rgb '#808080'"<<endl;
-
-//Line style for grid, dashed, grey color
-  gnuFile<<"set style line 101 linecolor rgb '#808080' linetype 0 "<<endl;
-
-//Line styles for curves
-//RED
-  gnuFile<<"set style line 1 lc rgb '#A00000' pt 6 ps 1 lt 1 lw 2"<<endl;
-//GREEN-BLUE (cyan) (Complementary Color)
-  gnuFile<<"set style line 2 lc rgb '#00A0A0' pt 6 ps 1 lt 1 lw 2"<<endl;
-
-//GREEN
-  gnuFile<<"set style line 3 lc rgb '#00A000' pt 6 ps 1 lt 1 lw 2"<<endl;
-//RED-BLUE (purple) (Complementary Color)
-  gnuFile<<"set style line 6 lc rgb '#A000A0' pt 6 ps 1 lt 1 lw 2"<<endl;
-
-//BLUE
-  gnuFile<<"set style line 4 lc rgb '#0000A0' pt 6 ps 1 lt 1 lw 2"<<endl; 
-//RED-GREEN (gold) (Complementary Color)
-  gnuFile<<"set style line 5 lc rgb '#A0A000' pt 6 ps 1 lt 1 lw 2"<<endl;
+  gnuFile<<"set output '"<<output<<"'"<<endl;
+  //We load a file with some gnuplot intructions already written
+  gnuFile<<"load '"<<loadFile<<"'"<<endl;
+  
 
   vector<string>::iterator it;
   if(isKeysOn==true)
@@ -70,6 +51,9 @@ void Plot::gnuplot()
     }
 
   gnuFile.close();
-  system("gnuplot data.gnu && evince spectrum.eps &");
+  
+  std::ostringstream shell;
+  shell<<"gnuplot "<<gnuFileName<<" && evince "<<output<<" &";
+  system((shell.str()).c_str());
 
 }
