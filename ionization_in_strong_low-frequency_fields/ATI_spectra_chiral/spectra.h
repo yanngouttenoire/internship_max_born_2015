@@ -130,7 +130,7 @@ Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, El
   energyUnit=27.2;
   
   binsWidthPhase=0.1;
-  binsWidthVelocity=0.01;
+  binsWidthVelocity=0.001;
 }
 
   //We return a bool which tell us if a trajectory has a good profile

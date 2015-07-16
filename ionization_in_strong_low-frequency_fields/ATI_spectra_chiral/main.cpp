@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=500, nVYPerpBirth=1000, nVZPrimPerpBirth=500;
+int nFieldBirth=50, nVYPerpBirth=100, nVZPrimPerpBirth=50;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -82,7 +82,7 @@ bool isWeightTooSmall;
 double binsWidthEnergy=0.1;
 
 //Ellipticity
-double ellipticity=0.;
+double ellipticity=0.1;
 
 //Angle between velocity vector and field polarization within which we detect electrons
 double angleDetection=180.;
