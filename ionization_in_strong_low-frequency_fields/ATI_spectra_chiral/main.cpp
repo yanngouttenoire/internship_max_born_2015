@@ -54,7 +54,7 @@ int weightTooSmallNbr=0;
 
 //We declare runge kutta error, its max allowed value, and the desired error min and max
 double error;
-double desiredErrorMax=1E-14;
+double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
@@ -147,26 +147,26 @@ for(int i=1; i<=3; i++)
           //We set the ionization time
 if(i==1)
 {
-	  myIC.tBirth=2.45156;
+	  myIC.tBirth=6./myField.pulsation*M_PI/180.;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.135;
+	  myIC.vYPerpBirth=0.13;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
 
 if(i==2)
 {
-	  myIC.tBirth=2.45156;
+	  myIC.tBirth=6./myField.pulsation*M_PI/180.;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.1375;
+	  myIC.vYPerpBirth=0.13;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
 if(i==3)
 {
-	  myIC.tBirth=2.45156;
+	  myIC.tBirth=7./myField.pulsation*M_PI/180.;
 	  myIC.setFieldBirth();
-	  myIC.vYPerpBirth=0.140;
+	  myIC.vYPerpBirth=0.13;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
           myIC.setWeightIonization();
 }
@@ -298,8 +298,7 @@ dataFile<<" "<<endl;
 //Specific to the article eV
    myPlot.addInstruction("set xlabel 'Z' offset 0,1");
    myPlot.addInstruction("set ylabel 'Y'");
-//Specific to the article 8
-   //myPlot.addInstruction("set xrange [0:8]");
+
    myPlot.addInstruction("set xtics offset 0,0.3");
    myPlot.addInstruction("set key on outside bmargin");
    myPlot.addInstruction("set multiplot  layout 2, 2");
@@ -307,28 +306,29 @@ dataFile<<" "<<endl;
    myPlot.addInstruction("set style line 1 lc rgb '#db0000' pt 6 ps 1 lt 1 lw 0.1 "); //red
    myPlot.addInstruction("set style line 2 lc rgb '#062be5' pt 6 ps 1 lt 1 lw 2 "); //blue '#0060ad'
  
-   //myPlot.setPlotType("plot");
-   //myPlot.addPlot("'data.dat' index 0 using 3:2 w l ls 1 title 'Photo-electron trajectories, errorMax=1E-6'");
-
-
 
 std::ostringstream traj0;
 traj0<<"plot 'data.dat' index 0 using 3:2 w l ls 1 title '(a) tBirth="<<tBirth[0]<<", vPerp="<<vPerpBirth[0]<<", asymptEnergy="<<asymptEnergy[0]*37.3<<"(eV)'";
 std::ostringstream traj1;
-traj1<<"plot 'data.dat' index 1 using 3:2 w l ls 1 title '(b) tBirth="<<tBirth[1]<<", vPerp="<<vPerpBirth[1]<<", asymptEnergy="<<asymptEnergy[1]*37.3<<"(eV)'";
-std::ostringstream traj2;
-traj2<<"plot 'data.dat' index 2 using 3:2 w l ls 1 title '(c) tBirth="<<tBirth[2]<<", vPerp="<<vPerpBirth[2]<<", asymptEnergy="<<asymptEnergy[2]*37.3<<"(eV)'";
 
+traj1<<"plot 'data.dat' index 0 using 7:3 w l ls 1 title '(b) tBirth="<<tBirth[1]<<", vPerp="<<vPerpBirth[1]<<", asymptEnergy="<<asymptEnergy[1]*37.3<<"(eV)'";
+std::ostringstream traj2;
+
+traj2<<"plot 'data.dat' index 0 using 7:5 w l ls 1 title '(c) tBirth="<<tBirth[2]<<", vPerp="<<vPerpBirth[2]<<", asymptEnergy="<<asymptEnergy[2]*37.3<<"(eV)'";
+//traj2<<"plot 'data.dat' index 2 using 3:2 w l ls 1 title '(c) tBirth="<<tBirth[2]<<", vPerp="<<vPerpBirth[2]<<", asymptEnergy="<<asymptEnergy[2]*37.3<<"(eV)'";
+
+std::ostringstream traj4;
+traj4<<"plot 'data.dat' index 0 using 7:6 w l ls 1 notitle ";
 
    myPlot.addInstruction(traj0.str());
 
    myPlot.addInstruction(traj1.str());
+   
 
+//myPlot.addInstruction("plot 'data.dat' index 0 using 7:8 w l ls 1 title 'laser field'");
+myPlot.addInstruction(traj4.str());
+  
    myPlot.addInstruction(traj2.str());
-
-   myPlot.addInstruction("plot 'data.dat' index 0 using 7:8 w l ls 1 title 'laser field'");
-   /*myPlot.addInstruction("plot 'data.dat' index 4 using 3:2 w l ls 1 title 'errorMax=1E-12'");
-   myPlot.addInstruction("plot 'data.dat' index 5 using 3:2 w l ls 1 title 'errorMax=1E-14'");*/
   
    myPlot.addInstruction("unset multiplot");
 
