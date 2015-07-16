@@ -215,7 +215,8 @@ void Spectra<state_type>::storeIC(const state_type& x, const double& t, const do
   int rangeVXZ=int(vXZPerp/binsWidthVelocity);
   int rangeVY=int(vYPerp/binsWidthVelocity);
     
-if(energy>1.2 && energy<2.)
+//if(energy>1.2 && energy<2.)
+if(energy>0.1 && energy<0.45)
 {
   insertInMap(initialPhase, rangePhase, weightIonization);
   insertInMap(initialVXZ, rangeVXZ, weightIonization);
