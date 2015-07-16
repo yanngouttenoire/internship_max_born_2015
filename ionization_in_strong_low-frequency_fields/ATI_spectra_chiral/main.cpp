@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=500, nVYPerpBirth=1000, nVZPrimPerpBirth=500;
+int nFieldBirth=10000, nVYPerpBirth=1, nVZPrimPerpBirth=10000;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -42,8 +42,8 @@ typedef double state_type[6];
 state_type x;
 
 //We select which electrostatic potential we want to use
-#define MOLECULE
-//#define HYDROGEN
+//#define MOLECULE
+#define HYDROGEN
 
 #ifdef HYDROGEN
 typedef Hydrogen<state_type> potential_type;
@@ -85,7 +85,7 @@ double binsWidthEnergy=0.1;
 double ellipticity=0.;
 
 //Angle between velocity vector and field polarization within which we detect electrons
-double angleDetection=180.;
+double angleDetection=5.;
 
 
 //FUNCTION MAIN
@@ -195,7 +195,7 @@ int main()
 		  mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
 		  //We wait long enough for the end of the pulse
-		  if(t>4.*myField.cyclesNbr*myField.opticalCycle)
+		  if(t>3.*myField.cyclesNbr*myField.opticalCycle)
 		    stopStepper=true;
 
 		  //We check if the step is no too small (otherwise the simulation will take too much time)

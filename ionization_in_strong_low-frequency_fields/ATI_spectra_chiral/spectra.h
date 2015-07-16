@@ -164,8 +164,8 @@ bool Spectra<state_type>::hasTrajectoryGoodProfile(const state_type& x, const do
 template<typename state_type>
 detectionType Spectra<state_type>::whichProfile(const state_type& x, const double& t)
 {
- //if(x[2]*myField('Z',myIC->tBirth)>=0)
- if(x[1]>=0)
+ if(x[2]*myField('Z',myIC->tBirth)>=0)
+ //if(x[1]>=0)
  return UP;
  else
  return DOWN;
@@ -215,7 +215,7 @@ void Spectra<state_type>::storeIC(const state_type& x, const double& t, const do
   int rangeVXZ=int(vXZPerp/binsWidthVelocity);
   int rangeVY=int(vYPerp/binsWidthVelocity);
     
-if(energy>0.15 && energy<0.80)
+if(energy>1.2 && energy<2.)
 {
   insertInMap(initialPhase, rangePhase, weightIonization);
   insertInMap(initialVXZ, rangeVXZ, weightIonization);
