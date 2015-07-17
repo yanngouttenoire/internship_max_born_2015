@@ -129,7 +129,7 @@ Spectra<state_type>::Spectra(ElectrostaticPotential<state_type> *myPotential, El
   angleTooLargeNbr=0;
   energyUnit=27.2;
   
-  binsWidthPhase=0.1;
+  binsWidthPhase=0.05;
   binsWidthVelocity=0.001;
 }
 
