@@ -147,7 +147,7 @@ for(int i=1; i<=3; i++)
           //We set the ionization time
 if(i==1)
 {
-	  myIC.tBirth=6./myField.pulsation*M_PI/180.;
+	  myIC.tBirth=5.5/myField.pulsation*M_PI/180.;
 	  myIC.setFieldBirth();
 	  myIC.vYPerpBirth=0.13;
 	  myIC.setVXZPerpBirth(iVZPrimPerpBirth, nVZPrimPerpBirth);
@@ -196,10 +196,11 @@ if(i==3)
 	      //We call the function which solve eq of the motion
 	      mySolve.controlledRK5(mySystem,x,t,step,error,desiredErrorMin,desiredErrorMax);
 
-dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField('Z',t)<<endl;	
+dataFile<<x[0]<<" "<<x[1]<<" "<<x[2]<<" "<<x[3]<<" "<<x[4]<<" "<<x[5]<<" "<<t<<" "<<myField('Z',t)<<" "<<sqrt(x[2]*x[2]+x[3]*x[3])<<endl;	
              //If the electron is always bonded to the attractor, we do not consider the event 
 	      //if(t>10.*myField.cyclesNbr*myField.opticalCycle)
-if(t>2.*myField.cyclesNbr*myField.opticalCycle)                
+//if(t>2.*myField.cyclesNbr*myField.opticalCycle)          
+if(t>900.)
 stopStepper=true;
 
 /*if( sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])>580 )
@@ -311,14 +312,14 @@ std::ostringstream traj0;
 traj0<<"plot 'data.dat' index 0 using 3:2 w l ls 1 title '(a) tBirth="<<tBirth[0]<<", vPerp="<<vPerpBirth[0]<<", asymptEnergy="<<asymptEnergy[0]*37.3<<"(eV)'";
 std::ostringstream traj1;
 
-traj1<<"plot 'data.dat' index 0 using 7:3 w l ls 1 title '(b) tBirth="<<tBirth[1]<<", vPerp="<<vPerpBirth[1]<<", asymptEnergy="<<asymptEnergy[1]*37.3<<"(eV)'";
+traj1<<"plot 'data.dat' index 0 using 7:3 w l ls 1 title '(b) z(t)'";
 std::ostringstream traj2;
 
-traj2<<"plot 'data.dat' index 0 using 7:5 w l ls 1 title '(c) tBirth="<<tBirth[2]<<", vPerp="<<vPerpBirth[2]<<", asymptEnergy="<<asymptEnergy[2]*37.3<<"(eV)'";
+traj2<<"plot 'data.dat' index 0 using 7:5 w l ls 1 title '(c) vPerp(t)'";
 //traj2<<"plot 'data.dat' index 2 using 3:2 w l ls 1 title '(c) tBirth="<<tBirth[2]<<", vPerp="<<vPerpBirth[2]<<", asymptEnergy="<<asymptEnergy[2]*37.3<<"(eV)'";
 
 std::ostringstream traj4;
-traj4<<"plot 'data.dat' index 0 using 7:6 w l ls 1 notitle ";
+traj4<<"plot 'data.dat' index 0 using 7:9 w l ls 1 title '(d) radial distance(t)'";
 
    myPlot.addInstruction(traj0.str());
 

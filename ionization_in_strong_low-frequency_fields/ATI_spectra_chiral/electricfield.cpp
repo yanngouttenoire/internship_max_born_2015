@@ -44,7 +44,7 @@ case 'Y' :
 return 0.;
 
 case 'Z' :
-return exp(-2.*log(2.)*pow(t/cyclesNbr/opticalCycle,2))*fieldAmpl*cos(pulsation*t+phase);
+return exp(-2.*log(2.)*pow(t/(cyclesNbr)/opticalCycle,2))*fieldAmpl*cos(pulsation*t+phase);
 }
 
 }
