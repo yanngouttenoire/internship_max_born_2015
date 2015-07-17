@@ -167,7 +167,8 @@ double IC<state_type>::getWeightIonization(const double& t, const double& vPerp,
     return 4./field*exp(-2.*pow(2.*myPotential->IP,3./2.)/3./field)*fabs(vPerp)/field*exp(-pow(2.*myPotential->IP,1./2.)*vPerp*vPerp/field);
   if(i==2)
   //REF: J. Liu, Classical Trajectory Perspective of Atomic Ionization in Strong Laser Fields
-    return 1./field/field*exp(-2.*pow((2.*myPotential->IP+vPerp*vPerp),3./2.)/3/field)*vPerp/sqrt(1+vPerp*vPerp/2./myPotential->IP);
+   // return 1./field/field*exp(-2.*pow((2.*myPotential->IP+vPerp*vPerp),3./2.)/3/field)*vPerp/sqrt(1+vPerp*vPerp/2./myPotential->IP);
+return 4./field*exp(-2.*pow(2.*myPotential->IP,3./2.)/3./field)/field*exp(-pow(2.*myPotential->IP,1./2.)*vPerp*vPerp/field);
 }
 
 //Compute the maximum ionization rate

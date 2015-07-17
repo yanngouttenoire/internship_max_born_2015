@@ -82,7 +82,7 @@ bool isWeightTooSmall;
 double binsWidth=0.1;
 
 //Ellipticity
-double ellipticity=-0.1;
+double ellipticity=0.1;
 
 //Angle between velocity vector and field polarization within which we detect electrons
 double angleDetection=180.;
