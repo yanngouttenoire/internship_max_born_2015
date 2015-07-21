@@ -87,7 +87,38 @@ lebedev_table.close();
 
 else 
 std::cerr << "Error when trying to open lebedev_table" << std::endl;
+std::cout<<xi<<" "<<yi<<" "<<zi<<std::endl;
 
+if(xi==0 && yi==0 && zi==1)
+{
+X[1]=bondLength[1];
+Y[1]=0.;
+Z[1]=0.;
+
+X[2]=0.;
+Y[2]=0.;
+Z[2]=-bondLength[2];
+
+X[3]=0.;
+Y[3]=bondLength[3];
+Z[3]=0.;
+}
+if(xi==0 && yi==0 && zi==-1)
+{
+X[1]=bondLength[1];
+Y[1]=0.;
+Z[1]=0.;
+
+X[2]=0.;
+Y[2]=0.;
+Z[2]=bondLength[2];
+
+X[3]=0.;
+Y[3]=-bondLength[3];
+Z[3]=0.;
+}
+if(xi!=0 || yi!=0)
+{
 X[1]=bondLength[1]*yi/sqrt(xi*xi+yi*yi);
 Y[1]=bondLength[1]*xi;
 Z[1]=-bondLength[1]*xi*zi/sqrt(xi*xi+yi*yi);
@@ -99,7 +130,7 @@ Z[2]=-bondLength[2]*yi*zi/sqrt(xi*xi+yi*yi);
 X[3]=0.;
 Y[3]=bondLength[3]*zi;
 Z[3]=bondLength[3]*sqrt(xi*xi+yi*yi);
-
+}
 }
 
 

@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=50, nVYPerpBirth=10, nVZPrimPerpBirth=50;
+int nFieldBirth=10, nVYPerpBirth=10, nVZPrimPerpBirth=10;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -70,7 +70,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=5.;
+double weightThresholdRatio=5000.;
 double weightThreshold;
 
 //We declare boolean controls
@@ -150,7 +150,7 @@ int main()
 #ifdef _OPENMP
   vector<Spectra<state_type> > mySpectra(threadsNbrMax,Spectra<state_type>(myPotential, myField, &myIC, angleDetection, binsWidth));
 #endif
-
+     
 #pragma omp parallel for schedule(dynamic) collapse(3) private(x,t,error,step,stopStepper,isStepTooSmall,isWeightTooSmall) firstprivate(myIC,desiredErrorMax,desiredErrorMin, mySystem) 
 
   for(iFieldBirth=1; iFieldBirth<=nFieldBirth; iFieldBirth++)
@@ -160,7 +160,7 @@ int main()
 
 	  for(iVZPrimPerpBirth=0; iVZPrimPerpBirth<=nVZPrimPerpBirth; iVZPrimPerpBirth++)
 	    {
-
+   
 	      /**************************We set the initial conditions********************************/
 	      myIC.setTBirth(iFieldBirth, nFieldBirth);
 	      myIC.setFieldBirth();
@@ -188,7 +188,8 @@ int main()
 
 	      //We update the step step
 	      step=0.0001; 
-
+	      
+            
 	      for(int nTraj=0; !stopStepper ; nTraj++)
 		{ 
 		  //We call the function which solve eq of the motion
@@ -205,6 +206,7 @@ int main()
 		      isStepTooSmall=true;
 		    }
 		}
+       
             
 	      if(isStepTooSmall==true)
 		stepTooSmallNbr+=1;
@@ -220,7 +222,7 @@ int main()
    mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 #endif
 	     
-	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500==0)
+	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500==-20)
 		{
 		#pragma omp critical
 		 {
@@ -285,6 +287,7 @@ int main()
 
 /*******We merge all the data binning computed by each thread and write it in a file***********************************/
 
+
 #ifdef _OPENMP
     Spectra<state_type> mySpectrum(myPotential, myField, &myIC, angleDetection, binsWidth);
     //We merge all the data binning computed by each thread
@@ -293,11 +296,12 @@ int main()
 
    //We open a file with a view to writing in it
    std::ostringstream dataFileString;
-  dataFileString<<"leb_orient_"<<myOrientation<<".dat"<<endl;;
+   dataFileString<<"leb_orient_"<<myOrientation<<".dat";
    fstream dataFile(dataFileString.str().c_str(),ios::out);
 
    //We write the data binning in the file "dataFile"
    mySpectrum.writeDataBinning(dataFile);
+
 
 /*****************************************************PLOT*****************************************************/
 /****************************************We build the key of the plot******************************************/
