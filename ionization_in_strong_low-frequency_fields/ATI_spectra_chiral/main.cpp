@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=10, nVYPerpBirth=10, nVZPrimPerpBirth=10;
+int nFieldBirth=200, nVYPerpBirth=500, nVZPrimPerpBirth=250;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -52,7 +52,6 @@ double IP=0.5792;
 
 #ifdef MOLECULE
 typedef Molecule<state_type> potential_type;
-//moleculeOrientation myOrientation(X3);
 int myOrientation=3;
 #endif
 
@@ -71,7 +70,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=1000.;
+double weightThresholdRatio=5.;
 double weightThreshold;
 
 //We declare boolean controls
@@ -80,7 +79,7 @@ bool isStepTooSmall;
 bool isWeightTooSmall;
 
 //Bins width
-double binsWidth=0.01;
+double binsWidth=0.05;
 
 //Ellipticity
 double ellipticity=0.1;
