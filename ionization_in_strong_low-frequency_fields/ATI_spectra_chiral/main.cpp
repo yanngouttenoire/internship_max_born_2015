@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=200, nVYPerpBirth=500, nVZPrimPerpBirth=250;
+int nFieldBirth=40, nVYPerpBirth=200, nVZPrimPerpBirth=200;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
