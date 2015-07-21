@@ -292,7 +292,9 @@ int main()
 #endif
 
    //We open a file with a view to writing in it
-   fstream dataFile("data_X3Z2.dat",ios::out);
+   std::ostringstream dataFileStream;
+   dataFileStream<<"leb_orient_"<<myPotential->myOrientation<<".dat";
+   fstream dataFile(dataFileStream.str().c_str(),ios::out);
 
    //We write the data binning in the file "dataFile"
    mySpectrum.writeDataBinning(dataFile);
