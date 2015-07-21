@@ -81,10 +81,6 @@ template<typename state_type> class Molecule : public ElectrostaticPotential<sta
   int myOrientation;
 
   //Nuclei charges and covalent bond length
-  //For orientation 'W'
-  double c[4]; 
-  double l[4]; 
-  //For others orientations (1,2,3 means the atoms respectively along axis x,y,z; 0 is the one at the origin)
   double charge[4];
   double bondLength[4]; 
   //Some variables
@@ -120,14 +116,14 @@ template<typename state_type>
 Molecule<state_type>::Molecule(moleculeOrientation toBeRemoved): toBeRemoved(toBeRemoved)
 {
   //Nuclei charges
-  c[0]=0.4;
-  c[1]=0.2;
-  c[2]=0.2;
-  c[3]=0.2;
+  charge[0]=0.4;
+  charge[1]=0.2;
+  charge[2]=0.2;
+  charge[3]=0.2;
   //Covalent bond length
-  l[1]=2.0;
-  l[2]=1.0;
-  l[3]=3.0;
+  bondLength[1]=2.0;
+  bondLength[2]=1.0;
+  bondLength[3]=3.0;
   setLebedevOrientation(3);
 
   //Ionization potential
@@ -202,12 +198,6 @@ template<typename state_type>
 void Molecule<state_type>::preparePotential(const state_type &x)
 {
 
-//  inverseRadialDistanceCube[0] = charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.);
-//  inverseRadialDistanceCube[1] = charge[1]/pow((x[0]-bondLength[1])*(x[0]-bondLength[1])+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
-//  inverseRadialDistanceCube[2] = charge[2]/pow(x[0]*x[0]+(x[1]-bondLength[2])*(x[1]-bondLength[2])+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
-//  inverseRadialDistanceCube[3] = charge[3]/pow(x[0]*x[0]+x[1]*x[1]+(x[2]-bondLength[3])*(x[2]-bondLength[3])+this->softParameter*this->softParameter,3./2.) ;
-//  sumInverseRadialDistanceCube = inverseRadialDistanceCube[0]+inverseRadialDistanceCube[1]+inverseRadialDistanceCube[2]+inverseRadialDistanceCube[3];
-
   inverseRadialDistanceCube[0] = charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],3./2.);
   inverseRadialDistanceCube[1] = charge[1]/pow((x[0]-X[1])*(x[0]-X[1])+(x[1]-Y[1])*(x[1]-Y[1])+(x[2]-Z[1])*(x[2]-Z[1]),3./2.) ;
   inverseRadialDistanceCube[2] = charge[2]/pow((x[0]-X[2])*(x[0]-X[2])+(x[1]-Y[2])*(x[1]-Y[2])+(x[2]-Z[2])*(x[2]-Z[2]),3./2.) ;
@@ -222,18 +212,6 @@ template<typename state_type>
 double Molecule<state_type>::operator()(char component, const state_type &x)
 {
 
-//  switch(component)
-//    {
-//    case 'X' :
-//      return -x[0]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[1]*bondLength[1];
-
-//    case 'Y' :
-//      return -x[1]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[2]*bondLength[2];
-
-//    case 'Z' :
-//      return -x[2]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[3]*bondLength[3];
-//    }
-//    
       switch(component)
     {
     case 'X' :
@@ -255,8 +233,6 @@ template<typename state_type>
 double Molecule<state_type>::potentialEnergy(const state_type& x)
 {
 
-//  return -charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,1./2.)-charge[1]/pow((x[0]-bondLength[1])*(x[0]-bondLength[1])+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,1./2.)-charge[2]/pow(x[0]*x[0]+(x[1]-bondLength[2])*(x[1]-bondLength[2])+x[2]*x[2]+this->softParameter*this->softParameter,1./2.)-charge[3]/pow(x[0]*x[0]+x[1]*x[1]+(x[2]-bondLength[3])*(x[2]-bondLength[3])+this->softParameter*this->softParameter,1./2.);
-//  
     return -charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],1./2.)-charge[1]/pow((x[0]-X[1])*(x[0]-X[1])+(x[1]-Y[1])*(x[1]-Y[1])+(x[2]-Z[1])*(x[2]-Z[1]),1./2.)-charge[2]/pow((x[0]-X[2])*(x[0]-X[2])+(x[1]-Y[2])*(x[1]-Y[2])+(x[2]-Z[2])*(x[2]-Z[2]),1./2.)-charge[3]/pow((x[0]-X[3])*(x[0]-X[3])+(x[1]-Y[3])*(x[1]-Y[3])+(x[2]-Z[3])*(x[2]-Z[3]),1./2.);
 
 }
