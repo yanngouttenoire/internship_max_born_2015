@@ -52,7 +52,7 @@ double IP=0.5792;
 
 #ifdef MOLECULE
 typedef Molecule<state_type> potential_type;
-moleculeOrientation myOrientation(X3Z2);
+int myOrientation=4;
 #endif
 
 //We declare a variable for the step in controlledRK5, the min allowed value
@@ -108,7 +108,7 @@ int main()
 #endif
 
 #ifdef MOLECULE
-    myPotential->setMoleculeOrientation(myOrientation);
+    myPotential->setLebedevOrientation(myOrientation);
 #endif
   
   //Contains the electric field properties
@@ -237,7 +237,7 @@ int main()
 		  myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
 		  myDisplay("ellipticity", myField.ellipticity);
 #ifdef MOLECULE
-                  myDisplay("Molecule orientation", myPotential->myOrientation.myString);
+                  myDisplay("Molecule orientation", myPotential->myOrientation);
 		  myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
 		  myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif		  
@@ -304,7 +304,7 @@ int main()
   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
                 
 #ifdef MOLECULE
-  myPlot.addKey("Molecule orientation",myPotential->myOrientation.myString);
+  myPlot.addKey("Molecule orientation",myPotential->myOrientation);
   myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
   myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif
