@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=500, nVYPerpBirth=1000, nVZPrimPerpBirth=500;
+int nFieldBirth=50, nVYPerpBirth=10, nVZPrimPerpBirth=50;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -52,7 +52,7 @@ double IP=0.5792;
 
 #ifdef MOLECULE
 typedef Molecule<state_type> potential_type;
-moleculeOrientation myOrientation(X3);
+int myOrientation=3;
 #endif
 
 //We declare a variable for the step in controlledRK5, the min allowed value
@@ -82,7 +82,7 @@ bool isWeightTooSmall;
 double binsWidth=0.01;
 
 //Ellipticity
-double ellipticity=-0.1;
+double ellipticity=0.1;
 
 //Angle between velocity vector and field polarization within which we detect electrons
 double angleDetection=180.;
@@ -220,7 +220,7 @@ int main()
    mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 #endif
 	     
-	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%50000==0)
+	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%500==0)
 		{
 		#pragma omp critical
 		 {
@@ -237,7 +237,7 @@ int main()
 		  myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
 		  myDisplay("ellipticity", myField.ellipticity);
 #ifdef MOLECULE
-                  myDisplay("Molecule orientation", myPotential->myOrientation.myString);
+                  myDisplay("Molecule orientation", myPotential->myOrientation);
 		  myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
 		  myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif		  
@@ -292,7 +292,9 @@ int main()
 #endif
 
    //We open a file with a view to writing in it
-   fstream dataFile("data.dat",ios::out);
+   std::ostringstream dataFileString;
+  dataFileString<<"leb_orient_"<<myOrientation<<".dat"<<endl;;
+   fstream dataFile(dataFileString.str().c_str(),ios::out);
 
    //We write the data binning in the file "dataFile"
    mySpectrum.writeDataBinning(dataFile);
@@ -304,7 +306,7 @@ int main()
   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
                 
 #ifdef MOLECULE
-  myPlot.addKey("Molecule orientation",myPotential->myOrientation.myString);
+  myPlot.addKey("Molecule orientation",myPotential->myOrientation);
   myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
   myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif
@@ -371,9 +373,9 @@ int main()
   
   //We consider electrons differently depending if they are detected in y>0 or y<0
   std::ostringstream plot1;
-  plot1<<"plot 'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %', \\";
+  plot1<<"plot '"<<dataFileString<<"' index 0 using 1:2 w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %', \\";
   std::ostringstream plot2;
-  plot2<<"'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
+  plot2<<"'"<<dataFileString<<"' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
 
   myPlot.addInstruction(plot1.str());
   myPlot.addInstruction(plot2.str());
