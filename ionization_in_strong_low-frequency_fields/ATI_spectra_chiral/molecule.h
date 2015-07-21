@@ -78,6 +78,7 @@ template<typename state_type> class Molecule : public ElectrostaticPotential<sta
 
   //We declare an orientation for the chiral molecule
   moleculeOrientation myOrientation;
+  int myOrientationL;
 
   //Nuclei charges and covalent bond length
   //For orientation 'W'
@@ -89,6 +90,9 @@ template<typename state_type> class Molecule : public ElectrostaticPotential<sta
   //Some variables
   double inverseRadialDistanceCube[4];
   double sumInverseRadialDistanceCube;
+  double X[4], Y[4], Z[4];
+  double xi,yi,zi;
+  double lebedevWeight;
 
   //Constructor
   Molecule(moleculeOrientation myOrientation=moleculeOrientation(W));
@@ -101,6 +105,8 @@ template<typename state_type> class Molecule : public ElectrostaticPotential<sta
   
   //Method which sets the molecule orientation
   void setOrientation(moleculeOrientation myOrientation);
+  
+  void setLebedevOrientation(int myOrientationL);
 
   //Method which builds the molecule and sets the molecule orientation
   void setMoleculeOrientation(moleculeOrientation myOrientation);
@@ -117,7 +123,7 @@ template<typename state_type> class Molecule : public ElectrostaticPotential<sta
 };
 
 template<typename state_type>
-Molecule<state_type>::Molecule(moleculeOrientation myOrientation) : myOrientation(myOrientation)
+Molecule<state_type>::Molecule(moleculeOrientation myOrientation): myOrientation(myOrientation)
 {
   //Nuclei charges
   c[0]=0.4;
@@ -128,140 +134,90 @@ Molecule<state_type>::Molecule(moleculeOrientation myOrientation) : myOrientatio
   l[1]=2.0;
   l[2]=1.0;
   l[3]=3.0;
-  
-  setMoleculeOrientation(myOrientation.myEnum);
+  setLebedevOrientation(3);
 
   //Ionization potential
   this->IP=0.32772257;
 }
 
-//Method which builds the molecule
+//
+
 template<typename state_type>
-void Molecule<state_type>::setMoleculeOrientation(moleculeOrientation _myOrientation_)
+void Molecule<state_type>::setLebedevOrientation(int _myOrientation_)
 {
-myOrientation=_myOrientation_;
-switch(myOrientation.myEnum)
- {
- case W :
-  charge[0]=c[0];
-  charge[1]=c[1];
-  charge[2]=c[2];
-  charge[3]=c[3];
-  bondLength[1]=l[1];
-  bondLength[2]=l[2];
-  bondLength[3]=l[3];
-  break;
- case X1 :
-  charge[0]=c[0];
-  charge[1]=c[1];
-  charge[2]=c[3];
-  charge[3]=c[2];
-  bondLength[1]=l[1];
-  bondLength[2]=l[3];
-  bondLength[3]=-l[2];
-  break;
- case X2 :
-  charge[0]=c[0];
-  charge[1]=c[1];
-  charge[2]=c[2];
-  charge[3]=c[3];
-  bondLength[1]=l[1];
-  bondLength[2]=-l[2];
-  bondLength[3]=-l[3];
-  break;
- case X3 :
-  charge[0]=c[0];
-  charge[1]=c[1];
-  charge[2]=c[3];
-  charge[3]=c[2];
-  bondLength[1]=l[1];
-  bondLength[2]=-l[3];
-  bondLength[3]=l[2];
-  break;
- case Y1 :
-  charge[0]=c[0];
-  charge[1]=c[3];
-  charge[2]=c[2];
-  charge[3]=c[1];
-  bondLength[1]=l[3];
-  bondLength[2]=l[2];
-  bondLength[3]=-l[1];
-  break;
- case Y2 :
-  charge[0]=c[0];
-  charge[1]=c[1];
-  charge[2]=c[2];
-  charge[3]=c[3];
-  bondLength[1]=-l[1];
-  bondLength[2]=l[2];
-  bondLength[3]=-l[3];
-  break;
- case Y3 :
-  charge[0]=c[0];
-  charge[1]=c[3];
-  charge[2]=c[2];
-  charge[3]=c[1];
-  bondLength[1]=-l[3];
-  bondLength[2]=l[2];
-  bondLength[3]=l[1];
-  break;
- case Z1 :
-  charge[0]=c[0];
-  charge[1]=c[2];
-  charge[2]=c[1];
-  charge[3]=c[3];
-  bondLength[1]=-l[2];
-  bondLength[2]=l[1];
-  bondLength[3]=l[3];
-  break;
- case Z2 :
-  charge[0]=c[0];
-  charge[1]=c[1];
-  charge[2]=c[2];
-  charge[3]=c[3];
-  bondLength[1]=-l[1];
-  bondLength[2]=-l[2];
-  bondLength[3]=l[3];
-  break;
- case Z3 :
-  charge[0]=c[0];
-  charge[1]=c[2];
-  charge[2]=c[1];
-  charge[3]=c[3];
-  bondLength[1]=l[2];
-  bondLength[2]=-l[1];
-  bondLength[3]=l[3];
-  break;
-  case X3Z2 :
-  charge[0]=c[0];
-  charge[1]=c[1];
-  charge[2]=c[3];
-  charge[3]=c[2];
-  bondLength[1]=-l[1];
-  bondLength[2]=l[3];
-  bondLength[3]=l[2];
-  break;
-  case X3Z3 :
-  charge[0]=c[0];
-  charge[1]=c[3];
-  charge[2]=c[1];
-  charge[3]=c[2];
-  bondLength[1]=-l[3];
-  bondLength[2]=-l[1];
-  bondLength[3]=l[2];
-  break;
- }  
+myOrientationL=_myOrientation_;
+std::ifstream lebedev_table("lebedev_table", std::ios::in);
+
+if(lebedev_table)  
+{      
+for(int i=1; i<=myOrientationL; i++)
+lebedev_table >> xi >> yi >> zi >> lebedevWeight;
+ 
+lebedev_table.close();
 }
 
+else 
+std::cerr << "Error when trying to open lebedev_table" << std::endl;
+std::cout<<xi<<" "<<yi<<" "<<zi<<std::endl;
+
+if(xi==0 && yi==0 && zi==1)
+{
+X[1]=bondLength[1];
+Y[1]=0.;
+Z[1]=0.;
+
+X[2]=0.;
+Y[2]=0.;
+Z[2]=-bondLength[2];
+
+X[3]=0.;
+Y[3]=bondLength[3];
+Z[3]=0.;
+}
+if(xi==0 && yi==0 && zi==-1)
+{
+X[1]=bondLength[1];
+Y[1]=0.;
+Z[1]=0.;
+
+X[2]=0.;
+Y[2]=0.;
+Z[2]=bondLength[2];
+
+X[3]=0.;
+Y[3]=-bondLength[3];
+Z[3]=0.;
+}
+if(xi!=0 || yi!=0)
+{
+X[1]=bondLength[1]*yi/sqrt(xi*xi+yi*yi);
+Y[1]=bondLength[1]*xi;
+Z[1]=-bondLength[1]*xi*zi/sqrt(xi*xi+yi*yi);
+
+X[2]=-bondLength[2]*xi/sqrt(xi*xi+yi*yi);
+Y[2]=bondLength[2]*yi;
+Z[2]=-bondLength[2]*yi*zi/sqrt(xi*xi+yi*yi);
+
+X[3]=0.;
+Y[3]=bondLength[3]*zi;
+Z[3]=bondLength[3]*sqrt(xi*xi+yi*yi);
+}
+}
 
 template<typename state_type>
 void Molecule<state_type>::preparePotential(const state_type &x)
 {
 
-  inverseRadialDistanceCube[0] = charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.);
-  inverseRadialDistanceCube[1] = charge[1]/pow((x[0]-bondLength[1])*(x[0]-bondLength[1])+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
-  inverseRadialDistanceCube[2] = charge[2]/pow(x[0]*x[0]+(x[1]-bondLength[2])*(x[1]-bondLength[2])+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
-  inverseRadialDistanceCube[3] = charge[3]/pow(x[0]*x[0]+x[1]*x[1]+(x[2]-bondLength[3])*(x[2]-bondLength[3])+this->softParameter*this->softParameter,3./2.) ;
+//  inverseRadialDistanceCube[0] = charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.);
+//  inverseRadialDistanceCube[1] = charge[1]/pow((x[0]-bondLength[1])*(x[0]-bondLength[1])+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
+//  inverseRadialDistanceCube[2] = charge[2]/pow(x[0]*x[0]+(x[1]-bondLength[2])*(x[1]-bondLength[2])+x[2]*x[2]+this->softParameter*this->softParameter,3./2.) ;
+//  inverseRadialDistanceCube[3] = charge[3]/pow(x[0]*x[0]+x[1]*x[1]+(x[2]-bondLength[3])*(x[2]-bondLength[3])+this->softParameter*this->softParameter,3./2.) ;
+//  sumInverseRadialDistanceCube = inverseRadialDistanceCube[0]+inverseRadialDistanceCube[1]+inverseRadialDistanceCube[2]+inverseRadialDistanceCube[3];
+
+  inverseRadialDistanceCube[0] = charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],3./2.);
+  inverseRadialDistanceCube[1] = charge[1]/pow((x[0]-X[1])*(x[0]-X[1])+(x[1]-Y[1])*(x[1]-Y[1])+(x[2]-Z[1])*(x[2]-Z[1]),3./2.) ;
+  inverseRadialDistanceCube[2] = charge[2]/pow((x[0]-X[2])*(x[0]-X[2])+(x[1]-Y[2])*(x[1]-Y[2])+(x[2]-Z[2])*(x[2]-Z[2]),3./2.) ;
+  inverseRadialDistanceCube[3] = charge[3]/pow((x[0]-X[3])*(x[0]-X[3])+(x[1]-Y[3])*(x[1]-Y[3])+(x[2]-Z[3])*(x[2]-Z[3]),3./2.) ;
   sumInverseRadialDistanceCube = inverseRadialDistanceCube[0]+inverseRadialDistanceCube[1]+inverseRadialDistanceCube[2]+inverseRadialDistanceCube[3];
 
 }
@@ -272,17 +228,30 @@ template<typename state_type>
 double Molecule<state_type>::operator()(char component, const state_type &x)
 {
 
-  switch(component)
+//  switch(component)
+//    {
+//    case 'X' :
+//      return -x[0]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[1]*bondLength[1];
+
+//    case 'Y' :
+//      return -x[1]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[2]*bondLength[2];
+
+//    case 'Z' :
+//      return -x[2]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[3]*bondLength[3];
+//    }
+//    
+      switch(component)
     {
     case 'X' :
-      return -x[0]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[1]*bondLength[1];
+      return -x[0]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[1]*X[1]+inverseRadialDistanceCube[2]*X[2]+inverseRadialDistanceCube[3]*X[3];
 
     case 'Y' :
-      return -x[1]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[2]*bondLength[2];
+      return -x[1]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[1]*Y[1]+inverseRadialDistanceCube[2]*Y[2]+inverseRadialDistanceCube[3]*Y[3];
 
     case 'Z' :
-      return -x[2]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[3]*bondLength[3];
+      return -x[2]*sumInverseRadialDistanceCube+inverseRadialDistanceCube[1]*Z[1]+inverseRadialDistanceCube[2]*Z[2]+inverseRadialDistanceCube[3]*Z[3];
     }
+
 
 
 }
@@ -292,7 +261,9 @@ template<typename state_type>
 double Molecule<state_type>::potentialEnergy(const state_type& x)
 {
 
-  return -charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,1./2.)-charge[1]/pow((x[0]-bondLength[1])*(x[0]-bondLength[1])+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,1./2.)-charge[2]/pow(x[0]*x[0]+(x[1]-bondLength[2])*(x[1]-bondLength[2])+x[2]*x[2]+this->softParameter*this->softParameter,1./2.)-charge[3]/pow(x[0]*x[0]+x[1]*x[1]+(x[2]-bondLength[3])*(x[2]-bondLength[3])+this->softParameter*this->softParameter,1./2.);
+//  return -charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,1./2.)-charge[1]/pow((x[0]-bondLength[1])*(x[0]-bondLength[1])+x[1]*x[1]+x[2]*x[2]+this->softParameter*this->softParameter,1./2.)-charge[2]/pow(x[0]*x[0]+(x[1]-bondLength[2])*(x[1]-bondLength[2])+x[2]*x[2]+this->softParameter*this->softParameter,1./2.)-charge[3]/pow(x[0]*x[0]+x[1]*x[1]+(x[2]-bondLength[3])*(x[2]-bondLength[3])+this->softParameter*this->softParameter,1./2.);
+//  
+    return -charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],1./2.)-charge[1]/pow((x[0]-X[1])*(x[0]-X[1])+(x[1]-Y[1])*(x[1]-Y[1])+(x[2]-Z[1])*(x[2]-Z[1]),1./2.)-charge[2]/pow((x[0]-X[2])*(x[0]-X[2])+(x[1]-Y[2])*(x[1]-Y[2])+(x[2]-Z[2])*(x[2]-Z[2]),1./2.)-charge[3]/pow((x[0]-X[3])*(x[0]-X[3])+(x[1]-Y[3])*(x[1]-Y[3])+(x[2]-Z[3])*(x[2]-Z[3]),1./2.);
 
 }
 

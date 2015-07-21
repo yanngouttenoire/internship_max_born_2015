@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=500, nVYPerpBirth=1000, nVZPrimPerpBirth=500;
+int nFieldBirth=5, nVYPerpBirth=5, nVZPrimPerpBirth=5;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -52,7 +52,8 @@ double IP=0.5792;
 
 #ifdef MOLECULE
 typedef Molecule<state_type> potential_type;
-moleculeOrientation myOrientation(X3);
+//moleculeOrientation myOrientation(X3);
+int myOrientation=3;
 #endif
 
 //We declare a variable for the step in controlledRK5, the min allowed value
@@ -70,7 +71,7 @@ double desiredErrorMax=1E-12;
 double desiredErrorMin=desiredErrorMax/10.;
 
 //We declare a minimum threshold value for the probability of ionization
-double weightThresholdRatio=5.;
+double weightThresholdRatio=1000.;
 double weightThreshold;
 
 //We declare boolean controls
@@ -82,7 +83,7 @@ bool isWeightTooSmall;
 double binsWidth=0.01;
 
 //Ellipticity
-double ellipticity=-0.1;
+double ellipticity=0.1;
 
 //Angle between velocity vector and field polarization within which we detect electrons
 double angleDetection=180.;
@@ -108,7 +109,7 @@ int main()
 #endif
 
 #ifdef MOLECULE
-    myPotential->setMoleculeOrientation(myOrientation);
+    myPotential->setLebedevOrientation(myOrientation);
 #endif
   
   //Contains the electric field properties
@@ -220,7 +221,7 @@ int main()
    mySpectra[omp_get_thread_num()].storeDataBinning(x,t, myIC.weightIonization, isStepTooSmall || isWeightTooSmall);
 #endif
 	     
-	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%50000==0)
+	      if(iVYPerpBirth+nVYPerpBirth*(iVZPrimPerpBirth+(iFieldBirth-1)*nVZPrimPerpBirth)%50==0)
 		{
 		#pragma omp critical
 		 {
@@ -237,7 +238,7 @@ int main()
 		  myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
 		  myDisplay("ellipticity", myField.ellipticity);
 #ifdef MOLECULE
-                  myDisplay("Molecule orientation", myPotential->myOrientation.myString);
+                  myDisplay("Molecule orientation", myPotential->myOrientationL);
 		  myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
 		  myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif		  
@@ -304,7 +305,7 @@ int main()
   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
                 
 #ifdef MOLECULE
-  myPlot.addKey("Molecule orientation",myPotential->myOrientation.myString);
+  myPlot.addKey("Molecule orientation",myPotential->myOrientationL);
   myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
   myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif
