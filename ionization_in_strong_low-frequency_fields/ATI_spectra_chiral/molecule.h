@@ -77,8 +77,8 @@ template<typename state_type> class Molecule : public ElectrostaticPotential<sta
  public:
 
   //We declare an orientation for the chiral molecule
-  moleculeOrientation myOrientation;
-  int myOrientationL;
+  moleculeOrientation toBeRemoved;
+  int myOrientation;
 
   //Nuclei charges and covalent bond length
   //For orientation 'W'
@@ -95,7 +95,7 @@ template<typename state_type> class Molecule : public ElectrostaticPotential<sta
   double lebedevWeight;
 
   //Constructor
-  Molecule(moleculeOrientation myOrientation=moleculeOrientation(W));
+  Molecule(moleculeOrientation toBeRemoved=moleculeOrientation(W));
   
   //Necessary method for copy procedure when using polymophism (abstract parent class)
   Molecule* Clone()
@@ -103,14 +103,8 @@ template<typename state_type> class Molecule : public ElectrostaticPotential<sta
   return new Molecule(*this);
   }
   
-  //Method which sets the molecule orientation
-  void setOrientation(moleculeOrientation myOrientation);
-  
-  void setLebedevOrientation(int myOrientationL);
+  void setLebedevOrientation(int myOrientation);
 
-  //Method which builds the molecule and sets the molecule orientation
-  void setMoleculeOrientation(moleculeOrientation myOrientation);
-  
   //Method which computes some quantities in advance
   void preparePotential(const state_type &x);
 
@@ -123,7 +117,7 @@ template<typename state_type> class Molecule : public ElectrostaticPotential<sta
 };
 
 template<typename state_type>
-Molecule<state_type>::Molecule(moleculeOrientation myOrientation): myOrientation(myOrientation)
+Molecule<state_type>::Molecule(moleculeOrientation toBeRemoved): toBeRemoved(toBeRemoved)
 {
   //Nuclei charges
   c[0]=0.4;
@@ -145,12 +139,12 @@ Molecule<state_type>::Molecule(moleculeOrientation myOrientation): myOrientation
 template<typename state_type>
 void Molecule<state_type>::setLebedevOrientation(int _myOrientation_)
 {
-myOrientationL=_myOrientation_;
+myOrientation=_myOrientation_;
 std::ifstream lebedev_table("lebedev_table", std::ios::in);
 
 if(lebedev_table)  
 {      
-for(int i=1; i<=myOrientationL; i++)
+for(int i=1; i<=myOrientation; i++)
 lebedev_table >> xi >> yi >> zi >> lebedevWeight;
  
 lebedev_table.close();

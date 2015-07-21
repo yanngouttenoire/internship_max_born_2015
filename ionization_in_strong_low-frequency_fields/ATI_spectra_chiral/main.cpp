@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=5, nVYPerpBirth=5, nVZPrimPerpBirth=5;
+int nFieldBirth=10, nVYPerpBirth=10, nVZPrimPerpBirth=10;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -238,7 +238,7 @@ int main()
 		  myDisplay("vZPrimPerpBirth", myIC.vZPrimPerpBirth);
 		  myDisplay("ellipticity", myField.ellipticity);
 #ifdef MOLECULE
-                  myDisplay("Molecule orientation", myPotential->myOrientationL);
+                  myDisplay("Molecule orientation", myPotential->myOrientation);
 		  myDisplay.variableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
 		  myDisplay.variableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif		  
@@ -293,7 +293,9 @@ int main()
 #endif
 
    //We open a file with a view to writing in it
-   fstream dataFile("data.dat",ios::out);
+   std::ostringstream dataFileStream;
+   dataFileStream<<"leb_orient_"<<myPotential->myOrientation<<".dat";
+   fstream dataFile(dataFileStream.str().c_str(),ios::out);
 
    //We write the data binning in the file "dataFile"
    mySpectrum.writeDataBinning(dataFile);
@@ -305,7 +307,7 @@ int main()
   myPlot.addKey("nVZPrimPerp",nVZPrimPerpBirth);
                 
 #ifdef MOLECULE
-  myPlot.addKey("Molecule orientation",myPotential->myOrientationL);
+  myPlot.addKey("Molecule orientation",myPotential->myOrientation);
   myPlot.addKeyVariableArg<double>("charges", 4, myPotential->charge[0],  myPotential->charge[1],  myPotential->charge[2],  myPotential->charge[3]);
   myPlot.addKeyVariableArg<double>("bondLength", 3, myPotential->bondLength[1],  myPotential->bondLength[2],  myPotential->bondLength[3]);
 #endif
@@ -372,9 +374,9 @@ int main()
   
   //We consider electrons differently depending if they are detected in y>0 or y<0
   std::ostringstream plot1;
-  plot1<<"plot 'data.dat' index 0 using 1:2 w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %', \\";
+  plot1<<"plot '"<<dataFileStream.str()<<"' index 0 using 1:2 w l ls 1 title 'Photo-electrons detected in the upper half-space (y>0), number="<< double(mySpectrum.electronsDetectedUPNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %', \\";
   std::ostringstream plot2;
-  plot2<<"'data.dat' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
+  plot2<<"'"<<dataFileStream.str()<<"' index 1 using 1:2 w l ls 2 title 'Photo-electrons detected in the lower half-space (y<0), number="<< double(mySpectrum.electronsDetectedDOWNNbr)/(mySpectrum.electronsDetectedNbr)*100.<<" %'";
 
   myPlot.addInstruction(plot1.str());
   myPlot.addInstruction(plot2.str());
