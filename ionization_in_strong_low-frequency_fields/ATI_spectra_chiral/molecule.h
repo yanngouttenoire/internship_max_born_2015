@@ -233,7 +233,7 @@ template<typename state_type>
 double Molecule<state_type>::potentialEnergy(const state_type& x)
 {
 
-    return -charge[0]/pow(x[0]*x[0]+x[1]*x[1]+x[2]*x[2],1./2.)-charge[1]/pow((x[0]-X[1])*(x[0]-X[1])+(x[1]-Y[1])*(x[1]-Y[1])+(x[2]-Z[1])*(x[2]-Z[1]),1./2.)-charge[2]/pow((x[0]-X[2])*(x[0]-X[2])+(x[1]-Y[2])*(x[1]-Y[2])+(x[2]-Z[2])*(x[2]-Z[2]),1./2.)-charge[3]/pow((x[0]-X[3])*(x[0]-X[3])+(x[1]-Y[3])*(x[1]-Y[3])+(x[2]-Z[3])*(x[2]-Z[3]),1./2.);
+    return -charge[0]/sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])-charge[1]/sqrt((x[0]-X[1])*(x[0]-X[1])+(x[1]-Y[1])*(x[1]-Y[1])+(x[2]-Z[1])*(x[2]-Z[1]))-charge[2]/sqrt((x[0]-X[2])*(x[0]-X[2])+(x[1]-Y[2])*(x[1]-Y[2])+(x[2]-Z[2])*(x[2]-Z[2]))-charge[3]/sqrt((x[0]-X[3])*(x[0]-X[3])+(x[1]-Y[3])*(x[1]-Y[3])+(x[2]-Z[3])*(x[2]-Z[3]));
 
 }
 

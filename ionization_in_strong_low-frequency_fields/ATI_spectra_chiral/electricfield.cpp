@@ -20,11 +20,11 @@ ElectricField::ElectricField(double ellipticity)
   double lightSpeed=2.99792458E8;
 
   //Field parameters
-  waveLenght=1.3E-6;
-  fieldAmpl=0.0534;
+  pulsation=0.05;
+  fieldAmpl=0.04;
   cyclesNbr=3;
   phase=0.;
-  pulsation=2.*M_PI*lightSpeed/waveLenght*uaTime;
+  waveLenght=2.*M_PI*lightSpeed/pulsation*uaTime;
   opticalCycle=2.*M_PI/pulsation;
 }
 
