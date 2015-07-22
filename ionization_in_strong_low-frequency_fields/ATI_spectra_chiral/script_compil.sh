@@ -7,7 +7,7 @@ cp lebedev_table $DIR/.
 cp script_exe.sh $DIR/.
 make clean
 
-for ((i=1; i<=3; i++))
+for ((i=1; i<=38; i++))
 do
 sed "s/__myOrientation__/$i/" main.cpp.GEN > main.cpp
 make

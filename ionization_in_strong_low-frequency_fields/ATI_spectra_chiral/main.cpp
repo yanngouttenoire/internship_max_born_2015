@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=40, nVYPerpBirth=200, nVZPrimPerpBirth=200;
+int nFieldBirth=100, nVYPerpBirth=1000, nVZPrimPerpBirth=500;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -52,7 +52,7 @@ double IP=0.5792;
 
 #ifdef MOLECULE
 typedef Molecule<state_type> potential_type;
-int myOrientation=4;
+int myOrientation=38;
 #endif
 
 //We declare a variable for the step in controlledRK5, the min allowed value

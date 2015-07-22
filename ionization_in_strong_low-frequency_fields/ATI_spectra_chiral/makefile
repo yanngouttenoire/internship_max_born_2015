@@ -8,7 +8,6 @@ OBJET= $(SOURCE:.cpp=.o)
 HEADER= $(wildcard *.h)
 
 run: exec.out
-	@ time ./exec.out
 
 exec.out: $(OBJET)
 	@ $(CC) -o $@ $^ $(LDFLAGS)
