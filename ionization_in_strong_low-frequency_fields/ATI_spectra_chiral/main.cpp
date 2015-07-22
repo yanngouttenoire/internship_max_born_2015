@@ -26,7 +26,7 @@ using namespace std;
 //VARIABLES DECLARATION
 
 //Numbers of computed points
-int nFieldBirth=500, nVYPerpBirth=1000, nVZPrimPerpBirth=500;
+int nFieldBirth=40, nVYPerpBirth=10, nVZPrimPerpBirth=10;
 int iFieldBirth, iVYPerpBirth, iVZPrimPerpBirth;
 
 //We declare some variables for OPENMP information
@@ -52,7 +52,7 @@ double IP=0.5792;
 
 #ifdef MOLECULE
 typedef Molecule<state_type> potential_type;
-moleculeOrientation myOrientation(X3Z3);
+moleculeOrientation myOrientation(X3);
 #endif
 
 //We declare a variable for the step in controlledRK5, the min allowed value
@@ -79,7 +79,7 @@ bool isStepTooSmall;
 bool isWeightTooSmall;
 
 //Bins width
-double binsWidth=0.1;
+double binsWidth=0.05;
 
 //Ellipticity
 double ellipticity=-0.1;
@@ -292,7 +292,7 @@ int main()
 #endif
 
    //We open a file with a view to writing in it
-   fstream dataFile("data.dat",ios::out);
+   fstream dataFile("X3_CCW_0.05.dat",ios::out);
 
    //We write the data binning in the file "dataFile"
    mySpectrum.writeDataBinning(dataFile);

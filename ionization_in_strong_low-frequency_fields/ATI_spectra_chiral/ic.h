@@ -104,8 +104,8 @@ void IC<state_type>::setTBirth(const int& iFieldBirth, const int& nFieldBirth)
 { 
   //We want to scan field phase values from -200° to 30°
 
-  double anglei=-200.*M_PI/180.;
-  double anglef=30.*M_PI/180.;
+  double anglei=-30.*M_PI/180.;
+  double anglef=5.*M_PI/180.;
   tBirth=anglei/myField.pulsation+double(iFieldBirth)/double(nFieldBirth)*(anglef-anglei)/myField.pulsation;
 }
 
