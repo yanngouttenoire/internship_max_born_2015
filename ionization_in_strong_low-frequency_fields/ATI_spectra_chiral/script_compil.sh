@@ -2,10 +2,12 @@
 
 DIR=lebedev_38
 
+rm -rf $DIR
 mkdir -p $DIR
 cp lebedev_table $DIR/.
 cp script_exe.sh $DIR/.
 make clean
+make mrproper
 
 for ((i=1; i<=38; i++))
 do
