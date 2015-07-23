@@ -116,9 +116,9 @@ template<typename state_type>
 Molecule<state_type>::Molecule(moleculeOrientation toBeRemoved): toBeRemoved(toBeRemoved)
 {
   //Nuclei charges
-  charge[0]=0.4;
-  charge[1]=0.2;
-  charge[2]=0.2;
+  charge[0]=0.2;
+  charge[1]=0.3;
+  charge[2]=0.3;
   charge[3]=0.2;
   //Covalent bond length
   bondLength[1]=2.0;
@@ -127,7 +127,8 @@ Molecule<state_type>::Molecule(moleculeOrientation toBeRemoved): toBeRemoved(toB
   setLebedevOrientation(3);
 
   //Ionization potential
-  this->IP=0.32772257;
+  //this->IP=0.32772257;
+  this->IP=0.31631047;
 }
 
 //

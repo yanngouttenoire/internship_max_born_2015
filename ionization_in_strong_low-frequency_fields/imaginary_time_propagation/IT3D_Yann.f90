@@ -89,9 +89,9 @@ nsize=nx*ny*nz
 
 !Define Potential
 
- charge(1)=0.4
- charge(2)=0.2
- charge(3)=0.2
+ charge(1)=0.2
+ charge(2)=0.3
+ charge(3)=0.3
  charge(4)=0.2
 !Covalent bond length
 
