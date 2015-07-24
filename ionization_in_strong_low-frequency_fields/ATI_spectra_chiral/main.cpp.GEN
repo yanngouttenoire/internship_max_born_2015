@@ -79,7 +79,7 @@ bool isStepTooSmall;
 bool isWeightTooSmall;
 
 //Bins width
-double binsWidth=0.05;
+double binsWidth=0.1;
 
 //Ellipticity
 double ellipticity=0.1;
