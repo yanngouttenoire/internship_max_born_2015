@@ -22,7 +22,7 @@ ElectricField::ElectricField(double ellipticity)
   //Field parameters
   pulsation=0.05;
   fieldAmpl=0.04;
-  cyclesNbr=3;
+  cyclesNbr=4;
   phase=0.;
   waveLenght=2.*M_PI*lightSpeed/pulsation*uaTime;
   opticalCycle=2.*M_PI/pulsation;
